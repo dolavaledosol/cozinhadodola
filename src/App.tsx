@@ -22,6 +22,7 @@ import LocaisEstoque from "./pages/admin/LocaisEstoque";
 import Estoque from "./pages/admin/Estoque";
 import Bancos from "./pages/admin/Bancos";
 import FormasPagamento from "./pages/admin/FormasPagamento";
+import Financeiro from "./pages/admin/Financeiro";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/admin/estoque" element={<AdminLayout><Estoque /></AdminLayout>} />
               <Route path="/admin/bancos" element={<AdminLayout><Bancos /></AdminLayout>} />
               <Route path="/admin/formas-pagamento" element={<AdminLayout><FormasPagamento /></AdminLayout>} />
+              <Route path="/admin/financeiro" element={<AdminLayout><Financeiro /></AdminLayout>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
