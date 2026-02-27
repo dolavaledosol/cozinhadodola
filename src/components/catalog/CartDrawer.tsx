@@ -81,7 +81,7 @@ const CartDrawer = ({ onClose }: CartDrawerProps) => {
           <span>R$ {total.toFixed(2)}</span>
         </div>
         <Button className="w-full" size="lg" asChild>
-          <Link to="/auth" onClick={onClose}>
+          <Link to="/checkout" onClick={onClose}>
             Finalizar pedido
           </Link>
         </Button>

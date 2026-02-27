@@ -10,6 +10,7 @@ interface ProdutoComPreco {
   produto_id: string;
   nome: string;
   slug: string | null;
+  descricao: string | null;
   familia_id: string | null;
   fabricante_id: string | null;
   familia_nome: string | null;
@@ -23,7 +24,7 @@ const Index = () => {
   const [selectedFamilia, setSelectedFamilia] = useState("all");
   const [selectedFabricante, setSelectedFabricante] = useState("all");
   const [produtos, setProdutos] = useState<ProdutoComPreco[]>([]);
-  const [familias, setFamilias] = useState<{ id: string; nome: string }[]>([]);
+  const [familias, setFamilias] = useState<{ id: string; nome: string; familia_pai_id: string | null }[]>([]);
   const [fabricantes, setFabricantes] = useState<{ id: string; nome: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,10 +32,10 @@ const Index = () => {
   useEffect(() => {
     const loadFilters = async () => {
       const [famRes, fabRes] = await Promise.all([
-        supabase.from("familia").select("familia_id, nome").eq("ativo", true).order("nome"),
+        supabase.from("familia").select("familia_id, nome, familia_pai_id").eq("ativo", true).order("nome"),
         supabase.from("fabricante").select("fabricante_id, nome").eq("ativo", true).order("nome"),
       ]);
-      if (famRes.data) setFamilias(famRes.data.map((f) => ({ id: f.familia_id, nome: f.nome })));
+      if (famRes.data) setFamilias(famRes.data.map((f) => ({ id: f.familia_id, nome: f.nome, familia_pai_id: f.familia_pai_id })));
       if (fabRes.data) setFabricantes(fabRes.data.map((f) => ({ id: f.fabricante_id, nome: f.nome })));
     };
     loadFilters();
@@ -51,6 +52,7 @@ const Index = () => {
           produto_id,
           nome,
           slug,
+          descricao,
           preco,
           familia_id,
           fabricante_id,
@@ -79,6 +81,7 @@ const Index = () => {
             produto_id: p.produto_id,
             nome: p.nome,
             slug: p.slug,
+            descricao: p.descricao,
             familia_id: p.familia_id,
             fabricante_id: p.fabricante_id,
             familia_nome: p.familia?.nome ?? null,
@@ -150,6 +153,7 @@ const Index = () => {
                 produto_id={p.produto_id}
                 nome={p.nome}
                 preco={p.preco}
+                descricao={p.descricao ?? undefined}
                 url_imagem={p.url_imagem ?? undefined}
                 familia_nome={p.familia_nome ?? undefined}
                 fabricante_nome={p.fabricante_nome ?? undefined}
