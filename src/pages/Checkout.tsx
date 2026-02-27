@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingBag, ArrowLeft, LogIn, Truck, Store, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ShoppingBag, ArrowLeft, LogIn, Truck, Store, AlertCircle, Plus, MapPin, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { useCep } from "@/hooks/useCep";
 
 function formatCpfCnpj(value: string) {
   const digits = value.replace(/\D/g, "");
@@ -79,6 +81,19 @@ interface LocalEstoque {
   nome: string;
 }
 
+interface Endereco {
+  endereco_id: string;
+  cep: string | null;
+  logradouro: string;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string;
+  estado: string;
+}
+
+const emptyEndForm = { cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "" };
+
 const Checkout = () => {
   const { items, total, clearCart } = useCart();
   const { user } = useAuth();
@@ -91,7 +106,17 @@ const Checkout = () => {
   const [locais, setLocais] = useState<LocalEstoque[]>([]);
   const [localSelecionado, setLocalSelecionado] = useState("");
 
-  // Load locais and pre-fill CPF/CNPJ from cliente
+  // Address state
+  const [enderecos, setEnderecos] = useState<Endereco[]>([]);
+  const [enderecoSelecionado, setEnderecoSelecionado] = useState("");
+  const [endDialogOpen, setEndDialogOpen] = useState(false);
+  const [endForm, setEndForm] = useState(emptyEndForm);
+  const [savingEnd, setSavingEnd] = useState(false);
+  const [clienteId, setClienteId] = useState<string | null>(null);
+
+  const { fetchCep, loading: cepLoading } = useCep();
+
+  // Load data
   useEffect(() => {
     supabase
       .from("local_estoque")
@@ -104,16 +129,29 @@ const Checkout = () => {
     if (user) {
       supabase
         .from("cliente")
-        .select("cpf_cnpj")
+        .select("cliente_id, cpf_cnpj")
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data }) => {
-          if (data?.cpf_cnpj) {
-            setCpfCnpj(formatCpfCnpj(data.cpf_cnpj));
+          if (data) {
+            setClienteId(data.cliente_id);
+            if (data.cpf_cnpj) setCpfCnpj(formatCpfCnpj(data.cpf_cnpj));
+            loadEnderecos(data.cliente_id);
           }
         });
     }
   }, [user]);
+
+  const loadEnderecos = async (cId: string) => {
+    const { data } = await supabase
+      .from("cliente_endereco")
+      .select("endereco_id, endereco:endereco_id(*)")
+      .eq("cliente_id", cId);
+    if (data) {
+      const mapped = data.map((e: any) => e.endereco).filter(Boolean);
+      setEnderecos(mapped);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -154,6 +192,73 @@ const Checkout = () => {
     if (cpfCnpjError) setCpfCnpjError(null);
   };
 
+  const handleCepBlur = async () => {
+    const cep = endForm.cep.replace(/\D/g, "");
+    if (cep.length === 8) {
+      const result = await fetchCep(cep);
+      if (result) {
+        setEndForm((prev) => ({
+          ...prev,
+          logradouro: result.street || prev.logradouro,
+          bairro: result.neighborhood || prev.bairro,
+          cidade: result.city || prev.cidade,
+          estado: result.state || prev.estado,
+        }));
+      }
+    }
+  };
+
+  const saveNovoEndereco = async () => {
+    if (!endForm.logradouro || !endForm.cidade || !endForm.estado) {
+      toast({ title: "Preencha logradouro, cidade e estado", variant: "destructive" });
+      return;
+    }
+    setSavingEnd(true);
+    try {
+      let cId = clienteId;
+      if (!cId) {
+        const { data: newCliente, error: cErr } = await supabase
+          .from("cliente")
+          .insert({ nome: user.email ?? "Cliente", email: user.email, user_id: user.id })
+          .select("cliente_id")
+          .single();
+        if (cErr) throw cErr;
+        cId = newCliente.cliente_id;
+        setClienteId(cId);
+      }
+
+      const { data: endData, error: eErr } = await supabase
+        .from("endereco")
+        .insert({
+          cep: endForm.cep || null,
+          logradouro: endForm.logradouro,
+          numero: endForm.numero || null,
+          complemento: endForm.complemento || null,
+          bairro: endForm.bairro || null,
+          cidade: endForm.cidade,
+          estado: endForm.estado,
+        })
+        .select()
+        .single();
+      if (eErr) throw eErr;
+
+      await supabase.from("cliente_endereco").insert({
+        cliente_id: cId!,
+        endereco_id: (endData as any).endereco_id,
+      });
+
+      setEndDialogOpen(false);
+      setEndForm(emptyEndForm);
+      toast({ title: "Endereço adicionado" });
+      await loadEnderecos(cId!);
+      setEnderecoSelecionado((endData as any).endereco_id);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingEnd(false);
+    }
+  };
+
   const handleFinalize = async () => {
     const error = validateCpfCnpj(cpfCnpj);
     if (error) {
@@ -168,47 +273,53 @@ const Checkout = () => {
       toast({ title: "Selecione o local de retirada", variant: "destructive" });
       return;
     }
+    if (tipoEntrega === "entrega" && !enderecoSelecionado) {
+      toast({ title: "Selecione ou cadastre um endereço de entrega", variant: "destructive" });
+      return;
+    }
 
     setLoading(true);
     try {
       const cleanCpfCnpj = cpfCnpj.replace(/\D/g, "");
 
-      // Find or create cliente for this user
-      let { data: cliente } = await supabase
-        .from("cliente")
-        .select("cliente_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!cliente) {
+      let cId = clienteId;
+      if (!cId) {
         const { data: newCliente, error: cErr } = await supabase
           .from("cliente")
           .insert({ nome: user.email ?? "Cliente", email: user.email, user_id: user.id, cpf_cnpj: cleanCpfCnpj })
           .select("cliente_id")
           .single();
         if (cErr) throw cErr;
-        cliente = newCliente;
+        cId = newCliente.cliente_id;
       } else {
-        // Update CPF/CNPJ
-        await supabase.from("cliente").update({ cpf_cnpj: cleanCpfCnpj }).eq("cliente_id", cliente.cliente_id);
+        await supabase.from("cliente").update({ cpf_cnpj: cleanCpfCnpj }).eq("cliente_id", cId);
       }
 
-      // Create pedido
+      // Build observacao
+      let observacao = "";
+      if (tipoEntrega === "entrega") {
+        const end = enderecos.find((e) => e.endereco_id === enderecoSelecionado);
+        const endStr = end ? `${end.logradouro}${end.numero ? `, ${end.numero}` : ""} — ${end.cidade}/${end.estado}` : "";
+        observacao = `Entrega — frete sem compromisso, será calculado e informado posteriormente. Endereço: ${endStr}`;
+      } else {
+        const local = locais.find((l) => l.local_estoque_id === localSelecionado);
+        observacao = `Retirada no local: ${local?.nome || ""}`;
+      }
+
       const { data: pedido, error: pErr } = await supabase
         .from("pedido")
         .insert({
-          cliente_id: cliente!.cliente_id,
+          cliente_id: cId!,
           total,
           status: "separacao",
           origem: "web",
           local_estoque_id: tipoEntrega === "retirada" ? localSelecionado : null,
-          observacao: tipoEntrega === "entrega" ? "Entrega — frete a calcular" : `Retirada no local`,
+          observacao,
         })
         .select("pedido_id")
         .single();
       if (pErr) throw pErr;
 
-      // Create pedido_items
       const pedidoItems = items.map((item) => ({
         pedido_id: pedido!.pedido_id,
         produto_id: item.produto_id,
@@ -219,7 +330,6 @@ const Checkout = () => {
       const { error: iErr } = await supabase.from("pedido_item").insert(pedidoItems);
       if (iErr) throw iErr;
 
-      // Create status history
       await supabase.from("pedido_status_historico").insert({
         pedido_id: pedido!.pedido_id,
         status: "separacao",
@@ -236,7 +346,11 @@ const Checkout = () => {
     }
   };
 
-  const canSubmit = !loading && cpfCnpj.length > 0 && tipoEntrega !== "" && (tipoEntrega === "entrega" || localSelecionado !== "");
+  const canSubmit =
+    !loading &&
+    cpfCnpj.length > 0 &&
+    tipoEntrega !== "" &&
+    (tipoEntrega === "retirada" ? localSelecionado !== "" : enderecoSelecionado !== "");
 
   return (
     <div className="min-h-screen bg-background">
@@ -323,11 +437,57 @@ const Checkout = () => {
             </RadioGroup>
 
             {tipoEntrega === "entrega" && (
-              <div className="rounded-lg bg-muted/50 border border-border p-3 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <p className="text-sm text-muted-foreground">
-                  O frete será calculado e informado posteriormente pela nossa equipe.
-                </p>
+              <div className="space-y-4">
+                <div className="rounded-lg bg-muted/50 border border-border p-3 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    O frete será calculado e informado posteriormente pela nossa equipe, <strong>sem compromisso</strong>. Você poderá confirmar ou cancelar após receber o valor.
+                  </p>
+                </div>
+
+                {/* Address selection */}
+                <div className="space-y-2">
+                  <Label>Endereço de entrega</Label>
+                  {enderecos.length > 0 ? (
+                    <div className="space-y-2">
+                      {enderecos.map((e) => (
+                        <div
+                          key={e.endereco_id}
+                          className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                            enderecoSelecionado === e.endereco_id
+                              ? "border-primary bg-primary/5"
+                              : "hover:bg-muted/50"
+                          }`}
+                          onClick={() => setEnderecoSelecionado(e.endereco_id)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {e.logradouro}{e.numero ? `, ${e.numero}` : ""}
+                              </p>
+                              {e.complemento && <p className="text-xs text-muted-foreground">{e.complemento}</p>}
+                              <p className="text-xs text-muted-foreground">
+                                {[e.bairro, e.cidade, e.estado].filter(Boolean).join(" — ")}
+                              </p>
+                              {e.cep && <p className="text-xs text-muted-foreground">CEP: {e.cep}</p>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Nenhum endereço cadastrado</p>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 mt-2"
+                    onClick={() => { setEndForm(emptyEndForm); setEndDialogOpen(true); }}
+                  >
+                    <Plus className="h-3 w-3" /> Cadastrar novo endereço
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -355,6 +515,63 @@ const Checkout = () => {
           {loading ? "Processando..." : "Confirmar Pedido"}
         </Button>
       </div>
+
+      {/* New Address Dialog */}
+      <Dialog open={endDialogOpen} onOpenChange={setEndDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Novo Endereço</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1 col-span-1">
+                <Label className="text-xs">CEP</Label>
+                <div className="relative">
+                  <Input
+                    value={endForm.cep}
+                    onChange={(e) => setEndForm({ ...endForm, cep: e.target.value })}
+                    onBlur={handleCepBlur}
+                    placeholder="00000-000"
+                  />
+                  {cepLoading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <Label className="text-xs">Logradouro *</Label>
+                <Input value={endForm.logradouro} onChange={(e) => setEndForm({ ...endForm, logradouro: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Número</Label>
+                <Input value={endForm.numero} onChange={(e) => setEndForm({ ...endForm, numero: e.target.value })} />
+              </div>
+              <div className="space-y-1 col-span-2">
+                <Label className="text-xs">Complemento</Label>
+                <Input value={endForm.complemento} onChange={(e) => setEndForm({ ...endForm, complemento: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Bairro</Label>
+              <Input value={endForm.bairro} onChange={(e) => setEndForm({ ...endForm, bairro: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1 col-span-2">
+                <Label className="text-xs">Cidade *</Label>
+                <Input value={endForm.cidade} onChange={(e) => setEndForm({ ...endForm, cidade: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Estado *</Label>
+                <Input value={endForm.estado} onChange={(e) => setEndForm({ ...endForm, estado: e.target.value })} maxLength={2} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEndDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={saveNovoEndereco} disabled={savingEnd}>
+              {savingEnd ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
