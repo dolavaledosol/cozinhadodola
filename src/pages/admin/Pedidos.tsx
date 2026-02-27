@@ -8,13 +8,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Truck, Store, Clock, CalendarIcon } from "lucide-react";
+import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+
 
 const statusOptions = [
   "carrinho", "separacao", "aguardando_pagamento", "pago", "enviado", "entregue", "cancelado",
@@ -26,16 +27,9 @@ function getAllowedNextStatuses(currentStatus: string): string[] {
   const currentIdx = statusOrder.indexOf(currentStatus);
   if (currentIdx === -1) return [currentStatus, "cancelado"];
   const allowed: string[] = [];
-  // Allow going back one step
-  if (currentIdx > 0) {
-    allowed.push(statusOrder[currentIdx - 1]);
-  }
-  // Current
+  if (currentIdx > 0) allowed.push(statusOrder[currentIdx - 1]);
   allowed.push(currentStatus);
-  // Next step
-  if (currentIdx < statusOrder.length - 1) {
-    allowed.push(statusOrder[currentIdx + 1]);
-  }
+  if (currentIdx < statusOrder.length - 1) allowed.push(statusOrder[currentIdx + 1]);
   if (currentStatus !== "cancelado") allowed.push("cancelado");
   return allowed;
 }
@@ -54,6 +48,7 @@ const statusColors: Record<string, string> = {
 
 interface Pedido {
   pedido_id: string;
+  cliente_id: string;
   data: string;
   total: number;
   frete: number;
@@ -67,6 +62,7 @@ interface Pedido {
 
 interface PedidoItem {
   pedido_item_id: string;
+  produto_id: string;
   quantidade: number;
   preco_unitario: number;
   produto: { nome: string } | null;
@@ -76,6 +72,14 @@ interface StatusHistorico {
   pedido_status_historico_id: string;
   status: string;
   data: string;
+}
+
+interface StockIssue {
+  produto_id: string;
+  produto_nome: string;
+  quantidade_pedida: number;
+  quantidade_disponivel: number;
+  faltante: number;
 }
 
 function getTipoEntrega(p: Pedido): { label: string; icon: typeof Truck } {
@@ -101,13 +105,17 @@ const Pedidos = () => {
   const [pagFormaId, setPagFormaId] = useState("");
   const [pagBancoId, setPagBancoId] = useState("");
   const [pagData, setPagData] = useState<Date | undefined>(undefined);
-  const [pagValor, setPagValor] = useState("");
+  
+  // Stock issue dialog
+  const [stockIssues, setStockIssues] = useState<StockIssue[]>([]);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+  const [allowNegativeStock, setAllowNegativeStock] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
     const { data } = await supabase
       .from("pedido")
-      .select("pedido_id, data, total, frete, status, origem, observacao, local_estoque_id, cliente!pedido_cliente_id_fkey(nome), local_estoque(nome)")
+      .select("pedido_id, cliente_id, data, total, frete, status, origem, observacao, local_estoque_id, cliente!pedido_cliente_id_fkey(nome), local_estoque(nome)")
       .order("data", { ascending: false });
     if (data) setPedidos(data as any);
   };
@@ -140,11 +148,13 @@ const Pedidos = () => {
     setPagFormaId("");
     setPagBancoId("");
     setPagData(undefined);
-    setPagValor(Number(p.total).toFixed(2));
+    
+    setStockIssues([]);
+    setAllowNegativeStock(false);
     const [itemsRes, histRes] = await Promise.all([
       supabase
         .from("pedido_item")
-        .select("pedido_item_id, quantidade, preco_unitario, produto(nome)")
+        .select("pedido_item_id, produto_id, quantidade, preco_unitario, produto(nome)")
         .eq("pedido_id", p.pedido_id),
       supabase
         .from("pedido_status_historico")
@@ -165,7 +175,6 @@ const Pedidos = () => {
   const editIdx = statusOrder.indexOf(editStatus);
   const isGoingBack = editIdx !== -1 && currentIdx !== -1 && editIdx < currentIdx;
   const isAfterPago = currentIdx >= statusOrder.indexOf("pago");
-  // When going back to separacao or earlier, undo payment
   const shouldDeletePayment = isGoingBack && editIdx <= statusOrder.indexOf("separacao") && currentIdx >= statusOrder.indexOf("aguardando_pagamento");
 
   const handleStatusClick = (s: string) => {
@@ -181,7 +190,156 @@ const Pedidos = () => {
     setConfirmCancelOpen(false);
   };
 
-  const updatePedido = async () => {
+  // Check stock availability for all items
+  const checkStock = async (): Promise<StockIssue[]> => {
+    if (!selectedPedido) return [];
+    const issues: StockIssue[] = [];
+
+    for (const item of items) {
+      // Get available stock across all locations (or specific location for pickup)
+      let query = supabase
+        .from("estoque_local")
+        .select("quantidade_disponivel")
+        .eq("produto_id", item.produto_id);
+
+      if (selectedPedido.local_estoque_id) {
+        query = query.eq("local_estoque_id", selectedPedido.local_estoque_id);
+      }
+
+      const { data: stockData } = await query;
+      const totalAvailable = (stockData || []).reduce((sum, s) => sum + Number(s.quantidade_disponivel), 0);
+
+      if (totalAvailable < Number(item.quantidade)) {
+        issues.push({
+          produto_id: item.produto_id,
+          produto_nome: item.produto?.nome || "—",
+          quantidade_pedida: Number(item.quantidade),
+          quantidade_disponivel: totalAvailable,
+          faltante: Number(item.quantidade) - totalAvailable,
+        });
+      }
+    }
+    return issues;
+  };
+
+  // Deduct stock
+  const deductStock = async () => {
+    if (!selectedPedido) return;
+
+    for (const item of items) {
+      let remaining = Number(item.quantidade);
+
+      let query = supabase
+        .from("estoque_local")
+        .select("estoque_local_id, quantidade_disponivel, local_estoque_id")
+        .eq("produto_id", item.produto_id)
+        .order("quantidade_disponivel", { ascending: false });
+
+      if (selectedPedido.local_estoque_id) {
+        query = query.eq("local_estoque_id", selectedPedido.local_estoque_id);
+      }
+
+      const { data: stocks } = await query;
+      if (!stocks) continue;
+
+      for (const stock of stocks) {
+        if (remaining <= 0) break;
+        const deduct = Math.min(remaining, Number(stock.quantidade_disponivel));
+        await supabase
+          .from("estoque_local")
+          .update({ quantidade_disponivel: Number(stock.quantidade_disponivel) - (allowNegativeStock ? remaining : deduct) })
+          .eq("estoque_local_id", stock.estoque_local_id);
+        remaining -= allowNegativeStock ? remaining : deduct;
+      }
+    }
+  };
+
+  // Split order: create new order with items that are out of stock
+  const splitOrder = async (issues: StockIssue[]) => {
+    if (!selectedPedido) return;
+
+    const faltanteMap = new Map(issues.map(i => [i.produto_id, i.faltante]));
+
+    // Create new order with missing items
+    const newOrderTotal = issues.reduce((sum, i) => {
+      const item = items.find(it => it.produto_id === i.produto_id);
+      return sum + (item ? Number(item.preco_unitario) * i.faltante : 0);
+    }, 0);
+
+    const { data: newOrder, error: orderError } = await supabase
+      .from("pedido")
+      .insert({
+        cliente_id: selectedPedido.cliente_id,
+        local_estoque_id: selectedPedido.local_estoque_id,
+        total: newOrderTotal,
+        frete: 0,
+        status: "separacao" as any,
+        origem: selectedPedido.origem as any,
+        observacao: `Desmembrado do pedido ${selectedPedido.pedido_id.slice(0, 8)} - itens faltantes`,
+      })
+      .select("pedido_id")
+      .single();
+
+    if (orderError || !newOrder) {
+      toast({ title: "Erro ao criar pedido desmembrado", description: orderError?.message, variant: "destructive" });
+      return;
+    }
+
+    // Insert items into new order
+    const newItems = issues.map(issue => {
+      const original = items.find(i => i.produto_id === issue.produto_id)!;
+      return {
+        pedido_id: newOrder.pedido_id,
+        produto_id: issue.produto_id,
+        quantidade: issue.faltante,
+        preco_unitario: Number(original.preco_unitario),
+      };
+    });
+    await supabase.from("pedido_item").insert(newItems);
+
+    // Add status history for new order
+    await supabase.from("pedido_status_historico").insert({
+      pedido_id: newOrder.pedido_id,
+      status: "separacao" as any,
+    });
+
+    // Update original order items quantities (reduce by faltante)
+    for (const issue of issues) {
+      const original = items.find(i => i.produto_id === issue.produto_id)!;
+      const newQty = Number(original.quantidade) - issue.faltante;
+      if (newQty <= 0) {
+        await supabase.from("pedido_item").delete().eq("pedido_item_id", original.pedido_item_id);
+      } else {
+        await supabase.from("pedido_item").update({ quantidade: newQty }).eq("pedido_item_id", original.pedido_item_id);
+      }
+    }
+
+    // Recalculate original order total
+    const remainingTotal = items.reduce((sum, i) => {
+      const faltante = faltanteMap.get(i.produto_id) || 0;
+      const qty = Number(i.quantidade) - faltante;
+      return qty > 0 ? sum + Number(i.preco_unitario) * qty : sum;
+    }, 0);
+    await supabase.from("pedido").update({ total: remainingTotal + freteNum }).eq("pedido_id", selectedPedido.pedido_id);
+
+    toast({ title: `Pedido desmembrado`, description: `Novo pedido ${newOrder.pedido_id.slice(0, 8)} criado com ${issues.length} item(ns) faltante(s)` });
+  };
+
+  // Create contas_receber entry
+  const createContaReceber = async (pedidoId: string, clienteId: string, valor: number, dataPagamento: Date) => {
+    await supabase.from("contas_receber").insert({
+      pedido_id: pedidoId,
+      cliente_id: clienteId,
+      descricao: `Pedido ${pedidoId.slice(0, 8)}`,
+      valor,
+      data_vencimento: dataPagamento.toISOString().slice(0, 10),
+      recebido: true,
+      data_recebimento: dataPagamento.toISOString().slice(0, 10),
+      banco_id: pagBancoId || null,
+    });
+  };
+
+  const updatePedido = async (forceNegative = false, forceSplit = false) => {
     if (!selectedPedido) return;
 
     // For delivery orders: require frete before leaving separacao
@@ -196,6 +354,16 @@ const Pedidos = () => {
         toast({ title: "Preencha forma de pagamento, banco e data", variant: "destructive" });
         return;
       }
+
+      // Check stock before proceeding to pago
+      if (!forceNegative && !forceSplit) {
+        const issues = await checkStock();
+        if (issues.length > 0) {
+          setStockIssues(issues);
+          setStockDialogOpen(true);
+          return;
+        }
+      }
     }
 
     setLoading(true);
@@ -203,10 +371,7 @@ const Pedidos = () => {
     const itemsTotal = items.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
     const newTotal = itemsTotal + freteNum;
 
-    // After pago, don't change frete/total
-    const updateData: any = isAfterPago
-      ? {}
-      : { frete: freteNum, total: newTotal };
+    const updateData: any = isAfterPago ? {} : { frete: freteNum, total: newTotal };
     if (editStatus !== selectedPedido.status) {
       updateData.status = editStatus;
     }
@@ -220,7 +385,7 @@ const Pedidos = () => {
         });
       }
 
-      // Insert payment record
+      // Insert payment record and handle stock when moving to pago
       if (needsPaymentInfo) {
         await supabase.from("pedido_pagamento").insert({
           pedido_id: selectedPedido.pedido_id,
@@ -229,15 +394,29 @@ const Pedidos = () => {
           data_pagamento: pagData!.toISOString(),
           valor: newTotal,
         });
+
+        // Create contas_receber
+        await createContaReceber(selectedPedido.pedido_id, selectedPedido.cliente_id, newTotal, pagData!);
+
+        // Handle stock
+        if (forceSplit && stockIssues.length > 0) {
+          await splitOrder(stockIssues);
+        }
+        if (forceNegative) {
+          setAllowNegativeStock(true);
+        }
+        await deductStock();
       }
 
-      // Delete payments when going back to separacao
+      // Delete payments & contas_receber when going back to separacao
       if (shouldDeletePayment) {
         await supabase.from("pedido_pagamento").delete().eq("pedido_id", selectedPedido.pedido_id);
+        await supabase.from("contas_receber").delete().eq("pedido_id", selectedPedido.pedido_id);
       }
 
       toast({ title: "Pedido atualizado" });
       setDialogOpen(false);
+      setStockDialogOpen(false);
       load();
     } else {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -350,7 +529,6 @@ const Pedidos = () => {
                 </Table>
               </div>
 
-              {/* Status History */}
               {historico.length > 0 && (
                 <div className="space-y-2">
                   <Separator />
@@ -370,7 +548,6 @@ const Pedidos = () => {
                 </div>
               )}
 
-              {/* Frete (for delivery orders) */}
               {isEntrega && (
                 <div className="space-y-2">
                   <Label>Valor do Frete (R$)</Label>
@@ -378,14 +555,7 @@ const Pedidos = () => {
                     <p className="text-sm font-medium">R$ {Number(selectedPedido.frete).toFixed(2)}</p>
                   ) : (
                     <>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={editFrete}
-                        onChange={(e) => setEditFrete(e.target.value)}
-                        placeholder="0.00"
-                      />
+                      <Input type="number" step="0.01" min="0" value={editFrete} onChange={(e) => setEditFrete(e.target.value)} placeholder="0.00" />
                       {freteNum > 0 && (
                         <p className="text-xs text-muted-foreground">
                           Novo total: R$ {(items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0) + freteNum).toFixed(2)}
@@ -418,7 +588,6 @@ const Pedidos = () => {
                 </div>
               </div>
 
-              {/* Payment fields when moving past aguardando_pagamento */}
               {needsPaymentInfo && (
                 <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
                   <Label className="font-semibold">Dados do Pagamento</Label>
@@ -426,13 +595,7 @@ const Pedidos = () => {
                     <Label>Forma de Pagamento *</Label>
                     <div className="flex flex-wrap gap-2">
                       {formasPagamento.map((f) => (
-                        <Button
-                          key={f.forma_pagamento_id}
-                          type="button"
-                          size="sm"
-                          variant={pagFormaId === f.forma_pagamento_id ? "default" : "outline"}
-                          onClick={() => setPagFormaId(f.forma_pagamento_id)}
-                        >
+                        <Button key={f.forma_pagamento_id} type="button" size="sm" variant={pagFormaId === f.forma_pagamento_id ? "default" : "outline"} onClick={() => setPagFormaId(f.forma_pagamento_id)}>
                           {f.nome}
                         </Button>
                       ))}
@@ -442,13 +605,7 @@ const Pedidos = () => {
                     <Label>Banco *</Label>
                     <div className="flex flex-wrap gap-2">
                       {bancos.map((b) => (
-                        <Button
-                          key={b.banco_id}
-                          type="button"
-                          size="sm"
-                          variant={pagBancoId === b.banco_id ? "default" : "outline"}
-                          onClick={() => setPagBancoId(b.banco_id)}
-                        >
+                        <Button key={b.banco_id} type="button" size="sm" variant={pagBancoId === b.banco_id ? "default" : "outline"} onClick={() => setPagBancoId(b.banco_id)}>
                           {b.nome}
                         </Button>
                       ))}
@@ -478,7 +635,7 @@ const Pedidos = () => {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Fechar</Button>
-            <Button onClick={updatePedido} disabled={loading || (editStatus === selectedPedido?.status && editFrete === Number(selectedPedido?.frete || 0).toFixed(2))}>
+            <Button onClick={() => updatePedido()} disabled={loading || (editStatus === selectedPedido?.status && editFrete === Number(selectedPedido?.frete || 0).toFixed(2))}>
               {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
@@ -498,6 +655,68 @@ const Pedidos = () => {
             <AlertDialogAction onClick={confirmCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Sim, cancelar
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Estoque insuficiente
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>Os seguintes itens não possuem estoque suficiente:</p>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Produto</TableHead>
+                        <TableHead className="text-xs text-center">Pedido</TableHead>
+                        <TableHead className="text-xs text-center">Disponível</TableHead>
+                        <TableHead className="text-xs text-center">Falta</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stockIssues.map((issue) => (
+                        <TableRow key={issue.produto_id}>
+                          <TableCell className="text-xs">{issue.produto_nome}</TableCell>
+                          <TableCell className="text-xs text-center">{issue.quantidade_pedida}</TableCell>
+                          <TableCell className="text-xs text-center">{issue.quantidade_disponivel}</TableCell>
+                          <TableCell className="text-xs text-center text-destructive font-medium">{issue.faltante}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-sm">O que deseja fazer?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAllowNegativeStock(true);
+                setStockDialogOpen(false);
+                updatePedido(true, false);
+              }}
+              disabled={loading}
+            >
+              Permitir negativo
+            </Button>
+            <Button
+              onClick={() => {
+                setStockDialogOpen(false);
+                updatePedido(false, true);
+              }}
+              disabled={loading}
+            >
+              Desmembrar pedido
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
