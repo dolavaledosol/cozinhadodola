@@ -379,6 +379,7 @@ const Perfil = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>Pedido</TableHead>
                           <TableHead>Data</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Total</TableHead>
@@ -389,6 +390,7 @@ const Perfil = () => {
                           const s = statusLabel[p.status] || { label: p.status, color: "bg-muted" };
                           return (
                             <TableRow key={p.pedido_id}>
+                              <TableCell className="text-xs font-mono text-muted-foreground">{p.pedido_id.slice(0, 8)}</TableCell>
                               <TableCell className="text-sm">{new Date(p.data).toLocaleDateString("pt-BR")}</TableCell>
                               <TableCell>
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${s.color}`}>{s.label}</span>
