@@ -11,8 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Home, Plus, Pencil, Trash2, MapPin, Phone, User, Package } from "lucide-react";
+import { ArrowLeft, Home, Plus, Pencil, Trash2, MapPin, Phone, User, Package, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCep } from "@/hooks/useCep";
 
 interface Cliente {
   cliente_id: string;
@@ -78,6 +79,8 @@ const Perfil = () => {
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [editEndId, setEditEndId] = useState<string | null>(null);
   const [endForm, setEndForm] = useState(emptyEndereco);
+
+  const { fetchCep, loading: cepLoading } = useCep();
 
   // Phone dialog
   const [telDialogOpen, setTelDialogOpen] = useState(false);
@@ -404,7 +407,27 @@ const Perfil = () => {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1 col-span-1">
                 <Label className="text-xs">CEP</Label>
-                <Input value={endForm.cep} onChange={(e) => setEndForm({ ...endForm, cep: e.target.value })} />
+                <div className="relative">
+                  <Input
+                    value={endForm.cep}
+                    onChange={(e) => setEndForm({ ...endForm, cep: e.target.value })}
+                    onBlur={async () => {
+                      const data = await fetchCep(endForm.cep);
+                      if (data) {
+                        setEndForm((prev) => ({
+                          ...prev,
+                          logradouro: data.street || prev.logradouro,
+                          bairro: data.neighborhood || prev.bairro,
+                          cidade: data.city || prev.cidade,
+                          estado: data.state || prev.estado,
+                        }));
+                      }
+                    }}
+                    placeholder="00000-000"
+                    maxLength={9}
+                  />
+                  {cepLoading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
               </div>
               <div className="space-y-1 col-span-2">
                 <Label className="text-xs">Logradouro *</Label>
