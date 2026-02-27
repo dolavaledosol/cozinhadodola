@@ -16,6 +16,12 @@ import Produtos from "./pages/admin/Produtos";
 import Familias from "./pages/admin/Familias";
 import Fabricantes from "./pages/admin/Fabricantes";
 import Clientes from "./pages/admin/Clientes";
+import Pedidos from "./pages/admin/Pedidos";
+import Fornecedores from "./pages/admin/Fornecedores";
+import LocaisEstoque from "./pages/admin/LocaisEstoque";
+import Estoque from "./pages/admin/Estoque";
+import Bancos from "./pages/admin/Bancos";
+import FormasPagamento from "./pages/admin/FormasPagamento";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +45,13 @@ const App = () => (
               <Route path="/admin/familias" element={<AdminLayout><Familias /></AdminLayout>} />
               <Route path="/admin/fabricantes" element={<AdminLayout><Fabricantes /></AdminLayout>} />
               <Route path="/admin/clientes" element={<AdminLayout><Clientes /></AdminLayout>} />
+
+              <Route path="/admin/pedidos" element={<AdminLayout><Pedidos /></AdminLayout>} />
+              <Route path="/admin/fornecedores" element={<AdminLayout><Fornecedores /></AdminLayout>} />
+              <Route path="/admin/locais-estoque" element={<AdminLayout><LocaisEstoque /></AdminLayout>} />
+              <Route path="/admin/estoque" element={<AdminLayout><Estoque /></AdminLayout>} />
+              <Route path="/admin/bancos" element={<AdminLayout><Bancos /></AdminLayout>} />
+              <Route path="/admin/formas-pagamento" element={<AdminLayout><FormasPagamento /></AdminLayout>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
