@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useMemo } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface FilterOption {
   id: string;
@@ -21,6 +22,18 @@ interface CatalogFiltersProps {
   onFabricanteChange: (value: string) => void;
 }
 
+// Palette of distinct hue-based colors for family groups
+const GROUP_COLORS = [
+  { bg: "bg-rose-100 dark:bg-rose-900/40", border: "border-rose-300 dark:border-rose-700", active: "bg-rose-500 dark:bg-rose-600 text-white border-rose-500" },
+  { bg: "bg-sky-100 dark:bg-sky-900/40", border: "border-sky-300 dark:border-sky-700", active: "bg-sky-500 dark:bg-sky-600 text-white border-sky-500" },
+  { bg: "bg-amber-100 dark:bg-amber-900/40", border: "border-amber-300 dark:border-amber-700", active: "bg-amber-500 dark:bg-amber-600 text-white border-amber-500" },
+  { bg: "bg-emerald-100 dark:bg-emerald-900/40", border: "border-emerald-300 dark:border-emerald-700", active: "bg-emerald-500 dark:bg-emerald-600 text-white border-emerald-500" },
+  { bg: "bg-violet-100 dark:bg-violet-900/40", border: "border-violet-300 dark:border-violet-700", active: "bg-violet-500 dark:bg-violet-600 text-white border-violet-500" },
+  { bg: "bg-orange-100 dark:bg-orange-900/40", border: "border-orange-300 dark:border-orange-700", active: "bg-orange-500 dark:bg-orange-600 text-white border-orange-500" },
+  { bg: "bg-teal-100 dark:bg-teal-900/40", border: "border-teal-300 dark:border-teal-700", active: "bg-teal-500 dark:bg-teal-600 text-white border-teal-500" },
+  { bg: "bg-pink-100 dark:bg-pink-900/40", border: "border-pink-300 dark:border-pink-700", active: "bg-pink-500 dark:bg-pink-600 text-white border-pink-500" },
+];
+
 const CatalogFilters = ({
   familias,
   fabricantes,
@@ -31,34 +44,31 @@ const CatalogFilters = ({
 }: CatalogFiltersProps) => {
   const hasFilters = selectedFamilia !== "all" || selectedFabricante !== "all";
 
-  // Build hierarchy: parents with their children
-  const familiaTree = useMemo(() => {
+  // Build hierarchy and assign colors per parent group
+  const familiaButtons = useMemo(() => {
     const parents = familias.filter((f) => !f.familia_pai_id);
-    return parents.map((parent) => ({
-      ...parent,
-      children: familias.filter((f) => f.familia_pai_id === parent.id),
-    }));
-  }, [familias]);
+    const items: { id: string; label: string; colorIdx: number }[] = [];
 
-  // Also include orphan subfamilies (whose parent isn't active)
-  const allFamiliaButtons = useMemo(() => {
-    const items: { id: string; label: string }[] = [];
-    for (const parent of familiaTree) {
-      items.push({ id: parent.id, label: parent.nome });
-      for (const child of parent.children) {
-        items.push({ id: child.id, label: `${parent.nome} › ${child.nome}` });
+    parents.forEach((parent, idx) => {
+      const colorIdx = idx % GROUP_COLORS.length;
+      const children = familias.filter((f) => f.familia_pai_id === parent.id);
+      items.push({ id: parent.id, label: parent.nome, colorIdx });
+      children.forEach((child) => {
+        items.push({ id: child.id, label: child.nome, colorIdx });
+      });
+    });
+
+    // orphans (parent not in active list)
+    const parentIds = new Set(parents.map((p) => p.id));
+    const childIds = new Set(items.map((i) => i.id));
+    familias.forEach((f, idx) => {
+      if (!childIds.has(f.id)) {
+        items.push({ id: f.id, label: f.nome, colorIdx: (parents.length + idx) % GROUP_COLORS.length });
       }
-    }
-    // orphans
-    const parentIds = new Set(familiaTree.map((p) => p.id));
-    const childIds = new Set(familiaTree.flatMap((p) => p.children.map((c) => c.id)));
-    for (const f of familias) {
-      if (!parentIds.has(f.id) && !childIds.has(f.id)) {
-        items.push({ id: f.id, label: f.nome });
-      }
-    }
+    });
+
     return items;
-  }, [familiaTree, familias]);
+  }, [familias]);
 
   return (
     <div className="space-y-3">
@@ -75,17 +85,24 @@ const CatalogFilters = ({
             >
               Todas
             </Button>
-            {allFamiliaButtons.map((f) => (
-              <Button
-                key={f.id}
-                variant={selectedFamilia === f.id ? "default" : "outline"}
-                size="sm"
-                className="shrink-0 rounded-full"
-                onClick={() => onFamiliaChange(selectedFamilia === f.id ? "all" : f.id)}
-              >
-                {f.label}
-              </Button>
-            ))}
+            {familiaButtons.map((f) => {
+              const colors = GROUP_COLORS[f.colorIdx];
+              const isActive = selectedFamilia === f.id;
+              return (
+                <button
+                  key={f.id}
+                  className={cn(
+                    "shrink-0 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors",
+                    isActive
+                      ? colors.active
+                      : `${colors.bg} ${colors.border} hover:opacity-80`
+                  )}
+                  onClick={() => onFamiliaChange(isActive ? "all" : f.id)}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
