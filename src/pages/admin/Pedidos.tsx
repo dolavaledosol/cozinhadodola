@@ -151,7 +151,7 @@ const Pedidos = () => {
   const isEntrega = selectedPedido ? !selectedPedido.local_estoque_id : false;
   const freteNum = parseFloat(editFrete) || 0;
   const allowedStatuses = selectedPedido ? getAllowedNextStatuses(selectedPedido.status) : [];
-  const needsPaymentInfo = editStatus === "aguardando_pagamento" && selectedPedido?.status !== "aguardando_pagamento";
+  const needsPaymentInfo = editStatus === "pago" && selectedPedido?.status === "aguardando_pagamento";
 
   const updatePedido = async () => {
     if (!selectedPedido) return;
