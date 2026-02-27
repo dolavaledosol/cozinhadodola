@@ -7,14 +7,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Truck, Store, Clock } from "lucide-react";
+import { Search, Eye, Truck, Store, Clock, CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const statusOptions = [
   "carrinho", "separacao", "aguardando_pagamento", "pago", "enviado", "entregue", "cancelado",
 ] as const;
+
+const statusOrder = ["carrinho", "separacao", "aguardando_pagamento", "pago", "enviado", "entregue"];
+
+function getAllowedNextStatuses(currentStatus: string): string[] {
+  const currentIdx = statusOrder.indexOf(currentStatus);
+  if (currentIdx === -1) return [currentStatus, "cancelado"];
+  const allowed: string[] = [currentStatus];
+  if (currentIdx < statusOrder.length - 1) {
+    allowed.push(statusOrder[currentIdx + 1]);
+  }
+  if (currentStatus !== "cancelado") allowed.push("cancelado");
+  return allowed;
+}
 
 const statusLabels: Record<string, string> = {
   carrinho: "Carrinho", separacao: "Separação", aguardando_pagamento: "Aguardando Pgto",
@@ -70,6 +86,13 @@ const Pedidos = () => {
   const [editStatus, setEditStatus] = useState("");
   const [editFrete, setEditFrete] = useState("");
   const [loading, setLoading] = useState(false);
+  // Payment fields
+  const [formasPagamento, setFormasPagamento] = useState<{ forma_pagamento_id: string; nome: string }[]>([]);
+  const [bancos, setBancos] = useState<{ banco_id: string; nome: string }[]>([]);
+  const [pagFormaId, setPagFormaId] = useState("");
+  const [pagBancoId, setPagBancoId] = useState("");
+  const [pagData, setPagData] = useState<Date | undefined>(undefined);
+  const [pagValor, setPagValor] = useState("");
   const { toast } = useToast();
 
   const load = async () => {
@@ -82,6 +105,18 @@ const Pedidos = () => {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    const loadAux = async () => {
+      const [fpRes, bRes] = await Promise.all([
+        supabase.from("forma_pagamento").select("forma_pagamento_id, nome").eq("ativo", true).order("nome"),
+        supabase.from("banco").select("banco_id, nome").eq("ativo", true).order("nome"),
+      ]);
+      if (fpRes.data) setFormasPagamento(fpRes.data);
+      if (bRes.data) setBancos(bRes.data);
+    };
+    loadAux();
+  }, []);
+
   const filtered = pedidos.filter((p) => {
     const term = search.toLowerCase();
     const matchSearch = !term || p.cliente?.nome?.toLowerCase().includes(term) || p.pedido_id.includes(term);
@@ -93,6 +128,10 @@ const Pedidos = () => {
     setSelectedPedido(p);
     setEditStatus(p.status);
     setEditFrete(Number(p.frete).toFixed(2));
+    setPagFormaId("");
+    setPagBancoId("");
+    setPagData(undefined);
+    setPagValor(Number(p.total).toFixed(2));
     const [itemsRes, histRes] = await Promise.all([
       supabase
         .from("pedido_item")
@@ -111,6 +150,8 @@ const Pedidos = () => {
 
   const isEntrega = selectedPedido ? !selectedPedido.local_estoque_id : false;
   const freteNum = parseFloat(editFrete) || 0;
+  const allowedStatuses = selectedPedido ? getAllowedNextStatuses(selectedPedido.status) : [];
+  const needsPaymentInfo = editStatus === "aguardando_pagamento" && selectedPedido?.status !== "aguardando_pagamento";
 
   const updatePedido = async () => {
     if (!selectedPedido) return;
@@ -121,9 +162,16 @@ const Pedidos = () => {
       return;
     }
 
+    // Require payment info when moving to aguardando_pagamento
+    if (needsPaymentInfo) {
+      if (!pagFormaId || !pagBancoId || !pagData) {
+        toast({ title: "Preencha forma de pagamento, banco e data", variant: "destructive" });
+        return;
+      }
+    }
+
     setLoading(true);
 
-    // Calculate new total: sum of items + frete
     const itemsTotal = items.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
     const newTotal = itemsTotal + freteNum;
 
@@ -140,6 +188,18 @@ const Pedidos = () => {
           status: editStatus as any,
         });
       }
+
+      // Insert payment record
+      if (needsPaymentInfo) {
+        await supabase.from("pedido_pagamento").insert({
+          pedido_id: selectedPedido.pedido_id,
+          forma_pagamento_id: pagFormaId,
+          banco_id: pagBancoId,
+          data_pagamento: pagData!.toISOString(),
+          valor: parseFloat(pagValor) || newTotal,
+        });
+      }
+
       toast({ title: "Pedido atualizado" });
       setDialogOpen(false);
       load();
@@ -300,10 +360,53 @@ const Pedidos = () => {
                 <Select value={editStatus} onValueChange={setEditStatus}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {statusOptions.map((s) => <SelectItem key={s} value={s}>{statusLabels[s]}</SelectItem>)}
+                    {allowedStatuses.map((s) => <SelectItem key={s} value={s}>{statusLabels[s]}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Payment fields when moving to aguardando_pagamento */}
+              {needsPaymentInfo && (
+                <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+                  <Label className="font-semibold">Dados do Pagamento</Label>
+                  <div className="space-y-2">
+                    <Label>Forma de Pagamento *</Label>
+                    <Select value={pagFormaId} onValueChange={setPagFormaId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {formasPagamento.map((f) => <SelectItem key={f.forma_pagamento_id} value={f.forma_pagamento_id}>{f.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Banco *</Label>
+                    <Select value={pagBancoId} onValueChange={setPagBancoId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {bancos.map((b) => <SelectItem key={b.banco_id} value={b.banco_id}>{b.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data do Pagamento *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !pagData && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {pagData ? format(pagData, "dd/MM/yyyy") : "Selecione a data"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={pagData} onSelect={setPagData} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor (R$)</Label>
+                    <Input type="number" step="0.01" min="0" value={pagValor} onChange={(e) => setPagValor(e.target.value)} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
