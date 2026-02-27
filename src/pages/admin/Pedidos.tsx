@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +25,14 @@ const statusOrder = ["carrinho", "separacao", "aguardando_pagamento", "pago", "e
 function getAllowedNextStatuses(currentStatus: string): string[] {
   const currentIdx = statusOrder.indexOf(currentStatus);
   if (currentIdx === -1) return [currentStatus, "cancelado"];
-  const allowed: string[] = [currentStatus];
+  const allowed: string[] = [];
+  // Allow going back one step
+  if (currentIdx > 0) {
+    allowed.push(statusOrder[currentIdx - 1]);
+  }
+  // Current
+  allowed.push(currentStatus);
+  // Next step
   if (currentIdx < statusOrder.length - 1) {
     allowed.push(statusOrder[currentIdx + 1]);
   }
@@ -86,6 +94,7 @@ const Pedidos = () => {
   const [editStatus, setEditStatus] = useState("");
   const [editFrete, setEditFrete] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   // Payment fields
   const [formasPagamento, setFormasPagamento] = useState<{ forma_pagamento_id: string; nome: string }[]>([]);
   const [bancos, setBancos] = useState<{ banco_id: string; nome: string }[]>([]);
@@ -152,6 +161,25 @@ const Pedidos = () => {
   const freteNum = parseFloat(editFrete) || 0;
   const allowedStatuses = selectedPedido ? getAllowedNextStatuses(selectedPedido.status) : [];
   const needsPaymentInfo = editStatus === "pago" && selectedPedido?.status === "aguardando_pagamento";
+  const currentIdx = selectedPedido ? statusOrder.indexOf(selectedPedido.status) : -1;
+  const editIdx = statusOrder.indexOf(editStatus);
+  const isGoingBack = editIdx !== -1 && currentIdx !== -1 && editIdx < currentIdx;
+  const isAfterPago = currentIdx >= statusOrder.indexOf("pago");
+  // When going back to separacao or earlier, undo payment
+  const shouldDeletePayment = isGoingBack && editIdx <= statusOrder.indexOf("separacao") && currentIdx >= statusOrder.indexOf("aguardando_pagamento");
+
+  const handleStatusClick = (s: string) => {
+    if (s === "cancelado") {
+      setConfirmCancelOpen(true);
+    } else {
+      setEditStatus(s);
+    }
+  };
+
+  const confirmCancel = () => {
+    setEditStatus("cancelado");
+    setConfirmCancelOpen(false);
+  };
 
   const updatePedido = async () => {
     if (!selectedPedido) return;
@@ -162,7 +190,7 @@ const Pedidos = () => {
       return;
     }
 
-    // Require payment info when moving to aguardando_pagamento
+    // Require payment info when moving to pago
     if (needsPaymentInfo) {
       if (!pagFormaId || !pagBancoId || !pagData) {
         toast({ title: "Preencha forma de pagamento, banco e data", variant: "destructive" });
@@ -175,7 +203,10 @@ const Pedidos = () => {
     const itemsTotal = items.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
     const newTotal = itemsTotal + freteNum;
 
-    const updateData: any = { frete: freteNum, total: newTotal };
+    // After pago, don't change frete/total
+    const updateData: any = isAfterPago
+      ? {}
+      : { frete: freteNum, total: newTotal };
     if (editStatus !== selectedPedido.status) {
       updateData.status = editStatus;
     }
@@ -198,6 +229,11 @@ const Pedidos = () => {
           data_pagamento: pagData!.toISOString(),
           valor: newTotal,
         });
+      }
+
+      // Delete payments when going back to separacao
+      if (shouldDeletePayment) {
+        await supabase.from("pedido_pagamento").delete().eq("pedido_id", selectedPedido.pedido_id);
       }
 
       toast({ title: "Pedido atualizado" });
@@ -338,18 +374,24 @@ const Pedidos = () => {
               {isEntrega && (
                 <div className="space-y-2">
                   <Label>Valor do Frete (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={editFrete}
-                    onChange={(e) => setEditFrete(e.target.value)}
-                    placeholder="0.00"
-                  />
-                  {freteNum > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Novo total: R$ {(items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0) + freteNum).toFixed(2)}
-                    </p>
+                  {isAfterPago ? (
+                    <p className="text-sm font-medium">R$ {Number(selectedPedido.frete).toFixed(2)}</p>
+                  ) : (
+                    <>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editFrete}
+                        onChange={(e) => setEditFrete(e.target.value)}
+                        placeholder="0.00"
+                      />
+                      {freteNum > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Novo total: R$ {(items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0) + freteNum).toFixed(2)}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -368,7 +410,7 @@ const Pedidos = () => {
                         editStatus === s && s !== "cancelado" && statusColors[s],
                         s === "cancelado" && editStatus === s && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
                       )}
-                      onClick={() => setEditStatus(s)}
+                      onClick={() => handleStatusClick(s)}
                     >
                       {statusLabels[s]}
                     </Button>
@@ -442,6 +484,23 @@ const Pedidos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar pedido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá cancelar o pedido. Tem certeza que deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
