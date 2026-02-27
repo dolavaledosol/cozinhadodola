@@ -8,6 +8,7 @@ interface ProductCardProps {
   produto_id: string;
   nome: string;
   preco: number;
+  descricao?: string;
   url_imagem?: string;
   familia_nome?: string;
   fabricante_nome?: string;
@@ -17,6 +18,7 @@ const ProductCard = ({
   produto_id,
   nome,
   preco,
+  descricao,
   url_imagem,
   familia_nome,
   fabricante_nome,
@@ -63,6 +65,9 @@ const ProductCard = ({
         <h3 className="font-medium text-sm leading-tight line-clamp-2 min-h-[2.5rem]">
           {nome}
         </h3>
+        {descricao && (
+          <p className="text-xs text-muted-foreground line-clamp-2">{descricao}</p>
+        )}
         <div className="flex items-center justify-between gap-2">
           <span className="text-lg font-bold text-primary">
             R$ {preco.toFixed(2)}
