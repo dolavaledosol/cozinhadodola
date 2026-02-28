@@ -368,6 +368,12 @@ const Pedidos = () => {
       return;
     }
 
+    // Block saving as "pago" if stock check hasn't passed yet (user clicked save before completing stock dialog)
+    if (editStatus === "pago" && selectedPedido.status === "aguardando_pagamento" && !stockCheckPassed) {
+      toast({ title: "Verifique o estoque antes de marcar como pago", variant: "destructive" });
+      return;
+    }
+
     // Require payment info when moving to pago
     if (needsPaymentInfo) {
       if (!pagFormaId || !pagBancoId || !pagData) {
