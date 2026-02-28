@@ -104,7 +104,9 @@ interface NovoPedidoItem {
 interface ContaPagarCompra {
   contas_pagar_id: string; descricao: string; valor: number;
   data_vencimento: string; data_pagamento: string | null;
-  pago: boolean; fornecedor: { nome: string } | null;
+  pago: boolean; fornecedor_id: string | null;
+  fornecedor: { nome: string } | null;
+  observacao: string | null;
 }
 interface EntradaLinha {
   produto_id: string; nome: string; checked: boolean;
@@ -243,15 +245,48 @@ const Pedidos = () => {
   const [entradaLoading, setEntradaLoading] = useState(false);
   const [entradaSearchProd, setEntradaSearchProd] = useState("");
 
+  /* ── Compra edit state ── */
+  const [compraEditOpen, setCompraEditOpen] = useState(false);
+  const [compraEdit, setCompraEdit] = useState<{ contas_pagar_id: string; descricao: string; valor: string; data_vencimento: string; pago: boolean; observacao: string; fornecedor_id: string }>({ contas_pagar_id: "", descricao: "", valor: "", data_vencimento: "", pago: false, observacao: "", fornecedor_id: "" });
+  const [compraEditLoading, setCompraEditLoading] = useState(false);
+  const [compraEditFornecedores, setCompraEditFornecedores] = useState<{ fornecedor_id: string; nome: string }[]>([]);
+
   const loadCompras = async () => {
     const { data } = await supabase
       .from("contas_pagar")
-      .select("contas_pagar_id, descricao, valor, data_vencimento, data_pagamento, pago, fornecedor(nome)")
+      .select("contas_pagar_id, descricao, valor, data_vencimento, data_pagamento, pago, fornecedor_id, observacao, fornecedor(nome)")
       .order("data_vencimento", { ascending: false });
     if (data) setCompras(data as any);
   };
 
   useEffect(() => { loadCompras(); }, []);
+
+  const openCompraEdit = async (c: ContaPagarCompra) => {
+    const { data: forns } = await supabase.from("fornecedor").select("fornecedor_id, nome").eq("ativo", true).order("nome");
+    if (forns) setCompraEditFornecedores(forns);
+    setCompraEdit({
+      contas_pagar_id: c.contas_pagar_id, descricao: c.descricao, valor: String(c.valor),
+      data_vencimento: c.data_vencimento, pago: c.pago, observacao: c.observacao || "",
+      fornecedor_id: c.fornecedor_id || "",
+    });
+    setCompraEditOpen(true);
+  };
+
+  const saveCompraEdit = async () => {
+    setCompraEditLoading(true);
+    const { error } = await supabase.from("contas_pagar").update({
+      descricao: compraEdit.descricao, valor: Number(compraEdit.valor),
+      data_vencimento: compraEdit.data_vencimento, pago: compraEdit.pago,
+      observacao: compraEdit.observacao || null,
+      fornecedor_id: compraEdit.fornecedor_id || null,
+      data_pagamento: compraEdit.pago ? (new Date().toISOString().slice(0, 10)) : null,
+    }).eq("contas_pagar_id", compraEdit.contas_pagar_id);
+    setCompraEditLoading(false);
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Registro atualizado" });
+    setCompraEditOpen(false);
+    loadCompras();
+  };
 
   const filteredCompras = compras.filter((c) => {
     const t = searchCompras.toLowerCase();
@@ -1527,17 +1562,18 @@ const Pedidos = () => {
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
+                 <TableRow>
                   <TableHead>Descrição</TableHead>
                   <TableHead className="hidden sm:table-cell">Fornecedor</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-16">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCompras.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pedido de compra encontrado</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum pedido de compra encontrado</TableCell></TableRow>
                 ) : filteredCompras.map((c) => (
                   <TableRow key={c.contas_pagar_id}>
                     <TableCell className="font-medium">{c.descricao}</TableCell>
@@ -1549,6 +1585,11 @@ const Pedidos = () => {
                         {c.pago ? "Pago" : "Pendente"}
                       </span>
                     </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => openCompraEdit(c)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -1556,6 +1597,50 @@ const Pedidos = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* ── Compra Edit dialog ── */}
+      <Dialog open={compraEditOpen} onOpenChange={setCompraEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar Compra</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Descrição *</Label>
+              <Input value={compraEdit.descricao} onChange={(e) => setCompraEdit({ ...compraEdit, descricao: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Fornecedor</Label>
+              <Select value={compraEdit.fornecedor_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, fornecedor_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>{compraEditFornecedores.map((f) => <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Valor (R$) *</Label>
+                <Input type="number" step="0.01" value={compraEdit.valor} onChange={(e) => setCompraEdit({ ...compraEdit, valor: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Vencimento *</Label>
+                <Input type="date" value={compraEdit.data_vencimento} onChange={(e) => setCompraEdit({ ...compraEdit, data_vencimento: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Observação</Label>
+              <Input value={compraEdit.observacao} onChange={(e) => setCompraEdit({ ...compraEdit, observacao: e.target.value })} />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox checked={compraEdit.pago} onCheckedChange={(v) => setCompraEdit({ ...compraEdit, pago: !!v })} />
+              <Label>Pago</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompraEditOpen(false)}>Cancelar</Button>
+            <Button onClick={saveCompraEdit} disabled={compraEditLoading || !compraEdit.descricao || !compraEdit.valor}>
+              {compraEditLoading ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Entrada dialog ── */}
       <Dialog open={entradaOpen} onOpenChange={setEntradaOpen}>
