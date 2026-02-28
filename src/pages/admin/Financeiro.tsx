@@ -158,7 +158,7 @@ const Financeiro = () => {
     setEditReceberId(c.contas_receber_id);
     setFormReceber({
       descricao: c.descricao, valor: String(c.valor), data_vencimento: c.data_vencimento,
-      data_recebimento: c.data_recebimento || "", recebido: c.recebido, observacao: c.observacao || "",
+      data_recebimento: c.data_recebimento || new Date().toISOString().slice(0, 10), recebido: c.recebido, observacao: c.observacao || "",
       cliente_id: c.cliente_id || "", banco_id: c.banco_id || "", pedido_id: c.pedido_id || "",
     });
     setDialogReceber(true);
@@ -185,11 +185,6 @@ const Financeiro = () => {
     loadReceber();
   };
 
-  const deleteReceber = async (id: string) => {
-    await supabase.from("contas_receber").delete().eq("contas_receber_id", id);
-    toast({ title: "Conta removida" });
-    loadReceber();
-  };
 
   const marcarRecebido = async (id: string) => {
     await supabase.from("contas_receber").update({ recebido: true, data_recebimento: new Date().toISOString().slice(0, 10) }).eq("contas_receber_id", id);
@@ -299,7 +294,6 @@ const Financeiro = () => {
                       <div className="flex gap-1">
                         {!c.recebido && <Button variant="ghost" size="icon" onClick={() => marcarRecebido(c.contas_receber_id)} title="Marcar recebido"><Check className="h-4 w-4 text-green-600" /></Button>}
                         <Button variant="ghost" size="icon" onClick={() => openEditReceber(c)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => deleteReceber(c.contas_receber_id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -357,7 +351,7 @@ const Financeiro = () => {
             <div className="space-y-2"><Label>Descrição *</Label><Input value={formReceber.descricao} onChange={(e) => setFormReceber({ ...formReceber, descricao: e.target.value })} disabled={!!editReceberId} /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Valor *</Label><Input type="number" step="0.01" value={formReceber.valor} onChange={(e) => setFormReceber({ ...formReceber, valor: e.target.value })} disabled={!!editReceberId} /></div>
-              <div className="space-y-2"><Label>Vencimento *</Label><Input type="date" value={formReceber.data_vencimento} onChange={(e) => setFormReceber({ ...formReceber, data_vencimento: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Vencimento *</Label><Input type="date" value={formReceber.data_vencimento} onChange={(e) => setFormReceber({ ...formReceber, data_vencimento: e.target.value })} disabled={!!editReceberId} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
