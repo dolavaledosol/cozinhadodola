@@ -1,0 +1,1 @@
+ALTER TABLE public.estoque_local ADD COLUMN preco_custo numeric NULL DEFAULT 0;

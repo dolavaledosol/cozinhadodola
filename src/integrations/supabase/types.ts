@@ -401,6 +401,7 @@ export type Database = {
           estoque_local_id: string
           local_estoque_id: string
           preco: number
+          preco_custo: number | null
           preco_promocional: number | null
           produto_id: string
           quantidade_disponivel: number
@@ -410,6 +411,7 @@ export type Database = {
           estoque_local_id?: string
           local_estoque_id: string
           preco?: number
+          preco_custo?: number | null
           preco_promocional?: number | null
           produto_id: string
           quantidade_disponivel?: number
@@ -419,6 +421,7 @@ export type Database = {
           estoque_local_id?: string
           local_estoque_id?: string
           preco?: number
+          preco_custo?: number | null
           preco_promocional?: number | null
           produto_id?: string
           quantidade_disponivel?: number
