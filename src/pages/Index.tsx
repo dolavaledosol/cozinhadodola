@@ -74,8 +74,8 @@ const Index = () => {
         const isChild = selectedFam?.familia_pai_id != null;
 
         if (isChild) {
-          // Subfamily selected — only show products assigned to this subfamily
-          query = query.eq("familia_id", selectedFamilia);
+          // Subfamily selected — include both this subfamily and its parent
+          query = query.in("familia_id", [selectedFamilia, selectedFam.familia_pai_id!]);
         } else {
           // Parent selected — include parent + all children
           const childIds = familias
