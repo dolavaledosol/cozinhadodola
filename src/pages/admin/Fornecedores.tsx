@@ -230,7 +230,7 @@ const Fornecedores = () => {
                 </Select>
               </div>
 
-              <ScrollArea className="flex-1 border rounded-md max-h-[300px]">
+              <ScrollArea className="flex-1 border rounded-md h-[300px]">
                 <div className="p-2 space-y-1">
                   {filteredProdutos.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">Nenhum produto encontrado</p>
