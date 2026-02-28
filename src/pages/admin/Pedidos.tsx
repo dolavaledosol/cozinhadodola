@@ -328,25 +328,16 @@ const Pedidos = () => {
     const remainingItems = items.filter(i => !selectedProductIds.includes(i.produto_id));
     setItems(remainingItems);
 
-    // Create conta a receber for the new split order
-    const today = new Date().toISOString().slice(0, 10);
-    const splitItemNames = splitItems.map(i => i.produto?.nome || "Produto").join(", ");
-    const descricao = `Desmembrado: ${splitItemNames}`.slice(0, 200);
-    await supabase.from("contas_receber").insert({
-      pedido_id: newOrder.pedido_id,
-      cliente_id: selectedPedido.cliente_id,
-      descricao,
-      valor: newOrderTotal,
-      data_vencimento: today,
-      recebido: false,
-      data_recebimento: null,
-    });
-
+    // NOTE: Do NOT create conta_receber here. It will be created when the split order is marked as "pago".
     toast({ title: `Pedido desmembrado`, description: `Novo pedido criado com ${splitItems.length} item(ns) — R$ ${newOrderTotal.toFixed(2)}` });
   };
 
-  // Create contas_receber entry
+  // Create contas_receber entry (with duplicate guard)
   const createContaReceber = async (pedidoId: string, clienteId: string, valor: number, dataPagamento: Date) => {
+    // Check if a conta_receber already exists for this pedido
+    const { data: existing } = await supabase.from("contas_receber").select("contas_receber_id").eq("pedido_id", pedidoId).limit(1);
+    if (existing && existing.length > 0) return; // Already exists, skip
+
     await supabase.from("contas_receber").insert({
       pedido_id: pedidoId,
       cliente_id: clienteId,
