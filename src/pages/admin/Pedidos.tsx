@@ -8,7 +8,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle } from "lucide-react";
+import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
@@ -111,6 +113,8 @@ const Pedidos = () => {
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [allowNegativeStock, setAllowNegativeStock] = useState(false);
   const [stockCheckPassed, setStockCheckPassed] = useState(false);
+  const [splitSelectedItems, setSplitSelectedItems] = useState<Record<string, boolean>>({});
+  
   const { toast } = useToast();
 
   const load = async () => {
@@ -153,6 +157,8 @@ const Pedidos = () => {
     setStockIssues([]);
     setAllowNegativeStock(false);
     setStockCheckPassed(false);
+    setSplitSelectedItems({});
+    setStockDialogOpen(false);
     const [itemsRes, histRes] = await Promise.all([
       supabase
         .from("pedido_item")
@@ -189,6 +195,10 @@ const Pedidos = () => {
       const issues = await checkStock();
       if (issues.length > 0) {
         setStockIssues(issues);
+        // Pre-select items with stock issues
+        const preSelected: Record<string, boolean> = {};
+        issues.forEach(i => { preSelected[i.produto_id] = true; });
+        setSplitSelectedItems(preSelected);
         setStockDialogOpen(true);
       } else {
         setStockCheckPassed(true);
@@ -268,17 +278,12 @@ const Pedidos = () => {
     }
   };
 
-  // Split order: create new order with items that are out of stock
-  const splitOrder = async (issues: StockIssue[]) => {
-    if (!selectedPedido) return;
+  // Split order: create new order with selected items (full qty)
+  const splitOrder = async (selectedProductIds: string[]) => {
+    if (!selectedPedido || selectedProductIds.length === 0) return;
 
-    const faltanteMap = new Map(issues.map(i => [i.produto_id, i.faltante]));
-
-    // Create new order with missing items
-    const newOrderTotal = issues.reduce((sum, i) => {
-      const item = items.find(it => it.produto_id === i.produto_id);
-      return sum + (item ? Number(item.preco_unitario) * i.faltante : 0);
-    }, 0);
+    const splitItems = items.filter(i => selectedProductIds.includes(i.produto_id));
+    const newOrderTotal = splitItems.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
 
     const { data: newOrder, error: orderError } = await supabase
       .from("pedido")
@@ -289,7 +294,7 @@ const Pedidos = () => {
         frete: 0,
         status: "separacao" as any,
         origem: selectedPedido.origem as any,
-        observacao: `Desmembrado do pedido ${selectedPedido.pedido_id.slice(0, 8)} - itens faltantes`,
+        observacao: `Desmembrado do pedido ${selectedPedido.pedido_id.slice(0, 8)}`,
       })
       .select("pedido_id")
       .single();
@@ -300,15 +305,12 @@ const Pedidos = () => {
     }
 
     // Insert items into new order
-    const newItems = issues.map(issue => {
-      const original = items.find(i => i.produto_id === issue.produto_id)!;
-      return {
-        pedido_id: newOrder.pedido_id,
-        produto_id: issue.produto_id,
-        quantidade: issue.faltante,
-        preco_unitario: Number(original.preco_unitario),
-      };
-    });
+    const newItems = splitItems.map(item => ({
+      pedido_id: newOrder.pedido_id,
+      produto_id: item.produto_id,
+      quantidade: Number(item.quantidade),
+      preco_unitario: Number(item.preco_unitario),
+    }));
     await supabase.from("pedido_item").insert(newItems);
 
     // Add status history for new order
@@ -317,24 +319,18 @@ const Pedidos = () => {
       status: "separacao" as any,
     });
 
-    // Update original order items quantities (reduce by faltante)
-    for (const issue of issues) {
-      const original = items.find(i => i.produto_id === issue.produto_id)!;
-      const newQty = Number(original.quantidade) - issue.faltante;
-      if (newQty <= 0) {
-        await supabase.from("pedido_item").delete().eq("pedido_item_id", original.pedido_item_id);
-      } else {
-        await supabase.from("pedido_item").update({ quantidade: newQty }).eq("pedido_item_id", original.pedido_item_id);
-      }
+    // Remove split items from original order
+    for (const item of splitItems) {
+      await supabase.from("pedido_item").delete().eq("pedido_item_id", item.pedido_item_id);
     }
 
     // Recalculate original order total
-    const remainingTotal = items.reduce((sum, i) => {
-      const faltante = faltanteMap.get(i.produto_id) || 0;
-      const qty = Number(i.quantidade) - faltante;
-      return qty > 0 ? sum + Number(i.preco_unitario) * qty : sum;
-    }, 0);
+    const remainingItems = items.filter(i => !selectedProductIds.includes(i.produto_id));
+    const remainingTotal = remainingItems.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
     await supabase.from("pedido").update({ total: remainingTotal + freteNum }).eq("pedido_id", selectedPedido.pedido_id);
+
+    // Update local items state to reflect remaining
+    setItems(remainingItems);
 
     // Create conta a receber for the new split order
     if (pagData) {
@@ -350,7 +346,7 @@ const Pedidos = () => {
       });
     }
 
-    toast({ title: `Pedido desmembrado`, description: `Novo pedido ${newOrder.pedido_id.slice(0, 8)} criado com ${issues.length} item(ns) faltante(s)` });
+    toast({ title: `Pedido desmembrado`, description: `Novo pedido ${newOrder.pedido_id.slice(0, 8)} criado com ${splitItems.length} item(ns)` });
   };
 
   // Create contas_receber entry
@@ -406,16 +402,13 @@ const Pedidos = () => {
       // Insert payment record and handle stock when moving to pago
       if (needsPaymentInfo) {
         // Handle stock first (split may change totals)
-        const shouldSplit = stockIssues.length > 0 && !allowNegativeStock;
+        const selectedSplitIds = Object.keys(splitSelectedItems).filter(k => splitSelectedItems[k]);
+        const shouldSplit = selectedSplitIds.length > 0 && !allowNegativeStock;
         if (shouldSplit) {
-          await splitOrder(stockIssues);
-          // Recalculate total after split
-          const faltanteMap = new Map(stockIssues.map(i => [i.produto_id, i.faltante]));
-          const remainingTotal = items.reduce((sum, i) => {
-            const faltante = faltanteMap.get(i.produto_id) || 0;
-            const qty = Number(i.quantidade) - faltante;
-            return qty > 0 ? sum + Number(i.preco_unitario) * qty : sum;
-          }, 0);
+          await splitOrder(selectedSplitIds);
+          // Recalculate total after split (items state already updated by splitOrder)
+          const remainingItems = items.filter(i => !selectedSplitIds.includes(i.produto_id));
+          const remainingTotal = remainingItems.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
           newTotal = remainingTotal + freteNum;
         }
         await deductStock();
@@ -683,48 +676,70 @@ const Pedidos = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
+      <Dialog open={stockDialogOpen} onOpenChange={(open) => {
+        if (!open) setEditStatus(selectedPedido?.status || "");
+        setStockDialogOpen(open);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
               Estoque insuficiente
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3">
-                <p>Os seguintes itens não possuem estoque suficiente:</p>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Produto</TableHead>
-                        <TableHead className="text-xs text-center">Pedido</TableHead>
-                        <TableHead className="text-xs text-center">Disponível</TableHead>
-                        <TableHead className="text-xs text-center">Falta</TableHead>
+            </DialogTitle>
+            <DialogDescription>
+              Selecione os itens que deseja mover para um novo pedido (desmembrar), ou permita estoque negativo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs w-8"><Split className="h-3 w-3" /></TableHead>
+                    <TableHead className="text-xs">Produto</TableHead>
+                    <TableHead className="text-xs text-center">Pedido</TableHead>
+                    <TableHead className="text-xs text-center">Disponível</TableHead>
+                    <TableHead className="text-xs text-center">Falta</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((item) => {
+                    const issue = stockIssues.find(i => i.produto_id === item.produto_id);
+                    const hasIssue = !!issue;
+                    return (
+                      <TableRow key={item.produto_id} className={hasIssue ? "bg-destructive/5" : ""}>
+                        <TableCell>
+                          <Checkbox
+                            checked={!!splitSelectedItems[item.produto_id]}
+                            onCheckedChange={(checked) =>
+                              setSplitSelectedItems(prev => ({ ...prev, [item.produto_id]: !!checked }))
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-xs">{item.produto?.nome || "—"}</TableCell>
+                        <TableCell className="text-xs text-center">{item.quantidade}</TableCell>
+                        <TableCell className="text-xs text-center">
+                          {issue ? issue.quantidade_disponivel : "OK"}
+                        </TableCell>
+                        <TableCell className="text-xs text-center text-destructive font-medium">
+                          {issue ? issue.faltante : "—"}
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stockIssues.map((issue) => (
-                        <TableRow key={issue.produto_id}>
-                          <TableCell className="text-xs">{issue.produto_nome}</TableCell>
-                          <TableCell className="text-xs text-center">{issue.quantidade_pedida}</TableCell>
-                          <TableCell className="text-xs text-center">{issue.quantidade_disponivel}</TableCell>
-                          <TableCell className="text-xs text-center text-destructive font-medium">{issue.faltante}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <p className="text-sm">O que deseja fazer?</p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel onClick={() => { setEditStatus(selectedPedido?.status || ""); }}>Cancelar</AlertDialogCancel>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => { setEditStatus(selectedPedido?.status || ""); setStockDialogOpen(false); }}>
+              Cancelar
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setAllowNegativeStock(true);
+                setSplitSelectedItems({});
                 setStockCheckPassed(true);
                 setStockDialogOpen(false);
               }}
@@ -734,16 +749,25 @@ const Pedidos = () => {
             </Button>
             <Button
               onClick={() => {
+                const selected = Object.keys(splitSelectedItems).filter(k => splitSelectedItems[k]);
+                if (selected.length === 0) {
+                  toast({ title: "Selecione ao menos um item para desmembrar", variant: "destructive" });
+                  return;
+                }
+                if (selected.length === items.length) {
+                  toast({ title: "Não é possível mover todos os itens", variant: "destructive" });
+                  return;
+                }
                 setStockCheckPassed(true);
                 setStockDialogOpen(false);
               }}
               disabled={loading}
             >
-              Desmembrar pedido
+              Desmembrar selecionados
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
