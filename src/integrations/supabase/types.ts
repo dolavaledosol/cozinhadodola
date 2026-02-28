@@ -1273,6 +1273,7 @@ export type Database = {
           imagem_principal: string | null
           nome: string | null
           peso_liquido: number | null
+          preco: number | null
           produto_id: string | null
           unidade_medida: Database["public"]["Enums"]["unidade_medida"] | null
         }
