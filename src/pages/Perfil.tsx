@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Home, Plus, Pencil, Trash2, MapPin, Phone, User, Package, Loader2, MessageCircle } from "lucide-react";
+import { ArrowLeft, Home, Plus, Pencil, Trash2, MapPin, Phone, User, Package, Loader2, MessageCircle, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCep } from "@/hooks/useCep";
 import { Switch } from "@/components/ui/switch";
@@ -45,8 +45,18 @@ interface Pedido {
   pedido_id: string;
   data: string;
   total: number;
+  frete: number;
   status: string;
   origem: string;
+  observacao: string | null;
+}
+
+interface PedidoItem {
+  pedido_item_id: string;
+  produto_id: string;
+  quantidade: number;
+  preco_unitario: number;
+  produto_nome: string;
 }
 
 const emptyEndereco = { cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacao: "" };
@@ -90,6 +100,12 @@ const Perfil = () => {
   const [telForm, setTelForm] = useState("");
   const [telWhatsapp, setTelWhatsapp] = useState(true);
 
+  // Order detail dialog
+  const [pedidoDetailOpen, setPedidoDetailOpen] = useState(false);
+  const [pedidoDetail, setPedidoDetail] = useState<Pedido | null>(null);
+  const [pedidoItens, setPedidoItens] = useState<PedidoItem[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
@@ -124,7 +140,7 @@ const Perfil = () => {
           .eq("cliente_id", (clienteData as any).cliente_id),
         supabase
           .from("pedido")
-          .select("pedido_id, data, total, status, origem")
+          .select("pedido_id, data, total, frete, status, origem, observacao")
           .eq("cliente_id", (clienteData as any).cliente_id)
           .neq("status", "carrinho")
           .order("data", { ascending: false }),
@@ -238,6 +254,27 @@ const Perfil = () => {
     await supabase.from("cliente_telefone").delete().eq("cliente_telefone_id", id);
     toast({ title: "Telefone removido" });
     loadAll();
+  };
+
+  const openPedidoDetail = async (p: Pedido) => {
+    setPedidoDetail(p);
+    setPedidoItens([]);
+    setPedidoDetailOpen(true);
+    setLoadingDetail(true);
+    const { data } = await supabase
+      .from("pedido_item")
+      .select("pedido_item_id, produto_id, quantidade, preco_unitario, produto:produto_id(nome)")
+      .eq("pedido_id", p.pedido_id);
+    if (data) {
+      setPedidoItens(data.map((i: any) => ({
+        pedido_item_id: i.pedido_item_id,
+        produto_id: i.produto_id,
+        quantidade: i.quantidade,
+        preco_unitario: i.preco_unitario,
+        produto_nome: i.produto?.nome || "Produto removido",
+      })));
+    }
+    setLoadingDetail(false);
   };
 
   if (authLoading || loading) {
@@ -383,19 +420,23 @@ const Perfil = () => {
                           <TableHead>Data</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Total</TableHead>
+                          <TableHead className="w-10"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {pedidos.map((p) => {
                           const s = statusLabel[p.status] || { label: p.status, color: "bg-muted" };
                           return (
-                            <TableRow key={p.pedido_id}>
+                            <TableRow key={p.pedido_id} className="cursor-pointer" onClick={() => openPedidoDetail(p)}>
                               <TableCell className="text-xs font-mono text-muted-foreground">{p.pedido_id.slice(0, 8)}</TableCell>
                               <TableCell className="text-sm">{new Date(p.data).toLocaleDateString("pt-BR")}</TableCell>
                               <TableCell>
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${s.color}`}>{s.label}</span>
                               </TableCell>
                               <TableCell className="text-right font-medium">R$ {Number(p.total).toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="icon" className="h-7 w-7"><Eye className="h-4 w-4" /></Button>
+                              </TableCell>
                             </TableRow>
                           );
                         })}
@@ -502,6 +543,96 @@ const Perfil = () => {
             <Button variant="outline" onClick={() => setTelDialogOpen(false)}>Cancelar</Button>
             <Button onClick={saveTelefone} disabled={saving || !telForm}>{saving ? "Salvando..." : "Salvar"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pedido Detail Dialog */}
+      <Dialog open={pedidoDetailOpen} onOpenChange={setPedidoDetailOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Pedido</DialogTitle>
+          </DialogHeader>
+          {pedidoDetail && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Pedido:</span>
+                  <p className="font-mono text-xs">{pedidoDetail.pedido_id.slice(0, 8)}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Data:</span>
+                  <p>{new Date(pedidoDetail.data).toLocaleDateString("pt-BR")}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${(statusLabel[pedidoDetail.status] || { color: "bg-muted" }).color}`}>
+                      {(statusLabel[pedidoDetail.status] || { label: pedidoDetail.status }).label}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Origem:</span>
+                  <p className="capitalize">{pedidoDetail.origem}</p>
+                </div>
+              </div>
+
+              {pedidoDetail.observacao && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Observação:</span>
+                  <p>{pedidoDetail.observacao}</p>
+                </div>
+              )}
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Itens</h4>
+                {loadingDetail ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : pedidoItens.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhum item encontrado</p>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Produto</TableHead>
+                          <TableHead className="text-center">Qtd</TableHead>
+                          <TableHead className="text-right">Unit.</TableHead>
+                          <TableHead className="text-right">Subtotal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pedidoItens.map((item) => (
+                          <TableRow key={item.pedido_item_id}>
+                            <TableCell className="text-sm">{item.produto_nome}</TableCell>
+                            <TableCell className="text-center text-sm">{Number(item.quantidade)}</TableCell>
+                            <TableCell className="text-right text-sm">R$ {Number(item.preco_unitario).toFixed(2)}</TableCell>
+                            <TableCell className="text-right text-sm font-medium">R$ {(Number(item.quantidade) * Number(item.preco_unitario)).toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-3 space-y-1 text-sm">
+                {pedidoDetail.frete > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Frete:</span>
+                    <span>R$ {Number(pedidoDetail.frete).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span>R$ {Number(pedidoDetail.total).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
