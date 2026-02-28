@@ -110,6 +110,7 @@ const Pedidos = () => {
   const [stockIssues, setStockIssues] = useState<StockIssue[]>([]);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [allowNegativeStock, setAllowNegativeStock] = useState(false);
+  const [stockCheckPassed, setStockCheckPassed] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -151,6 +152,7 @@ const Pedidos = () => {
     
     setStockIssues([]);
     setAllowNegativeStock(false);
+    setStockCheckPassed(false);
     const [itemsRes, histRes] = await Promise.all([
       supabase
         .from("pedido_item")
@@ -170,18 +172,30 @@ const Pedidos = () => {
   const isEntrega = selectedPedido ? !selectedPedido.local_estoque_id : false;
   const freteNum = parseFloat(editFrete) || 0;
   const allowedStatuses = selectedPedido ? getAllowedNextStatuses(selectedPedido.status) : [];
-  const needsPaymentInfo = editStatus === "pago" && selectedPedido?.status === "aguardando_pagamento";
+  const needsPaymentInfo = editStatus === "pago" && selectedPedido?.status === "aguardando_pagamento" && stockCheckPassed;
   const currentIdx = selectedPedido ? statusOrder.indexOf(selectedPedido.status) : -1;
   const editIdx = statusOrder.indexOf(editStatus);
   const isGoingBack = editIdx !== -1 && currentIdx !== -1 && editIdx < currentIdx;
   const isAfterPago = currentIdx >= statusOrder.indexOf("pago");
   const shouldDeletePayment = isGoingBack && editIdx <= statusOrder.indexOf("separacao") && currentIdx >= statusOrder.indexOf("aguardando_pagamento");
 
-  const handleStatusClick = (s: string) => {
+  const handleStatusClick = async (s: string) => {
     if (s === "cancelado") {
       setConfirmCancelOpen(true);
+    } else if (s === "pago" && selectedPedido?.status === "aguardando_pagamento") {
+      // Check stock before showing payment form
+      setEditStatus(s);
+      setStockCheckPassed(false);
+      const issues = await checkStock();
+      if (issues.length > 0) {
+        setStockIssues(issues);
+        setStockDialogOpen(true);
+      } else {
+        setStockCheckPassed(true);
+      }
     } else {
       setEditStatus(s);
+      setStockCheckPassed(false);
     }
   };
 
@@ -322,6 +336,20 @@ const Pedidos = () => {
     }, 0);
     await supabase.from("pedido").update({ total: remainingTotal + freteNum }).eq("pedido_id", selectedPedido.pedido_id);
 
+    // Create conta a receber for the new split order
+    if (pagData) {
+      await supabase.from("contas_receber").insert({
+        pedido_id: newOrder.pedido_id,
+        cliente_id: selectedPedido.cliente_id,
+        descricao: `Pedido ${newOrder.pedido_id.slice(0, 8)} (desmembrado)`,
+        valor: newOrderTotal,
+        data_vencimento: pagData.toISOString().slice(0, 10),
+        recebido: false,
+        data_recebimento: null,
+        banco_id: pagBancoId || null,
+      });
+    }
+
     toast({ title: `Pedido desmembrado`, description: `Novo pedido ${newOrder.pedido_id.slice(0, 8)} criado com ${issues.length} item(ns) faltante(s)` });
   };
 
@@ -339,7 +367,7 @@ const Pedidos = () => {
     });
   };
 
-  const updatePedido = async (forceNegative = false, forceSplit = false) => {
+  const updatePedido = async () => {
     if (!selectedPedido) return;
 
     // For delivery orders: require frete before leaving separacao
@@ -354,22 +382,12 @@ const Pedidos = () => {
         toast({ title: "Preencha forma de pagamento, banco e data", variant: "destructive" });
         return;
       }
-
-      // Check stock before proceeding to pago
-      if (!forceNegative && !forceSplit) {
-        const issues = await checkStock();
-        if (issues.length > 0) {
-          setStockIssues(issues);
-          setStockDialogOpen(true);
-          return;
-        }
-      }
     }
 
     setLoading(true);
 
     const itemsTotal = items.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
-    const newTotal = itemsTotal + freteNum;
+    let newTotal = itemsTotal + freteNum;
 
     const updateData: any = isAfterPago ? {} : { frete: freteNum, total: newTotal };
     if (editStatus !== selectedPedido.status) {
@@ -387,6 +405,21 @@ const Pedidos = () => {
 
       // Insert payment record and handle stock when moving to pago
       if (needsPaymentInfo) {
+        // Handle stock first (split may change totals)
+        const shouldSplit = stockIssues.length > 0 && !allowNegativeStock;
+        if (shouldSplit) {
+          await splitOrder(stockIssues);
+          // Recalculate total after split
+          const faltanteMap = new Map(stockIssues.map(i => [i.produto_id, i.faltante]));
+          const remainingTotal = items.reduce((sum, i) => {
+            const faltante = faltanteMap.get(i.produto_id) || 0;
+            const qty = Number(i.quantidade) - faltante;
+            return qty > 0 ? sum + Number(i.preco_unitario) * qty : sum;
+          }, 0);
+          newTotal = remainingTotal + freteNum;
+        }
+        await deductStock();
+
         await supabase.from("pedido_pagamento").insert({
           pedido_id: selectedPedido.pedido_id,
           forma_pagamento_id: pagFormaId,
@@ -395,17 +428,8 @@ const Pedidos = () => {
           valor: newTotal,
         });
 
-        // Create contas_receber
+        // Create contas_receber for original order
         await createContaReceber(selectedPedido.pedido_id, selectedPedido.cliente_id, newTotal, pagData!);
-
-        // Handle stock
-        if (forceSplit && stockIssues.length > 0) {
-          await splitOrder(stockIssues);
-        }
-        if (forceNegative) {
-          setAllowNegativeStock(true);
-        }
-        await deductStock();
       }
 
       // Delete payments & contas_receber when going back to separacao
@@ -696,13 +720,13 @@ const Pedidos = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => { setEditStatus(selectedPedido?.status || ""); }}>Cancelar</AlertDialogCancel>
             <Button
               variant="outline"
               onClick={() => {
                 setAllowNegativeStock(true);
+                setStockCheckPassed(true);
                 setStockDialogOpen(false);
-                updatePedido(true, false);
               }}
               disabled={loading}
             >
@@ -710,8 +734,8 @@ const Pedidos = () => {
             </Button>
             <Button
               onClick={() => {
+                setStockCheckPassed(true);
                 setStockDialogOpen(false);
-                updatePedido(false, true);
               }}
               disabled={loading}
             >
