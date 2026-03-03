@@ -185,8 +185,17 @@ const Checkout = () => {
       const cleanCpfCnpj = cpfCnpj.replace(/\D/g, "");
       let cId = clienteId;
       if (!cId) {
-        const { data: newCliente, error: cErr } = await supabase.from("cliente").insert({ nome: user.email ?? "Cliente", email: user.email, user_id: user.id, cpf_cnpj: cleanCpfCnpj }).select("cliente_id").single();
-        if (cErr) throw cErr; cId = newCliente.cliente_id;
+        // Check if client already exists by cpf_cnpj
+        const { data: existingCliente } = await supabase.from("cliente").select("cliente_id").eq("cpf_cnpj", cleanCpfCnpj).maybeSingle();
+        if (existingCliente) {
+          cId = existingCliente.cliente_id;
+          await supabase.from("cliente").update({ user_id: user.id, email: user.email }).eq("cliente_id", cId);
+          setClienteId(cId);
+          await loadEnderecos(cId);
+        } else {
+          const { data: newCliente, error: cErr } = await supabase.from("cliente").insert({ nome: user.email ?? "Cliente", email: user.email, user_id: user.id, cpf_cnpj: cleanCpfCnpj }).select("cliente_id").single();
+          if (cErr) throw cErr; cId = newCliente.cliente_id;
+        }
       } else { await supabase.from("cliente").update({ cpf_cnpj: cleanCpfCnpj }).eq("cliente_id", cId); }
 
       // Save/update phone
