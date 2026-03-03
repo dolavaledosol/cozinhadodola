@@ -1,0 +1,1 @@
+ALTER TABLE public.produto ADD COLUMN quantidade_default numeric NOT NULL DEFAULT 1;

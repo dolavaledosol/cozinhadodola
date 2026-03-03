@@ -191,7 +191,7 @@ const Pedidos = () => {
   const [clientes, setClientes] = useState<{ cliente_id: string; nome: string; cpf_cnpj: string | null }[]>([]);
   const [selectedClienteCpf, setSelectedClienteCpf] = useState("");
   const [cpfCnpjError, setCpfCnpjError] = useState<string | null>(null);
-  const [produtos, setProdutos] = useState<{ produto_id: string; nome: string; preco: number; fabricante_nome: string | null; peso_bruto: number | null; unidade_medida: string; aceita_fracionado: boolean }[]>([]);
+  const [produtos, setProdutos] = useState<{ produto_id: string; nome: string; preco: number; fabricante_nome: string | null; peso_bruto: number | null; unidade_medida: string; aceita_fracionado: boolean; quantidade_default: number }[]>([]);
   const [newOrderSearch, setNewOrderSearch] = useState("");
   const [clienteSearch, setClienteSearch] = useState("");
   const [clienteDropdownOpen, setClienteDropdownOpen] = useState(false);
@@ -768,11 +768,11 @@ const Pedidos = () => {
 
     const [cRes, pRes, leRes] = await Promise.all([
       supabase.from("cliente").select("cliente_id, nome, cpf_cnpj").eq("ativo", true).order("nome"),
-      supabase.from("produto").select("produto_id, nome, preco, peso_bruto, unidade_medida, aceita_fracionado, fabricante:fabricante_id(nome)").eq("ativo", true).order("nome"),
+      supabase.from("produto").select("produto_id, nome, preco, peso_bruto, unidade_medida, aceita_fracionado, quantidade_default, fabricante:fabricante_id(nome)").eq("ativo", true).order("nome"),
       supabase.from("local_estoque").select("local_estoque_id, nome").eq("ativo", true).order("nome"),
     ]);
     if (cRes.data) setClientes(cRes.data);
-    if (pRes.data) setProdutos(pRes.data.map((p: any) => ({ ...p, fabricante_nome: p.fabricante?.nome ?? null, aceita_fracionado: p.aceita_fracionado ?? false })));
+    if (pRes.data) setProdutos(pRes.data.map((p: any) => ({ ...p, fabricante_nome: p.fabricante?.nome ?? null, aceita_fracionado: p.aceita_fracionado ?? false, quantidade_default: p.quantidade_default ?? 1 })));
     if (leRes.data) setLocaisEstoque(leRes.data);
     setNewOrderOpen(true);
   };
@@ -804,11 +804,12 @@ const Pedidos = () => {
     return produtos.filter(p => p.nome.toLowerCase().includes(term) || p.fabricante_nome?.toLowerCase().includes(term));
   }, [produtos, newOrderSearch]);
 
-  const addProduct = (p: { produto_id: string; nome: string; preco: number; aceita_fracionado?: boolean }) => {
+  const addProduct = (p: { produto_id: string; nome: string; preco: number; aceita_fracionado?: boolean; quantidade_default?: number }) => {
+    const qtdDefault = p.quantidade_default ?? (p.aceita_fracionado ? 0.5 : 1);
     setNewOrderItems(prev => {
       const existing = prev.find(i => i.produto_id === p.produto_id);
-      if (existing) return prev.map(i => i.produto_id === p.produto_id ? { ...i, quantidade: i.quantidade + (p.aceita_fracionado ? 0.5 : 1) } : i);
-      return [...prev, { produto_id: p.produto_id, nome: p.nome, preco: p.preco, quantidade: p.aceita_fracionado ? 0.5 : 1, aceita_fracionado: p.aceita_fracionado ?? false }];
+      if (existing) return prev.map(i => i.produto_id === p.produto_id ? { ...i, quantidade: i.quantidade + qtdDefault } : i);
+      return [...prev, { produto_id: p.produto_id, nome: p.nome, preco: p.preco, quantidade: qtdDefault, aceita_fracionado: p.aceita_fracionado ?? false }];
     });
   };
 
