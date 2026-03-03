@@ -19,6 +19,7 @@ interface ProductCardProps {
   peso_liquido?: number;
   unidade_medida?: string;
   aceita_fracionado?: boolean;
+  quantidade_default?: number;
 }
 
 const unidadeLabels: Record<string, string> = {
@@ -43,11 +44,12 @@ const ProductCard = ({
   peso_liquido,
   unidade_medida = "un",
   aceita_fracionado = false,
+  quantidade_default = 1,
 }: ProductCardProps) => {
   const { addItem } = useCart();
   const { toast } = useToast();
   const [detailOpen, setDetailOpen] = useState(false);
-  const [quantidade, setQuantidade] = useState(aceita_fracionado ? "0.5" : "1");
+  const [quantidade, setQuantidade] = useState(String(quantidade_default));
 
   const handleAdd = (e?: React.MouseEvent) => {
     e?.stopPropagation();

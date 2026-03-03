@@ -36,7 +36,7 @@ const unidadeLabels: Record<string, string> = {
 const emptyForm = {
   nome: "", descricao: "", ativo: true, familia_id: "", fabricante_id: "",
   unidade_medida: "un", peso_bruto: "", peso_liquido: "", preco: "",
-  aceita_fracionado: false,
+  aceita_fracionado: false, quantidade_default: "1",
 };
 
 const Produtos = () => {
@@ -89,6 +89,7 @@ const Produtos = () => {
       peso_liquido: p.peso_liquido?.toString() || "",
       preco: p.preco?.toString() || "0",
       aceita_fracionado: p.aceita_fracionado,
+      quantidade_default: (p as any).quantidade_default?.toString() || "1",
     });
     setDialogOpen(true);
   };
@@ -106,6 +107,7 @@ const Produtos = () => {
       peso_liquido: form.peso_liquido ? Number(form.peso_liquido) : null,
       preco: form.preco ? Number(form.preco) : 0,
       aceita_fracionado: form.aceita_fracionado,
+      quantidade_default: form.quantidade_default ? Number(form.quantidade_default) : 1,
     };
 
     let savedId = editId;
@@ -275,6 +277,16 @@ const Produtos = () => {
                 <Label>Peso líquido ({weightUnit})</Label>
                 <Input type="number" step="0.001" value={form.peso_liquido} onChange={(e) => setForm({ ...form, peso_liquido: e.target.value })} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Quantidade padrão</Label>
+              <Input
+                type="number"
+                step={form.aceita_fracionado ? "0.1" : "1"}
+                min={form.aceita_fracionado ? "0.1" : "1"}
+                value={form.quantidade_default}
+                onChange={(e) => setForm({ ...form, quantidade_default: e.target.value })}
+              />
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">

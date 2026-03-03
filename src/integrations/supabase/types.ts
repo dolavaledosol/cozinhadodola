@@ -1138,6 +1138,7 @@ export type Database = {
           preco: number
           produto_id: string
           profundidade: number | null
+          quantidade_default: number
           slug: string | null
           unidade_medida: Database["public"]["Enums"]["unidade_medida"]
           updated_at: string
@@ -1157,6 +1158,7 @@ export type Database = {
           preco?: number
           produto_id?: string
           profundidade?: number | null
+          quantidade_default?: number
           slug?: string | null
           unidade_medida?: Database["public"]["Enums"]["unidade_medida"]
           updated_at?: string
@@ -1176,6 +1178,7 @@ export type Database = {
           preco?: number
           produto_id?: string
           profundidade?: number | null
+          quantidade_default?: number
           slug?: string | null
           unidade_medida?: Database["public"]["Enums"]["unidade_medida"]
           updated_at?: string

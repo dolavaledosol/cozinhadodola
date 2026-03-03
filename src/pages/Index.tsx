@@ -22,6 +22,7 @@ interface ProdutoComPreco {
   peso_liquido: number | null;
   unidade_medida: string;
   aceita_fracionado: boolean;
+  quantidade_default: number;
 }
 
 const Index = () => {
@@ -63,6 +64,7 @@ const Index = () => {
           peso_liquido,
           unidade_medida,
           aceita_fracionado,
+          quantidade_default,
           familia_id,
           fabricante_id,
           familia:familia_id (nome),
@@ -117,6 +119,7 @@ const Index = () => {
             peso_liquido: p.peso_liquido,
             unidade_medida: p.unidade_medida || "un",
             aceita_fracionado: p.aceita_fracionado ?? false,
+            quantidade_default: p.quantidade_default ?? 1,
           };
         });
         setProdutos(mapped);
@@ -197,6 +200,7 @@ const Index = () => {
                 peso_liquido={p.peso_liquido ?? undefined}
                 unidade_medida={p.unidade_medida}
                 aceita_fracionado={p.aceita_fracionado}
+                quantidade_default={p.quantidade_default}
               />
             ))}
           </div>
