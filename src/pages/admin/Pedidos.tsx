@@ -1297,18 +1297,21 @@ const Pedidos = () => {
               <TableHead className="hidden sm:table-cell">Origem</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-16">Ver</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado</TableCell></TableRow>
             ) : filtered.map((p) => {
               const tipo = getTipoEntrega(p);
               const TipoIcon = tipo.icon;
               return (
                 <TableRow key={p.pedido_id}>
-                  <TableCell className="text-xs font-mono text-muted-foreground">{p.pedido_id.slice(0, 8)}</TableCell>
+                  <TableCell>
+                    <button onClick={() => openDetails(p)} className="text-xs font-mono text-primary hover:underline cursor-pointer">
+                      {p.pedido_id.slice(0, 8)}
+                    </button>
+                  </TableCell>
                   <TableCell className="text-sm">{format(new Date(p.data), "dd/MM/yy HH:mm")}</TableCell>
                   <TableCell className="font-medium">{p.cliente?.nome || "—"}</TableCell>
                   <TableCell className="hidden sm:table-cell">
@@ -1328,9 +1331,6 @@ const Pedidos = () => {
                   <TableCell>R$ {Number(p.total).toFixed(2)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={statusColors[p.status]}>{statusLabels[p.status]}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => openDetails(p)}><Eye className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               );
