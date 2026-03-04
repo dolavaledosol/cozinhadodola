@@ -319,6 +319,7 @@ export type Database = {
       contas_pagar: {
         Row: {
           banco_id: string | null
+          compra_itens: Json | null
           contas_pagar_id: string
           created_at: string
           data_pagamento: string | null
@@ -326,12 +327,15 @@ export type Database = {
           descricao: string
           forma_pagamento_id: string | null
           fornecedor_id: string | null
+          local_estoque_id: string | null
           observacao: string | null
           pago: boolean
+          status_compra: string
           valor: number
         }
         Insert: {
           banco_id?: string | null
+          compra_itens?: Json | null
           contas_pagar_id?: string
           created_at?: string
           data_pagamento?: string | null
@@ -339,12 +343,15 @@ export type Database = {
           descricao: string
           forma_pagamento_id?: string | null
           fornecedor_id?: string | null
+          local_estoque_id?: string | null
           observacao?: string | null
           pago?: boolean
+          status_compra?: string
           valor: number
         }
         Update: {
           banco_id?: string | null
+          compra_itens?: Json | null
           contas_pagar_id?: string
           created_at?: string
           data_pagamento?: string | null
@@ -352,8 +359,10 @@ export type Database = {
           descricao?: string
           forma_pagamento_id?: string | null
           fornecedor_id?: string | null
+          local_estoque_id?: string | null
           observacao?: string | null
           pago?: boolean
+          status_compra?: string
           valor?: number
         }
         Relationships: [
@@ -377,6 +386,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fornecedor"
             referencedColumns: ["fornecedor_id"]
+          },
+          {
+            foreignKeyName: "contas_pagar_local_estoque_id_fkey"
+            columns: ["local_estoque_id"]
+            isOneToOne: false
+            referencedRelation: "local_estoque"
+            referencedColumns: ["local_estoque_id"]
           },
         ]
       }
