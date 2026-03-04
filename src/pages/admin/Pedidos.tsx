@@ -102,6 +102,25 @@ interface NovoPedidoItem {
 }
 
 /* ── Compras types ── */
+const statusCompraLabels: Record<string, string> = {
+  pendente: "Pendente", recebido: "Recebido", pago: "Pago", cancelado: "Cancelado",
+};
+const statusCompraColors: Record<string, string> = {
+  pendente: "bg-orange-100 text-orange-700", recebido: "bg-blue-100 text-blue-700",
+  pago: "bg-green-100 text-green-700", cancelado: "bg-red-100 text-red-700",
+};
+const statusCompraOrder = ["pendente", "recebido", "pago"];
+function getAllowedCompraStatuses(current: string): string[] {
+  const idx = statusCompraOrder.indexOf(current);
+  if (idx === -1) return [current];
+  const allowed: string[] = [];
+  if (idx > 0) allowed.push(statusCompraOrder[idx - 1]);
+  allowed.push(current);
+  if (idx < statusCompraOrder.length - 1) allowed.push(statusCompraOrder[idx + 1]);
+  if (current !== "cancelado") allowed.push("cancelado");
+  return allowed;
+}
+
 interface ContaPagarCompra {
   contas_pagar_id: string; descricao: string; valor: number;
   data_vencimento: string; data_pagamento: string | null;
@@ -109,6 +128,9 @@ interface ContaPagarCompra {
   pago: boolean; fornecedor_id: string | null;
   fornecedor: { nome: string } | null;
   observacao: string | null;
+  status_compra: string;
+  local_estoque_id: string | null;
+  compra_itens: any[] | null;
 }
 interface EntradaLinha {
   produto_id: string; nome: string; checked: boolean;
@@ -241,6 +263,7 @@ const Pedidos = () => {
   /* ═══════════════ COMPRAS STATE ═══════════════ */
   const [compras, setCompras] = useState<ContaPagarCompra[]>([]);
   const [searchCompras, setSearchCompras] = useState("");
+  const [statusCompraFilter, setStatusCompraFilter] = useState("pendente");
   const [entradaOpen, setEntradaOpen] = useState(false);
   const [entradaFornecedores, setEntradaFornecedores] = useState<{ fornecedor_id: string; nome: string }[]>([]);
   const [entradaFornecedor, setEntradaFornecedor] = useState("");
@@ -261,7 +284,7 @@ const Pedidos = () => {
   const loadCompras = async () => {
     const { data } = await supabase
       .from("contas_pagar")
-      .select("contas_pagar_id, descricao, valor, data_vencimento, data_pagamento, pago, fornecedor_id, observacao, created_at, fornecedor(nome)")
+      .select("contas_pagar_id, descricao, valor, data_vencimento, data_pagamento, pago, fornecedor_id, observacao, created_at, status_compra, local_estoque_id, compra_itens, fornecedor(nome)")
       .order("created_at", { ascending: false });
     if (data) setCompras(data as any);
   };
@@ -297,7 +320,9 @@ const Pedidos = () => {
 
   const filteredCompras = compras.filter((c) => {
     const t = searchCompras.toLowerCase();
-    return !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
+    const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
+    const matchStatus = statusCompraFilter === "todos" || (c.status_compra || "pendente") === statusCompraFilter;
+    return matchSearch && matchStatus;
   });
 
   const fmtDate = (d: string | null) => d ? format(new Date(d + "T00:00:00"), "dd/MM/yyyy") : "—";
@@ -354,38 +379,126 @@ const Pedidos = () => {
     if (checkedLinhas.length === 0) { toast({ title: "Marque ao menos um produto", variant: "destructive" }); return; }
     setEntradaLoading(true);
     try {
-      for (const linha of checkedLinhas) {
-        const qty = Number(linha.quantidade); const custoVal = Number(linha.preco_custo); const vendaVal = Number(linha.preco_venda);
-        const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
-          .eq("produto_id", linha.produto_id).eq("local_estoque_id", entradaLocal).maybeSingle();
-        if (existing) {
-          await supabase.from("estoque_local").update({ quantidade_disponivel: Number(existing.quantidade_disponivel) + qty, preco_custo: custoVal, preco: vendaVal }).eq("estoque_local_id", existing.estoque_local_id);
-        } else {
-          await supabase.from("estoque_local").insert({ produto_id: linha.produto_id, local_estoque_id: entradaLocal, quantidade_disponivel: qty, preco_custo: custoVal, preco: vendaVal });
-        }
-        await supabase.from("produto").update({ preco: vendaVal }).eq("produto_id", linha.produto_id);
-        // Registrar movimentação de estoque
-        await supabase.from("movimentacao_estoque").insert({
-          tipo: "entrada", produto_id: linha.produto_id, local_estoque_id: entradaLocal,
-          quantidade: qty, documento: entradaNF ? `NF ${entradaNF}` : null, fornecedor_id: entradaFornecedor || null,
-        });
-      }
       const fornNome = entradaFornecedores.find((f) => f.fornecedor_id === entradaFornecedor)?.nome || "";
       const fornId = entradaFornecedor || null;
-      if (totalNF > 0) {
-        const { error: cpErr } = await supabase.from("contas_pagar").insert({ descricao: `NF ${entradaNF || "s/n"} - ${fornNome}`, valor: totalNF, data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId });
-        if (cpErr) console.error("Erro ao criar conta a pagar NF:", cpErr.message);
-      }
+      const itensJson = checkedLinhas.map(l => ({
+        produto_id: l.produto_id, nome: l.nome, quantidade: Number(l.quantidade),
+        preco_custo: Number(l.preco_custo), preco_venda: Number(l.preco_venda),
+      }));
       const freteVal = Number(entradaFrete);
-      if (freteVal > 0) {
-        const { error: cfErr } = await supabase.from("contas_pagar").insert({ descricao: `Frete NF ${entradaNF || "s/n"} - ${fornNome}`, valor: freteVal, data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId });
-        if (cfErr) console.error("Erro ao criar conta a pagar Frete:", cfErr.message);
+      // Create contas_pagar NF record with status pendente (deferred)
+      if (totalNF > 0) {
+        await supabase.from("contas_pagar").insert({
+          descricao: `NF ${entradaNF || "s/n"} - ${fornNome}`, valor: totalNF,
+          data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
+          status_compra: "pendente", local_estoque_id: entradaLocal,
+          compra_itens: itensJson as any,
+        });
       }
-      toast({ title: "Entrada registrada com sucesso!" });
+      // Create frete record if applicable
+      if (freteVal > 0) {
+        await supabase.from("contas_pagar").insert({
+          descricao: `Frete NF ${entradaNF || "s/n"} - ${fornNome}`, valor: freteVal,
+          data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
+          status_compra: "pendente",
+        });
+      }
+      toast({ title: "Compra registrada como pendente!" });
       setEntradaOpen(false);
       loadCompras();
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
     finally { setEntradaLoading(false); }
+  };
+
+  /* ── Compra status transition ── */
+  const [compraStatusLoading, setCompraStatusLoading] = useState(false);
+
+  const changeCompraStatus = async (compra: ContaPagarCompra, newStatus: string) => {
+    const current = compra.status_compra || "pendente";
+    if (current === newStatus) return;
+    setCompraStatusLoading(true);
+    try {
+      // pendente → recebido: create stock entries and update prices
+      if (current === "pendente" && newStatus === "recebido") {
+        const itens = compra.compra_itens || [];
+        const localId = compra.local_estoque_id;
+        if (itens.length > 0 && localId) {
+          for (const item of itens) {
+            const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
+              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
+            if (existing) {
+              await supabase.from("estoque_local").update({
+                quantidade_disponivel: Number(existing.quantidade_disponivel) + item.quantidade,
+                preco_custo: item.preco_custo, preco: item.preco_venda,
+              }).eq("estoque_local_id", existing.estoque_local_id);
+            } else {
+              await supabase.from("estoque_local").insert({
+                produto_id: item.produto_id, local_estoque_id: localId,
+                quantidade_disponivel: item.quantidade, preco_custo: item.preco_custo, preco: item.preco_venda,
+              });
+            }
+            await supabase.from("produto").update({ preco: item.preco_venda }).eq("produto_id", item.produto_id);
+            const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
+            await supabase.from("movimentacao_estoque").insert({
+              tipo: "entrada", produto_id: item.produto_id, local_estoque_id: localId,
+              quantidade: item.quantidade, documento: nfMatch ? `NF ${nfMatch[1]}` : null,
+              fornecedor_id: compra.fornecedor_id || null,
+            });
+          }
+        }
+        await supabase.from("contas_pagar").update({ status_compra: "recebido" }).eq("contas_pagar_id", compra.contas_pagar_id);
+      }
+      // recebido → pendente: rollback stock entries
+      else if (current === "recebido" && newStatus === "pendente") {
+        const itens = compra.compra_itens || [];
+        const localId = compra.local_estoque_id;
+        if (itens.length > 0 && localId) {
+          for (const item of itens) {
+            const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
+              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
+            if (existing) {
+              await supabase.from("estoque_local").update({
+                quantidade_disponivel: Math.max(0, Number(existing.quantidade_disponivel) - item.quantidade),
+              }).eq("estoque_local_id", existing.estoque_local_id);
+            }
+            // Remove movimentacao related to this compra
+            const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
+            if (nfMatch) {
+              await supabase.from("movimentacao_estoque").delete()
+                .eq("produto_id", item.produto_id).eq("local_estoque_id", localId)
+                .eq("tipo", "entrada").eq("documento", `NF ${nfMatch[1]}`);
+            }
+          }
+        }
+        await supabase.from("contas_pagar").update({ status_compra: "pendente", pago: false, data_pagamento: null }).eq("contas_pagar_id", compra.contas_pagar_id);
+      }
+      // recebido → pago
+      else if (current === "recebido" && newStatus === "pago") {
+        await supabase.from("contas_pagar").update({
+          status_compra: "pago", pago: true, data_pagamento: new Date().toISOString().slice(0, 10),
+        }).eq("contas_pagar_id", compra.contas_pagar_id);
+      }
+      // pago → recebido (voltar)
+      else if (current === "pago" && newStatus === "recebido") {
+        await supabase.from("contas_pagar").update({
+          status_compra: "recebido", pago: false, data_pagamento: null,
+        }).eq("contas_pagar_id", compra.contas_pagar_id);
+      }
+      // cancelado
+      else if (newStatus === "cancelado") {
+        // If recebido, rollback first
+        if (current === "recebido") {
+          await changeCompraStatus(compra, "pendente");
+        }
+        await supabase.from("contas_pagar").update({ status_compra: "cancelado" }).eq("contas_pagar_id", compra.contas_pagar_id);
+      }
+      else {
+        await supabase.from("contas_pagar").update({ status_compra: newStatus }).eq("contas_pagar_id", compra.contas_pagar_id);
+      }
+      toast({ title: `Status alterado para ${statusCompraLabels[newStatus] || newStatus}` });
+      loadCompras();
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+    finally { setCompraStatusLoading(false); }
   };
 
   const filtered = pedidos.filter((p) => {
@@ -2038,7 +2151,19 @@ const Pedidos = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por descrição ou fornecedor..." value={searchCompras} onChange={(e) => setSearchCompras(e.target.value)} className="pl-10" />
             </div>
-            <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
+            <div className="flex items-center gap-2">
+              <Select value={statusCompraFilter} onValueChange={setStatusCompraFilter}>
+                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="recebido">Recebido</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
+            </div>
           </div>
 
           <div className="border rounded-lg overflow-hidden">
@@ -2058,6 +2183,7 @@ const Pedidos = () => {
                 ) : filteredCompras.map((c) => {
                   const nfMatch = c.descricao.match(/NF\s+([^\s-]+)/i);
                   const nfNum = nfMatch ? nfMatch[1] : "—";
+                  const st = c.status_compra || "pendente";
                   return (
                   <TableRow key={c.contas_pagar_id}>
                     <TableCell>
@@ -2069,8 +2195,8 @@ const Pedidos = () => {
                     <TableCell>{nfNum}</TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground">{c.fornecedor?.nome || "—"}</TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${c.pago ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                        {c.pago ? "Pago" : "Pendente"}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusCompraColors[st] || "bg-muted text-muted-foreground"}`}>
+                        {statusCompraLabels[st] || st}
                       </span>
                     </TableCell>
                   </TableRow>
@@ -2087,6 +2213,31 @@ const Pedidos = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar Compra</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            {/* Status buttons */}
+            {compraEdit.contas_pagar_id && (() => {
+              const currentCompra = compras.find(c => c.contas_pagar_id === compraEdit.contas_pagar_id);
+              if (!currentCompra) return null;
+              const currentSt = currentCompra.status_compra || "pendente";
+              const allowed = getAllowedCompraStatuses(currentSt);
+              return (
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <div className="flex flex-wrap gap-1">
+                    {allowed.map((s) => (
+                      <Button key={s} size="sm" variant={s === currentSt ? "default" : "outline"}
+                        disabled={compraStatusLoading}
+                        className={s === currentSt ? statusCompraColors[s] : ""}
+                        onClick={() => {
+                          if (s !== currentSt) changeCompraStatus(currentCompra, s);
+                        }}>
+                        {statusCompraLabels[s] || s}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="space-y-2">
               <Label>Descrição *</Label>
               <Input value={compraEdit.descricao} onChange={(e) => setCompraEdit({ ...compraEdit, descricao: e.target.value })} />
@@ -2112,10 +2263,32 @@ const Pedidos = () => {
               <Label>Observação</Label>
               <Input value={compraEdit.observacao} onChange={(e) => setCompraEdit({ ...compraEdit, observacao: e.target.value })} />
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox checked={compraEdit.pago} onCheckedChange={(v) => setCompraEdit({ ...compraEdit, pago: !!v })} />
-              <Label>Pago</Label>
-            </div>
+
+            {/* Show items if available */}
+            {(() => {
+              const currentCompra = compras.find(c => c.contas_pagar_id === compraEdit.contas_pagar_id);
+              const itens = currentCompra?.compra_itens;
+              if (!itens || itens.length === 0) return null;
+              return (
+                <div className="space-y-2">
+                  <Label>Itens da Compra</Label>
+                  <div className="border rounded-lg overflow-hidden max-h-40 overflow-y-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead className="w-16">Qtd</TableHead><TableHead className="w-24 text-right">Custo</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {itens.map((item: any, idx: number) => (
+                          <TableRow key={idx}>
+                            <TableCell className="text-sm">{item.nome}</TableCell>
+                            <TableCell className="text-sm">{item.quantidade}</TableCell>
+                            <TableCell className="text-sm text-right">R$ {Number(item.preco_custo).toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCompraEditOpen(false)}>Cancelar</Button>
