@@ -2046,9 +2046,9 @@ const Pedidos = () => {
               <TableHeader>
                  <TableRow>
                   <TableHead>Código</TableHead>
+                  <TableHead>Data Entrada</TableHead>
                   <TableHead>NF</TableHead>
                   <TableHead className="hidden sm:table-cell">Fornecedor</TableHead>
-                  <TableHead>Data Entrada</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -2065,9 +2065,9 @@ const Pedidos = () => {
                         {c.contas_pagar_id.slice(0, 8)}
                       </button>
                     </TableCell>
+                    <TableCell>{c.created_at ? format(new Date(c.created_at), "dd/MM/yyyy") : "—"}</TableCell>
                     <TableCell>{nfNum}</TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground">{c.fornecedor?.nome || "—"}</TableCell>
-                    <TableCell>{c.created_at ? format(new Date(c.created_at), "dd/MM/yyyy") : "—"}</TableCell>
                     <TableCell>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${c.pago ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
                         {c.pago ? "Pago" : "Pendente"}
