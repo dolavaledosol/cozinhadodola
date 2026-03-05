@@ -237,18 +237,43 @@ const Financeiro = () => {
   const fmtDate = (d: string | null) => d ? format(new Date(d + "T00:00:00"), "dd/MM/yyyy") : "—";
   const fmtMoney = (v: number) => `R$ ${Number(v).toFixed(2)}`;
 
-  const exportReceber = () => {
-    const headers = ["Código", "Cliente", "Criação", "Vencimento", "Forma", "Banco", "Valor", "Status"];
-    const rows = filteredReceber.map((c) => [
-      c.contas_receber_id.slice(0, 8).toUpperCase(),
-      c.cliente?.nome || "—",
-      format(new Date(c.created_at), "dd/MM/yy HH:mm"),
-      fmtDate(c.data_vencimento),
-      c._forma,
-      c._banco_pag,
-      Number(c.valor).toFixed(2).replace(".", ","),
-      c.recebido ? "Recebido" : "Pendente",
-    ]);
+  const exportReceber = async () => {
+    // Buscar telefones verificados e WhatsApp de todos os clientes
+    const clienteIds = [...new Set(filteredReceber.map((c) => c.cliente_id).filter(Boolean))] as string[];
+    let phoneMap: Record<string, { from: string }> = {};
+    if (clienteIds.length > 0) {
+      const { data: phones } = await supabase
+        .from("cliente_telefone")
+        .select("cliente_id, from")
+        .in("cliente_id", clienteIds)
+        .eq("verificado", true)
+        .eq("is_whatsapp", true);
+      if (phones) {
+        for (const p of phones) {
+          // Pega o primeiro telefone verificado+whatsapp por cliente
+          if (!phoneMap[p.cliente_id]) {
+            phoneMap[p.cliente_id] = { from: p.from || "" };
+          }
+        }
+      }
+    }
+
+    const headers = ["Código", "Cliente", "Cliente ID", "WhatsApp (from)", "Criação", "Vencimento", "Forma", "Banco", "Valor", "Status"];
+    const rows = filteredReceber.map((c) => {
+      const phone = c.cliente_id ? phoneMap[c.cliente_id] : null;
+      return [
+        c.contas_receber_id.slice(0, 8).toUpperCase(),
+        c.cliente?.nome || "—",
+        c.cliente_id || "—",
+        phone?.from || "—",
+        format(new Date(c.created_at), "dd/MM/yy HH:mm"),
+        fmtDate(c.data_vencimento),
+        c._forma,
+        c._banco_pag,
+        Number(c.valor).toFixed(2).replace(".", ","),
+        c.recebido ? "Recebido" : "Pendente",
+      ];
+    });
     const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
