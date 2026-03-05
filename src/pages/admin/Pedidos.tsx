@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, Plus, Minus, Trash2, UserPlus, MapPin, PackagePlus, Share2 } from "lucide-react";
+import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, Plus, Minus, Trash2, UserPlus, MapPin, PackagePlus, Share2, Download } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useCep } from "@/hooks/useCep";
@@ -499,6 +499,57 @@ const Pedidos = () => {
       loadCompras();
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
     finally { setCompraStatusLoading(false); }
+  };
+
+  const exportPedidos = async () => {
+    if (filtered.length === 0) {
+      toast({ title: "Nenhum pedido para exportar", variant: "destructive" });
+      return;
+    }
+
+    // Fetch WhatsApp phones for all clients
+    const clienteIds = [...new Set(filtered.map((p) => p.cliente_id).filter(Boolean))];
+    const { data: phones } = await supabase
+      .from("cliente_telefone")
+      .select("cliente_id, from")
+      .in("cliente_id", clienteIds)
+      .eq("verificado", true)
+      .eq("is_whatsapp", true);
+    const phoneMap: Record<string, { from: string | null }> = {};
+    if (phones) {
+      for (const ph of phones) {
+        if (!phoneMap[ph.cliente_id]) phoneMap[ph.cliente_id] = { from: ph.from };
+      }
+    }
+
+    const headers = ["Código", "Data", "Cliente", "Cliente ID", "WhatsApp (from)", "Tipo", "Local", "Origem", "Vendedor", "Frete", "Total", "Status"];
+    const rows = filtered.map((p) => {
+      const tipo = getTipoEntrega(p);
+      const phone = phoneMap[p.cliente_id];
+      return [
+        p.pedido_id.slice(0, 8).toUpperCase(),
+        format(new Date(p.data), "dd/MM/yy HH:mm"),
+        p.cliente?.nome || "—",
+        p.cliente_id || "—",
+        phone?.from || "—",
+        tipo.label,
+        p.local_estoque?.nome || "—",
+        origemLabels[p.origem] || p.origem,
+        p.vendedor?.nome || "—",
+        Number(p.frete).toFixed(2).replace(".", ","),
+        Number(p.total).toFixed(2).replace(".", ","),
+        statusLabels[p.status] || p.status,
+      ];
+    });
+    const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pedidos_${format(new Date(), "yyyyMMdd_HHmm")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exportação concluída" });
   };
 
   const filtered = pedidos.filter((p) => {
@@ -1384,7 +1435,10 @@ const Pedidos = () => {
         <TabsContent value="vendas" className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div />
-        <Button onClick={openNewOrder} className="gap-2"><Plus className="h-4 w-4" /> Novo Pedido</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportPedidos} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+          <Button onClick={openNewOrder} className="gap-2"><Plus className="h-4 w-4" /> Novo Pedido</Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
