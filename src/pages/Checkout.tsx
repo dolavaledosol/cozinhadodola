@@ -194,7 +194,7 @@ const Checkout = () => {
 
     setLoading(true);
     try {
-      const cleanCpfCnpj = cpfCnpj.replace(/\D/g, "");
+      
       const cId = await findOrCreateCliente();
       await loadEnderecos(cId);
 
