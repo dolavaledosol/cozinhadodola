@@ -97,8 +97,8 @@ const Checkout = () => {
           setClienteId(data.cliente_id);
           if (data.cpf_cnpj) setCpfCnpj(formatCpfCnpj(data.cpf_cnpj));
           loadEnderecos(data.cliente_id);
-          supabase.from("cliente_telefone").select("telefone").eq("cliente_id", data.cliente_id).limit(1).then(({ data: tels }) => {
-            if (tels && tels.length > 0) setTelefone(formatTelefone(tels[0].telefone));
+          supabase.from("cliente_telefone").select("telefone").eq("cliente_id", data.cliente_id).order("cliente_telefone_id").then(({ data: tels }) => {
+            if (tels && tels.length > 0) setTelefones(tels.map(t => formatTelefone(t.telefone)));
           });
         }
       });
@@ -146,7 +146,7 @@ const Checkout = () => {
 
   const handleCpfCnpjChange = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 14); setCpfCnpj(formatCpfCnpj(digits)); if (cpfCnpjError) setCpfCnpjError(null); };
   const handleCpfCnpjBlur = () => { if (cpfCnpj.replace(/\D/g, "").length > 0) { const err = validateCpfCnpj(cpfCnpj); if (err) setCpfCnpjError(err); } };
-  const handleTelefoneChange = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 11); setTelefone(formatTelefone(digits)); if (telefoneError) setTelefoneError(null); };
+  const handleTelefoneChange = (idx: number, value: string) => { const digits = value.replace(/\D/g, "").slice(0, 11); const updated = [...telefones]; updated[idx] = formatTelefone(digits); setTelefones(updated); if (telefoneError) setTelefoneError(null); };
 
   const handleCepBlur = async () => {
     const cep = endForm.cep.replace(/\D/g, "");
@@ -187,8 +187,8 @@ const Checkout = () => {
   const handleFinalize = async () => {
     const error = validateCpfCnpj(cpfCnpj);
     if (error) { setCpfCnpjError(error); return; }
-    const telDigits = telefone.replace(/\D/g, "");
-    if (telDigits.length < 10) { setTelefoneError("Telefone deve ter pelo menos 10 dígitos"); return; }
+    const firstTelDigits = telefones[0]?.replace(/\D/g, "") || "";
+    if (firstTelDigits.length < 10) { setTelefoneError("Telefone deve ter pelo menos 10 dígitos"); return; }
     if (!tipoEntrega) { toast({ title: "Selecione o tipo de entrega", variant: "destructive" }); return; }
     if (tipoEntrega === "entrega" && !enderecoSelecionado) { toast({ title: "Selecione ou cadastre um endereço de entrega", variant: "destructive" }); return; }
 
@@ -197,11 +197,15 @@ const Checkout = () => {
       const cId = await findOrCreateCliente();
       await loadEnderecos(cId);
 
-      const { data: existingTel } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", cId!).limit(1);
-      if (existingTel && existingTel.length > 0) {
-        await supabase.from("cliente_telefone").update({ telefone: telDigits }).eq("cliente_telefone_id", existingTel[0].cliente_telefone_id);
-      } else {
-        await supabase.from("cliente_telefone").insert({ cliente_id: cId!, telefone: telDigits, is_whatsapp: false });
+      // Save all phones
+      const validPhones = telefones.map(t => t.replace(/\D/g, "")).filter(t => t.length >= 10);
+      // Delete existing phones for this client
+      const { data: existingTels } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", cId!);
+      if (existingTels) {
+        for (const et of existingTels) await supabase.from("cliente_telefone").delete().eq("cliente_telefone_id", et.cliente_telefone_id);
+      }
+      for (const phone of validPhones) {
+        await supabase.from("cliente_telefone").insert({ cliente_id: cId!, telefone: phone, is_whatsapp: false });
       }
 
       let observacao = "";
