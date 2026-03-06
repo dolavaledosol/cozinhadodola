@@ -32,7 +32,7 @@ const formatPeso = (peso: number | undefined, unidade: string) => {
   return `${peso}${unidadeLabels[unidade] || unidade}`;
 };
 
-const ProductCard = memo(({
+const ProductCard = memo(function ProductCard({
   produto_id,
   nome,
   preco,
@@ -45,7 +45,7 @@ const ProductCard = memo(({
   unidade_medida = "un",
   aceita_fracionado = false,
   quantidade_default = 1,
-}: ProductCardProps) => {
+}: ProductCardProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
   const [detailOpen, setDetailOpen] = useState(false);
