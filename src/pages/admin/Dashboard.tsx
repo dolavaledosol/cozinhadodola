@@ -216,10 +216,13 @@ const Dashboard = () => {
 
       {/* Faturamento por origem */}
       <div className="rounded-xl bg-card border border-border overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground">Faturamento por origem</h2>
-        </div>
+        <Link to="/admin/pedidos" className="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-muted/50 transition-colors group">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Faturamento por origem</h2>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Link>
         {origemFat.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">
             Nenhum pedido no mês
