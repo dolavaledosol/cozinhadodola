@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ShoppingCart, DollarSign, TrendingDown, TrendingUp,
   CalendarDays, BarChart3, ClipboardList, Globe, MessageCircle, Monitor,
+  ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
