@@ -452,7 +452,12 @@ const Estoque = () => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Estoque</h1>
-        <Button onClick={openTransfer} className="gap-2"><ArrowRightLeft className="h-4 w-4" /> Transferir</Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar Excel</Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar Conciliação</Button>
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
+          <Button onClick={openTransfer} className="gap-2"><ArrowRightLeft className="h-4 w-4" /> Transferir</Button>
+        </div>
       </div>
 
       <Tabs defaultValue="estoque">
