@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ShoppingBag, ArrowLeft, LogIn, Truck, Store, AlertCircle, Plus, MapPin, Loader2, Phone, Check } from "lucide-react";
+import { ShoppingBag, ArrowLeft, LogIn, Truck, Store, AlertCircle, Plus, MapPin, Loader2, Phone, Check, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
