@@ -39,6 +39,7 @@ const Clientes = () => {
   const [form, setForm] = useState(emptyForm);
   const [telefones, setTelefones] = useState<TelefoneItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cpfError, setCpfError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
