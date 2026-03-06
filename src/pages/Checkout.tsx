@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ShoppingBag, ArrowLeft, LogIn, Truck, Store, AlertCircle, Plus, MapPin, Loader2, Phone, Check } from "lucide-react";
+import { ShoppingBag, ArrowLeft, LogIn, Truck, Store, AlertCircle, Plus, MapPin, Loader2, Phone, Check, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useCep } from "@/hooks/useCep";
 import AppHeader from "@/components/shared/AppHeader";
-import { formatTelefone as formatTelefoneShared, unformatTelefone } from "@/lib/telefone";
+import { formatTelefone as formatTelefoneShared } from "@/lib/telefone";
 
 // interfaces
 interface Endereco { endereco_id: string; cep: string | null; logradouro: string; numero: string | null; complemento: string | null; bairro: string | null; cidade: string; estado: string; }
@@ -86,7 +86,7 @@ const Checkout = () => {
   const [endForm, setEndForm] = useState(emptyEndForm);
   const [savingEnd, setSavingEnd] = useState(false);
   const [clienteId, setClienteId] = useState<string | null>(null);
-  const [telefone, setTelefone] = useState("");
+  const [telefones, setTelefones] = useState<string[]>([""]);
   const [telefoneError, setTelefoneError] = useState<string | null>(null);
   const { fetchCep, loading: cepLoading } = useCep();
 
@@ -97,8 +97,8 @@ const Checkout = () => {
           setClienteId(data.cliente_id);
           if (data.cpf_cnpj) setCpfCnpj(formatCpfCnpj(data.cpf_cnpj));
           loadEnderecos(data.cliente_id);
-          supabase.from("cliente_telefone").select("telefone").eq("cliente_id", data.cliente_id).limit(1).then(({ data: tels }) => {
-            if (tels && tels.length > 0) setTelefone(formatTelefone(tels[0].telefone));
+          supabase.from("cliente_telefone").select("telefone").eq("cliente_id", data.cliente_id).order("cliente_telefone_id").then(({ data: tels }) => {
+            if (tels && tels.length > 0) setTelefones(tels.map(t => formatTelefone(t.telefone)));
           });
         }
       });
@@ -146,7 +146,7 @@ const Checkout = () => {
 
   const handleCpfCnpjChange = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 14); setCpfCnpj(formatCpfCnpj(digits)); if (cpfCnpjError) setCpfCnpjError(null); };
   const handleCpfCnpjBlur = () => { if (cpfCnpj.replace(/\D/g, "").length > 0) { const err = validateCpfCnpj(cpfCnpj); if (err) setCpfCnpjError(err); } };
-  const handleTelefoneChange = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 11); setTelefone(formatTelefone(digits)); if (telefoneError) setTelefoneError(null); };
+  const handleTelefoneChange = (idx: number, value: string) => { const digits = value.replace(/\D/g, "").slice(0, 11); const updated = [...telefones]; updated[idx] = formatTelefone(digits); setTelefones(updated); if (telefoneError) setTelefoneError(null); };
 
   const handleCepBlur = async () => {
     const cep = endForm.cep.replace(/\D/g, "");
@@ -187,8 +187,8 @@ const Checkout = () => {
   const handleFinalize = async () => {
     const error = validateCpfCnpj(cpfCnpj);
     if (error) { setCpfCnpjError(error); return; }
-    const telDigits = telefone.replace(/\D/g, "");
-    if (telDigits.length < 10) { setTelefoneError("Telefone deve ter pelo menos 10 dígitos"); return; }
+    const firstTelDigits = telefones[0]?.replace(/\D/g, "") || "";
+    if (firstTelDigits.length < 10) { setTelefoneError("Telefone deve ter pelo menos 10 dígitos"); return; }
     if (!tipoEntrega) { toast({ title: "Selecione o tipo de entrega", variant: "destructive" }); return; }
     if (tipoEntrega === "entrega" && !enderecoSelecionado) { toast({ title: "Selecione ou cadastre um endereço de entrega", variant: "destructive" }); return; }
 
@@ -197,11 +197,15 @@ const Checkout = () => {
       const cId = await findOrCreateCliente();
       await loadEnderecos(cId);
 
-      const { data: existingTel } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", cId!).limit(1);
-      if (existingTel && existingTel.length > 0) {
-        await supabase.from("cliente_telefone").update({ telefone: telDigits }).eq("cliente_telefone_id", existingTel[0].cliente_telefone_id);
-      } else {
-        await supabase.from("cliente_telefone").insert({ cliente_id: cId!, telefone: telDigits, is_whatsapp: false });
+      // Save all phones
+      const validPhones = telefones.map(t => t.replace(/\D/g, "")).filter(t => t.length >= 10);
+      // Delete existing phones for this client
+      const { data: existingTels } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", cId!);
+      if (existingTels) {
+        for (const et of existingTels) await supabase.from("cliente_telefone").delete().eq("cliente_telefone_id", et.cliente_telefone_id);
+      }
+      for (const phone of validPhones) {
+        await supabase.from("cliente_telefone").insert({ cliente_id: cId!, telefone: phone, is_whatsapp: false });
       }
 
       let observacao = "";
@@ -228,7 +232,7 @@ const Checkout = () => {
 
   const cpfCnpjDigits = cpfCnpj.replace(/\D/g, "");
   const isCpfCnpjValid = (cpfCnpjDigits.length === 11 && validateCpf(cpfCnpjDigits)) || (cpfCnpjDigits.length === 14 && validateCnpj(cpfCnpjDigits));
-  const canSubmit = !loading && isCpfCnpjValid && !cpfCnpjError && telefone.replace(/\D/g, "").length >= 10 && !telefoneError && tipoEntrega !== "" && (tipoEntrega === "retirada" || enderecoSelecionado !== "");
+  const canSubmit = !loading && isCpfCnpjValid && !cpfCnpjError && (telefones[0]?.replace(/\D/g, "").length ?? 0) >= 10 && !telefoneError && tipoEntrega !== "" && (tipoEntrega === "retirada" || enderecoSelecionado !== "");
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -280,16 +284,29 @@ const Checkout = () => {
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="telefone" className="text-sm flex items-center gap-1.5">
-                <Phone className="h-3.5 w-3.5" /> Telefone *
-              </Label>
-              <Input
-                id="telefone"
-                placeholder="(00) 00000-0000"
-                value={telefone}
-                onChange={(e) => handleTelefoneChange(e.target.value)}
-                className={`rounded-xl h-12 ${telefoneError ? "border-destructive" : ""}`}
-              />
+              <div className="flex items-center justify-between">
+                <Label className="text-sm flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" /> Telefones *
+                </Label>
+                <button type="button" onClick={() => setTelefones([...telefones, ""])} className="text-xs text-primary font-medium flex items-center gap-0.5">
+                  <Plus className="h-3 w-3" /> Adicionar
+                </button>
+              </div>
+              {telefones.map((tel, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={tel}
+                    onChange={(e) => handleTelefoneChange(idx, e.target.value)}
+                    className={`rounded-xl h-12 ${telefoneError && idx === 0 ? "border-destructive" : ""}`}
+                  />
+                  {telefones.length > 1 && (
+                    <button type="button" onClick={() => setTelefones(telefones.filter((_, i) => i !== idx))} className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-destructive/10 transition-colors shrink-0">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </button>
+                  )}
+                </div>
+              ))}
               {telefoneError && (
                 <p className="text-xs text-destructive flex items-center gap-1 mt-1">
                   <AlertCircle className="h-3 w-3" /> {telefoneError}

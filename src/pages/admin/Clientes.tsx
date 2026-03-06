@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, Phone } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Phone, AlertCircle } from "lucide-react";
 import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 
 interface Cliente {
   cliente_id: string;
@@ -22,6 +23,7 @@ interface Cliente {
 }
 
 const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true };
+
 
 interface TelefoneItem {
   id?: string; // cliente_telefone_id if existing
@@ -37,6 +39,7 @@ const Clientes = () => {
   const [form, setForm] = useState(emptyForm);
   const [telefones, setTelefones] = useState<TelefoneItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cpfError, setCpfError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
@@ -53,12 +56,13 @@ const Clientes = () => {
     return matchText && matchStatus;
   });
 
-  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: "" }]); setDialogOpen(true); };
+  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: "" }]); setCpfError(null); setDialogOpen(true); };
   const openEdit = (c: Cliente) => {
     setEditId(c.cliente_id);
+    setCpfError(null);
     setForm({
       nome: c.nome,
-      cpf_cnpj: c.cpf_cnpj || "",
+      cpf_cnpj: c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "",
       email: c.email || "",
       tipo_cliente: c.tipo_cliente,
       ativo: c.ativo,
@@ -76,10 +80,17 @@ const Clientes = () => {
   };
 
   const save = async () => {
+    // Validate CPF/CNPJ
+    const cpfDigits = unformatCpfCnpj(form.cpf_cnpj);
+    if (cpfDigits.length > 0) {
+      const err = validateCpfCnpj(cpfDigits);
+      if (err) { setCpfError(err); toast({ title: err, variant: "destructive" }); return; }
+    }
+
     setLoading(true);
     const payload: any = {
       nome: form.nome,
-      cpf_cnpj: form.cpf_cnpj || null,
+      cpf_cnpj: cpfDigits || null,
       email: form.email || null,
       tipo_cliente: form.tipo_cliente,
       ativo: form.ativo,
@@ -216,7 +227,7 @@ const Clientes = () => {
               <TableRow key={c.cliente_id}>
                 <TableCell className="text-muted-foreground text-xs font-mono">{c.cliente_id.slice(0, 8)}</TableCell>
                 <TableCell className="font-medium">{c.nome}</TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">{c.cpf_cnpj || "—"}</TableCell>
+                <TableCell className="hidden md:table-cell text-muted-foreground">{c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "—"}</TableCell>
                 <TableCell className="hidden md:table-cell text-muted-foreground">{c.email || "—"}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-muted">{tipoLabel(c.tipo_cliente)}</span>
@@ -249,7 +260,13 @@ const Clientes = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>CPF/CNPJ</Label>
-                <Input value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
+                <Input
+                  value={form.cpf_cnpj}
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  onChange={(e) => { setForm({ ...form, cpf_cnpj: formatCpfCnpj(e.target.value) }); setCpfError(null); }}
+                  className={cpfError ? "border-destructive" : ""}
+                />
+                {cpfError && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {cpfError}</p>}
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>

@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useCep } from "@/hooks/useCep";
 import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { formatCpfCnpj, unformatCpfCnpj } from "@/lib/cpfCnpj";
 
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -2003,7 +2004,7 @@ const Pedidos = () => {
                   <div className="space-y-2">
                     <Input placeholder="Nome *" value={newClientNome} onChange={e => setNewClientNome(e.target.value)} />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="CPF/CNPJ *" value={newClientCpf} onChange={e => { setNewClientCpf(e.target.value.replace(/\D/g, "").slice(0, 14)); setCpfCnpjError(null); }} className={cpfCnpjError && showNewClient ? "border-destructive" : ""} />
+                      <Input placeholder="CPF/CNPJ *" value={formatCpfCnpj(newClientCpf)} onChange={e => { setNewClientCpf(unformatCpfCnpj(e.target.value)); setCpfCnpjError(null); }} className={cpfCnpjError && showNewClient ? "border-destructive" : ""} />
                       <Input placeholder="Email" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} />
                     </div>
                     <div className="space-y-1">
@@ -2036,10 +2037,9 @@ const Pedidos = () => {
                 <Label>CPF/CNPJ do cliente *</Label>
                 <Input
                   placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                  value={selectedClienteCpf}
+                  value={formatCpfCnpj(selectedClienteCpf)}
                   onChange={e => {
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 14);
-                    setSelectedClienteCpf(digits);
+                    setSelectedClienteCpf(unformatCpfCnpj(e.target.value));
                     setCpfCnpjError(null);
                   }}
                   className={cpfCnpjError ? "border-destructive" : ""}
