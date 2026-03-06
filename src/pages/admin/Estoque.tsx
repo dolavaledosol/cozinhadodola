@@ -687,7 +687,55 @@ const Estoque = () => {
             {transferOrigem && transferLinhas.length === 0 && (
               <p className="text-center text-muted-foreground py-8">Nenhum produto com estoque disponível neste local.</p>
             )}
-          </div>
+
+      {/* ═══════════════════  DIALOG CONCILIAÇÃO  ═══════════════════ */}
+      <Dialog open={conciliacaoOpen} onOpenChange={setConciliacaoOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Conciliação de Estoque</DialogTitle></DialogHeader>
+          {conciliacaoLinhas.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Nenhum dado importado.</p>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {conciliacaoLinhas.filter((l) => l.diferenca !== 0).length} produto(s) com diferença de {conciliacaoLinhas.length} importado(s).
+              </p>
+              <div className="border rounded-lg overflow-auto max-h-[400px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead className="text-center">Sistema</TableHead>
+                      <TableHead className="text-center">Físico</TableHead>
+                      <TableHead className="text-center">Diferença</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {conciliacaoLinhas.map((l) => (
+                      <TableRow key={`${l.produto_id}-${l.local_estoque_id}`} className={l.diferenca !== 0 ? "bg-muted/30" : ""}>
+                        <TableCell className="font-medium">{l.nome}</TableCell>
+                        <TableCell className="text-muted-foreground">{l.local}</TableCell>
+                        <TableCell className="text-center">{l.estoque_sistema}</TableCell>
+                        <TableCell className="text-center">{l.estoque_fisico}</TableCell>
+                        <TableCell className={`text-center font-semibold ${l.diferenca > 0 ? "text-green-600" : l.diferenca < 0 ? "text-red-600" : ""}`}>
+                          {l.diferenca > 0 ? `+${l.diferenca}` : l.diferenca}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConciliacaoOpen(false)}>Cancelar</Button>
+            <Button onClick={saveConciliacao} disabled={conciliacaoLoading || conciliacaoLinhas.filter((l) => l.diferenca !== 0).length === 0}>
+              {conciliacaoLoading ? "Aplicando..." : "Aplicar Conciliação"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTransferOpen(false)}>Cancelar</Button>
             <Button onClick={saveTransfer} disabled={transferLoading || checkedTransferLinhas.length === 0 || !transferOrigem || !transferDestino}>
