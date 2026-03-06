@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Phone } from "lucide-react";
 
 interface Cliente {
   cliente_id: string;
@@ -20,7 +20,12 @@ interface Cliente {
   ativo: boolean;
 }
 
-const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true, telefone: "" };
+const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true };
+
+interface TelefoneItem {
+  id?: string; // cliente_telefone_id if existing
+  telefone: string;
+}
 
 const Clientes = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -29,6 +34,7 @@ const Clientes = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [telefones, setTelefones] = useState<TelefoneItem[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -46,7 +52,7 @@ const Clientes = () => {
     return matchText && matchStatus;
   });
 
-  const openNew = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
+  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: "" }]); setDialogOpen(true); };
   const openEdit = (c: Cliente) => {
     setEditId(c.cliente_id);
     setForm({
@@ -55,11 +61,15 @@ const Clientes = () => {
       email: c.email || "",
       tipo_cliente: c.tipo_cliente,
       ativo: c.ativo,
-      telefone: "",
     });
-    // Load existing phone
-    supabase.from("cliente_telefone").select("telefone").eq("cliente_id", c.cliente_id).limit(1).then(({ data }) => {
-      if (data && data.length > 0) setForm(prev => ({ ...prev, telefone: data[0].telefone }));
+    setTelefones([]);
+    // Load existing phones
+    supabase.from("cliente_telefone").select("cliente_telefone_id, telefone").eq("cliente_id", c.cliente_id).then(({ data }) => {
+      if (data && data.length > 0) {
+        setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: t.telefone })));
+      } else {
+        setTelefones([{ telefone: "" }]);
+      }
     });
     setDialogOpen(true);
   };
@@ -110,19 +120,39 @@ const Clientes = () => {
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
-      // Save phone if provided
-      const phoneDigits = form.telefone.replace(/\D/g, "");
-      if (phoneDigits) {
-        const targetId = editId || (await supabase.from("cliente").select("cliente_id").eq("cpf_cnpj", form.cpf_cnpj || "___").maybeSingle()).data?.cliente_id;
-        if (targetId) {
-          const { data: existingTel } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", targetId).limit(1);
-          if (existingTel && existingTel.length > 0) {
-            await supabase.from("cliente_telefone").update({ telefone: phoneDigits, is_whatsapp: false }).eq("cliente_telefone_id", existingTel[0].cliente_telefone_id);
+      // Determine target client ID
+      let targetId = editId;
+      if (!targetId && form.cpf_cnpj) {
+        const { data: found } = await supabase.from("cliente").select("cliente_id").eq("cpf_cnpj", form.cpf_cnpj).maybeSingle();
+        targetId = found?.cliente_id || null;
+      }
+      if (!targetId) {
+        // For new clients without cpf, get the latest inserted
+        const { data: latest } = await supabase.from("cliente").select("cliente_id").eq("nome", form.nome).order("created_at", { ascending: false }).limit(1);
+        targetId = latest?.[0]?.cliente_id || null;
+      }
+
+      // Save phones
+      if (targetId) {
+        const validPhones = telefones.filter(t => t.telefone.replace(/\D/g, "").length > 0);
+        // Delete removed phones
+        const { data: existingTels } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", targetId);
+        const keepIds = validPhones.filter(t => t.id).map(t => t.id!);
+        const toDelete = (existingTels || []).filter(t => !keepIds.includes(t.cliente_telefone_id));
+        for (const del of toDelete) {
+          await supabase.from("cliente_telefone").delete().eq("cliente_telefone_id", del.cliente_telefone_id);
+        }
+        // Upsert phones
+        for (const tel of validPhones) {
+          const digits = tel.telefone.replace(/\D/g, "");
+          if (tel.id) {
+            await supabase.from("cliente_telefone").update({ telefone: digits, is_whatsapp: false }).eq("cliente_telefone_id", tel.id);
           } else {
-            await supabase.from("cliente_telefone").insert({ cliente_id: targetId, telefone: phoneDigits, is_whatsapp: false });
+            await supabase.from("cliente_telefone").insert({ cliente_id: targetId, telefone: digits, is_whatsapp: false });
           }
         }
       }
+
       toast({ title: actionLabel });
       setDialogOpen(false);
       load();
@@ -226,8 +256,31 @@ const Clientes = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input placeholder="Ex: 11999998888" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value.replace(/\D/g, "").slice(0, 11) })} />
+              <div className="flex items-center justify-between">
+                <Label>Telefones</Label>
+                <Button type="button" variant="ghost" size="sm" className="gap-1 h-7" onClick={() => setTelefones([...telefones, { telefone: "" }])}>
+                  <Plus className="h-3 w-3" /> Adicionar
+                </Button>
+              </div>
+              {telefones.map((tel, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Input
+                    placeholder="Ex: 11999998888"
+                    value={tel.telefone}
+                    onChange={(e) => {
+                      const updated = [...telefones];
+                      updated[idx] = { ...updated[idx], telefone: e.target.value.replace(/\D/g, "").slice(0, 11) };
+                      setTelefones(updated);
+                    }}
+                  />
+                  {telefones.length > 1 && (
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setTelefones(telefones.filter((_, i) => i !== idx))}>
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
