@@ -260,7 +260,13 @@ const Clientes = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>CPF/CNPJ</Label>
-                <Input value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
+                <Input
+                  value={form.cpf_cnpj}
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  onChange={(e) => { setForm({ ...form, cpf_cnpj: formatCpfCnpj(e.target.value) }); setCpfError(null); }}
+                  className={cpfError ? "border-destructive" : ""}
+                />
+                {cpfError && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {cpfError}</p>}
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
