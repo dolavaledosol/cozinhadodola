@@ -61,10 +61,9 @@ function validateCnpj(cnpj: string): boolean {
   return parseInt(digits[13]) === d2;
 }
 
-function formatTelefone(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length <= 10) return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
-  return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+// Use shared phone mask
+import { formatTelefone as formatTelefoneLib, unformatTelefone } from "@/lib/telefone";
+function formatTelefone(value: string) { return formatTelefoneLib(value); }
 }
 
 function validateCpfCnpj(value: string): string | null {
