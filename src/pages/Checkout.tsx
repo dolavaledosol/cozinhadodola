@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useCep } from "@/hooks/useCep";
 import AppHeader from "@/components/shared/AppHeader";
-import { formatTelefone as formatTelefoneShared, unformatTelefone } from "@/lib/telefone";
+import { formatTelefone as formatTelefoneShared } from "@/lib/telefone";
 
 // interfaces
 interface Endereco { endereco_id: string; cep: string | null; logradouro: string; numero: string | null; complemento: string | null; bairro: string | null; cidade: string; estado: string; }
@@ -232,7 +232,7 @@ const Checkout = () => {
 
   const cpfCnpjDigits = cpfCnpj.replace(/\D/g, "");
   const isCpfCnpjValid = (cpfCnpjDigits.length === 11 && validateCpf(cpfCnpjDigits)) || (cpfCnpjDigits.length === 14 && validateCnpj(cpfCnpjDigits));
-  const canSubmit = !loading && isCpfCnpjValid && !cpfCnpjError && telefone.replace(/\D/g, "").length >= 10 && !telefoneError && tipoEntrega !== "" && (tipoEntrega === "retirada" || enderecoSelecionado !== "");
+  const canSubmit = !loading && isCpfCnpjValid && !cpfCnpjError && (telefones[0]?.replace(/\D/g, "").length ?? 0) >= 10 && !telefoneError && tipoEntrega !== "" && (tipoEntrega === "retirada" || enderecoSelecionado !== "");
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -284,16 +284,29 @@ const Checkout = () => {
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="telefone" className="text-sm flex items-center gap-1.5">
-                <Phone className="h-3.5 w-3.5" /> Telefone *
-              </Label>
-              <Input
-                id="telefone"
-                placeholder="(00) 00000-0000"
-                value={telefone}
-                onChange={(e) => handleTelefoneChange(e.target.value)}
-                className={`rounded-xl h-12 ${telefoneError ? "border-destructive" : ""}`}
-              />
+              <div className="flex items-center justify-between">
+                <Label className="text-sm flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" /> Telefones *
+                </Label>
+                <button type="button" onClick={() => setTelefones([...telefones, ""])} className="text-xs text-primary font-medium flex items-center gap-0.5">
+                  <Plus className="h-3 w-3" /> Adicionar
+                </button>
+              </div>
+              {telefones.map((tel, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={tel}
+                    onChange={(e) => handleTelefoneChange(idx, e.target.value)}
+                    className={`rounded-xl h-12 ${telefoneError && idx === 0 ? "border-destructive" : ""}`}
+                  />
+                  {telefones.length > 1 && (
+                    <button type="button" onClick={() => setTelefones(telefones.filter((_, i) => i !== idx))} className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-destructive/10 transition-colors shrink-0">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </button>
+                  )}
+                </div>
+              ))}
               {telefoneError && (
                 <p className="text-xs text-destructive flex items-center gap-1 mt-1">
                   <AlertCircle className="h-3 w-3" /> {telefoneError}
