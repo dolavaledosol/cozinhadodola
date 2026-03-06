@@ -96,7 +96,7 @@ const Checkout = () => {
       supabase.from("cliente").select("cliente_id, cpf_cnpj").eq("user_id", user.id).maybeSingle().then(({ data }) => {
         if (data) {
           setClienteId(data.cliente_id);
-          if (data.cpf_cnpj) setCpfCnpj(formatCpfCnpj(data.cpf_cnpj));
+          if (data.cpf_cnpj) { setCpfCnpj(formatCpfCnpj(data.cpf_cnpj)); setCpfCnpjLocked(true); }
           loadEnderecos(data.cliente_id);
           supabase.from("cliente_telefone").select("telefone").eq("cliente_id", data.cliente_id).order("cliente_telefone_id").then(({ data: tels }) => {
             if (tels && tels.length > 0) setTelefones(tels.map(t => formatTelefone(t.telefone)));
@@ -145,7 +145,7 @@ const Checkout = () => {
     );
   }
 
-  const handleCpfCnpjChange = (value: string) => { const digits = value.replace(/\D/g, "").slice(0, 14); setCpfCnpj(formatCpfCnpj(digits)); if (cpfCnpjError) setCpfCnpjError(null); };
+  const handleCpfCnpjChange = (value: string) => { if (cpfCnpjLocked) return; const digits = value.replace(/\D/g, "").slice(0, 14); setCpfCnpj(formatCpfCnpj(digits)); if (cpfCnpjError) setCpfCnpjError(null); };
   const handleCpfCnpjBlur = () => { if (cpfCnpj.replace(/\D/g, "").length > 0) { const err = validateCpfCnpj(cpfCnpj); if (err) setCpfCnpjError(err); } };
   const handleTelefoneChange = (idx: number, value: string) => { const digits = value.replace(/\D/g, "").slice(0, 11); const updated = [...telefones]; updated[idx] = formatTelefone(digits); setTelefones(updated); if (telefoneError) setTelefoneError(null); };
 
