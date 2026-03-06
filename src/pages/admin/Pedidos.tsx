@@ -2037,10 +2037,9 @@ const Pedidos = () => {
                 <Label>CPF/CNPJ do cliente *</Label>
                 <Input
                   placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                  value={selectedClienteCpf}
+                  value={formatCpfCnpj(selectedClienteCpf)}
                   onChange={e => {
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 14);
-                    setSelectedClienteCpf(digits);
+                    setSelectedClienteCpf(unformatCpfCnpj(e.target.value));
                     setCpfCnpjError(null);
                   }}
                   className={cpfCnpjError ? "border-destructive" : ""}
