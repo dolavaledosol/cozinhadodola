@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, User, Search, Share2, X } from "lucide-react";
+import { ShoppingCart, User, Search, Share2, X, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,18 @@ const CatalogHeader = ({ search, onSearchChange }: CatalogHeaderProps) => {
   const { count } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAdminOrVendedor, setIsAdminOrVendedor] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) { setIsAdminOrVendedor(false); return; }
+    Promise.all([
+      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: user.id, _role: "vendedor" }),
+    ]).then(([adminRes, vendedorRes]) => {
+      setIsAdminOrVendedor(!!(adminRes.data || vendedorRes.data));
+    });
+  }, [user]);
 
   useEffect(() => {
     if (searchOpen && searchRef.current) {
@@ -101,6 +113,15 @@ const CatalogHeader = ({ search, onSearchChange }: CatalogHeaderProps) => {
               <CartDrawer onClose={() => setCartOpen(false)} />
             </SheetContent>
           </Sheet>
+
+          {/* Admin link */}
+          {isAdminOrVendedor && (
+            <Link to="/admin">
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-sidebar-foreground hover:bg-sidebar-accent rounded-full" title="Painel Admin">
+                <Shield className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
 
           {/* User */}
           {user ? (

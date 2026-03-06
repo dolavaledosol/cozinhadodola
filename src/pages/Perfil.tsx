@@ -82,7 +82,7 @@ const Perfil = () => {
   const [telefones, setTelefones] = useState<Telefone[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminOrVendedor, setIsAdminOrVendedor] = useState(false);
 
   const [editNome, setEditNome] = useState("");
   const [editCpf, setEditCpf] = useState("");
@@ -109,7 +109,12 @@ const Perfil = () => {
     if (authLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     loadAll();
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => { if (data) setIsAdmin(true); });
+    Promise.all([
+      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: user.id, _role: "vendedor" }),
+    ]).then(([adminRes, vendedorRes]) => {
+      if (adminRes.data || vendedorRes.data) setIsAdminOrVendedor(true);
+    });
   }, [user, authLoading]);
 
   const loadAll = async () => {
@@ -248,7 +253,7 @@ const Perfil = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader backTo="/" backLabel="Catálogo">
-        {isAdmin && (
+        {isAdminOrVendedor && (
           <Button size="sm" variant="ghost" className="text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-full gap-1.5 text-xs" onClick={() => navigate("/admin")}>
             <Shield className="h-4 w-4" /> Admin
           </Button>
