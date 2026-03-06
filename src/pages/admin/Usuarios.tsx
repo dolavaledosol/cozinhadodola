@@ -208,6 +208,9 @@ const Usuarios = () => {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openRoles(u)}>
                         <Shield className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPermUser(u); setPermOpen(true); }}>
+                        <Lock className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -264,6 +267,9 @@ const Usuarios = () => {
                             </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openRoles(u)} title="Gerenciar roles">
                               <Shield className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPermUser(u); setPermOpen(true); }} title="Permissões">
+                              <Lock className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
