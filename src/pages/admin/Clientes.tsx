@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Phone, AlertCircle } from "lucide-react";
-import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { formatTelefone, unformatTelefone, validateTelefone } from "@/lib/telefone";
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 
 interface Cliente {
@@ -89,6 +89,16 @@ const Clientes = () => {
     if (cpfDigits.length > 0) {
       const err = validateCpfCnpj(cpfDigits);
       if (err) { setCpfError(err); toast({ title: err, variant: "destructive" }); return; }
+    }
+
+    // Validate phones
+    const validPhones = telefones.filter(t => unformatTelefone(t.telefone).length > 0);
+    for (const tel of validPhones) {
+      const phoneErr = validateTelefone(unformatTelefone(tel.telefone));
+      if (phoneErr) {
+        toast({ title: phoneErr, variant: "destructive" });
+        return;
+      }
     }
 
     setLoading(true);
