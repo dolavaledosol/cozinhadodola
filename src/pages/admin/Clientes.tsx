@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Phone, AlertCircle } from "lucide-react";
-import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { formatTelefone, unformatTelefone, validateTelefone } from "@/lib/telefone";
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 
 interface Cliente {
