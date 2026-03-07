@@ -13,7 +13,7 @@ import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, P
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useCep } from "@/hooks/useCep";
-import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { formatTelefone, unformatTelefone, defaultTelefone } from "@/lib/telefone";
 import { formatCpfCnpj, unformatCpfCnpj } from "@/lib/cpfCnpj";
 
 import { Badge } from "@/components/ui/badge";
@@ -515,14 +515,13 @@ const Pedidos = () => {
     const clienteIds = [...new Set(filtered.map((p) => p.cliente_id).filter(Boolean))];
     const { data: phones } = await supabase
       .from("cliente_telefone")
-      .select("cliente_id, from")
+      .select("cliente_id, telefone")
       .in("cliente_id", clienteIds)
-      .eq("verificado", true)
       .eq("is_whatsapp", true);
     const phoneMap: Record<string, { from: string | null }> = {};
     if (phones) {
       for (const ph of phones) {
-        if (!phoneMap[ph.cliente_id]) phoneMap[ph.cliente_id] = { from: ph.from };
+        if (!phoneMap[ph.cliente_id]) phoneMap[ph.cliente_id] = { from: ph.telefone };
       }
     }
 
@@ -976,7 +975,7 @@ const Pedidos = () => {
     setNewClientNome("");
     setNewClientCpf("");
     setNewClientEmail("");
-    setNewClientTelefones([""]);
+    setNewClientTelefones([defaultTelefone()]);
     setSelectedClienteCpf("");
     setCpfCnpjError(null);
     setNewOrderTipoEntrega("retirada");
@@ -2012,13 +2011,13 @@ const Pedidos = () => {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <Label className="text-xs text-muted-foreground">Telefones</Label>
-                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setNewClientTelefones([...newClientTelefones, ""])}>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setNewClientTelefones([...newClientTelefones, defaultTelefone()])}>
                           <Plus className="h-3 w-3" /> Adicionar
                         </Button>
                       </div>
                       {newClientTelefones.map((tel, idx) => (
                         <div key={idx} className="flex gap-1 items-center">
-                          <Input placeholder="(00) 00000-0000" value={tel} onChange={e => { const updated = [...newClientTelefones]; updated[idx] = formatTelefone(e.target.value); setNewClientTelefones(updated); }} />
+                          <Input placeholder="+55 (31) 90000-0000" value={tel} onChange={e => { const updated = [...newClientTelefones]; updated[idx] = formatTelefone(e.target.value); setNewClientTelefones(updated); }} />
                           {newClientTelefones.length > 1 && (
                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setNewClientTelefones(newClientTelefones.filter((_, i) => i !== idx))}>
                               <Trash2 className="h-3 w-3 text-destructive" />

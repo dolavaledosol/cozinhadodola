@@ -22,6 +22,8 @@ interface Cliente {
   ativo: boolean;
 }
 
+import { defaultTelefone } from "@/lib/telefone";
+
 const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true };
 
 
@@ -57,7 +59,7 @@ const Clientes = () => {
     return matchText && matchStatus;
   });
 
-  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: "" }]); setCpfError(null); setCpfLocked(false); setDialogOpen(true); };
+  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: defaultTelefone() }]); setCpfError(null); setCpfLocked(false); setDialogOpen(true); };
   const openEdit = (c: Cliente) => {
     setEditId(c.cliente_id);
     setCpfError(null);
@@ -75,7 +77,7 @@ const Clientes = () => {
       if (data && data.length > 0) {
         setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: formatTelefone(t.telefone) })));
       } else {
-        setTelefones([{ telefone: "" }]);
+        setTelefones([{ telefone: defaultTelefone() }]);
       }
     });
     setDialogOpen(true);
@@ -288,7 +290,7 @@ const Clientes = () => {
                 <div key={idx} className="flex gap-2 items-center">
                   <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
-                    placeholder="(00) 00000-0000"
+                    placeholder="+55 (31) 90000-0000"
                     value={tel.telefone}
                     onChange={(e) => {
                       const updated = [...telefones];
