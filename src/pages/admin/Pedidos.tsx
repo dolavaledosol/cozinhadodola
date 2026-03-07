@@ -13,7 +13,7 @@ import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, P
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useCep } from "@/hooks/useCep";
-import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { formatTelefone, unformatTelefone, defaultTelefone } from "@/lib/telefone";
 import { formatCpfCnpj, unformatCpfCnpj } from "@/lib/cpfCnpj";
 
 import { Badge } from "@/components/ui/badge";
@@ -975,7 +975,7 @@ const Pedidos = () => {
     setNewClientNome("");
     setNewClientCpf("");
     setNewClientEmail("");
-    setNewClientTelefones([""]);
+    setNewClientTelefones([defaultTelefone()]);
     setSelectedClienteCpf("");
     setCpfCnpjError(null);
     setNewOrderTipoEntrega("retirada");
@@ -2011,7 +2011,7 @@ const Pedidos = () => {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <Label className="text-xs text-muted-foreground">Telefones</Label>
-                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setNewClientTelefones([...newClientTelefones, ""])}>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setNewClientTelefones([...newClientTelefones, defaultTelefone()])}>
                           <Plus className="h-3 w-3" /> Adicionar
                         </Button>
                       </div>
