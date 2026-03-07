@@ -196,24 +196,27 @@ export type Database = {
         Row: {
           cliente_id: string
           cliente_telefone_id: string
-          from: string | null
           is_whatsapp: boolean
+          lid: string | null
+          pn: string | null
           telefone: string
           verificado: boolean
         }
         Insert: {
           cliente_id: string
           cliente_telefone_id?: string
-          from?: string | null
           is_whatsapp?: boolean
+          lid?: string | null
+          pn?: string | null
           telefone: string
           verificado?: boolean
         }
         Update: {
           cliente_id?: string
           cliente_telefone_id?: string
-          from?: string | null
           is_whatsapp?: boolean
+          lid?: string | null
+          pn?: string | null
           telefone?: string
           verificado?: boolean
         }
