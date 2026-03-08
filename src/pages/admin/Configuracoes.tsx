@@ -19,7 +19,12 @@ const emptyForm = { chave: "", valor: "" };
 
 const WEBHOOK_KEYS = [
   { chave: "webhook_cobranca_url", label: "URL do Webhook de Cobrança", placeholder: "https://exemplo.com/webhook" },
-  { chave: "webhook_cobranca_apikey", label: "API Key do Webhook", placeholder: "Bearer token ou chave de autenticação" },
+  { chave: "webhook_cobranca_apikey", label: "API Key do Webhook de Cobrança", placeholder: "Bearer token ou chave de autenticação" },
+];
+
+const WEBHOOK_ESTOQUE_KEYS = [
+  { chave: "webhook_estoque_url", label: "URL do Webhook de Estoque", placeholder: "https://exemplo.com/webhook-estoque" },
+  { chave: "webhook_estoque_apikey", label: "API Key do Webhook de Estoque", placeholder: "Bearer token ou chave de autenticação" },
 ];
 
 const Configuracoes = () => {
