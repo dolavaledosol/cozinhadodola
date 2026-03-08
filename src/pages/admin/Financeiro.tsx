@@ -296,7 +296,7 @@ const Financeiro = () => {
       }
     }
 
-    return { phoneMap, allPhones };
+    return { phoneMap, allPhones, prefMap };
   };
 
   const exportReceber = async () => {
