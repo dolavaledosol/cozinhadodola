@@ -199,7 +199,7 @@ const Checkout = () => {
       await loadEnderecos(cId);
 
       // Save all phones
-      const validPhones = telefones.map(t => t.replace(/\D/g, "")).filter(t => t.length >= 10);
+      const validPhones = telefones.map(t => phoneToDigits(t)).filter(t => t.length >= 10);
       // Delete existing phones for this client
       const { data: existingTels } = await supabase.from("cliente_telefone").select("cliente_telefone_id").eq("cliente_id", cId!);
       if (existingTels) {
