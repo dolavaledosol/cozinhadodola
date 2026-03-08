@@ -100,8 +100,8 @@ const Checkout = () => {
           if (data.cpf_cnpj) { setCpfCnpj(formatCpfCnpj(data.cpf_cnpj)); setCpfCnpjLocked(true); }
           loadEnderecos(data.cliente_id);
           supabase.from("cliente_telefone").select("telefone").eq("cliente_id", data.cliente_id).order("cliente_telefone_id").then(({ data: tels }) => {
-            if (tels && tels.length > 0) setTelefones(tels.map(t => formatTelefone(t.telefone)));
-          });
+            if (tels && tels.length > 0) setTelefones(tels.map(t => digitsToPhone(t.telefone)));
+            else setTelefones([""]);
         }
       });
     }
