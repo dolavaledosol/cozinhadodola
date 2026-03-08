@@ -99,10 +99,9 @@ const ProductCard = memo(function ProductCard({
         {/* Image */}
         <div className="aspect-square relative bg-muted overflow-hidden">
           {url_imagem ? (
-            <img
+            <LazyImage
               src={url_imagem}
               alt={nome}
-              loading="lazy"
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
