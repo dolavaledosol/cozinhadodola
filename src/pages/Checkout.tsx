@@ -231,8 +231,7 @@ const Checkout = () => {
     finally { setLoading(false); }
   };
 
-  const cpfCnpjDigits = cpfCnpj.replace(/\D/g, "");
-  const isCpfCnpjValid = (cpfCnpjDigits.length === 11 && validateCpf(cpfCnpjDigits)) || (cpfCnpjDigits.length === 14 && validateCnpj(cpfCnpjDigits));
+  const canSubmit = !loading && isCpfCnpjValid && !cpfCnpjError && telefones[0] && isValidPhoneNumber(telefones[0]) && !telefoneError && tipoEntrega !== "" && (tipoEntrega === "retirada" || enderecoSelecionado !== "");
   const canSubmit = !loading && isCpfCnpjValid && !cpfCnpjError && (telefones[0]?.replace(/\D/g, "").length ?? 0) >= 10 && !telefoneError && tipoEntrega !== "" && (tipoEntrega === "retirada" || enderecoSelecionado !== "");
 
   return (
