@@ -146,6 +146,7 @@ const Index = () => {
         </div>
       </div>
 
+      <PullToRefresh onRefresh={loadProdutos}>
       <main className="flex-1 px-4 py-4 md:px-6 md:py-6 max-w-7xl mx-auto w-full">
         {/* Count */}
         <p className="text-xs text-muted-foreground mb-3">
