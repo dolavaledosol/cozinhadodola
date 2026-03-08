@@ -469,7 +469,10 @@ const Financeiro = () => {
     }
   };
 
+  const handleRefresh = useCallback(async () => { await loadPagar(); await loadReceber(); }, []);
+
   return (
+    <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Financeiro</h1>
 
