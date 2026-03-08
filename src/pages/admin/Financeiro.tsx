@@ -265,7 +265,6 @@ const Financeiro = () => {
         .from("cliente")
         .select("cliente_id, telefone_preferencial_id")
         .in("cliente_id", clienteIds);
-      const prefMap: Record<string, string | null> = {};
       if (clientePrefs) for (const c of clientePrefs) prefMap[c.cliente_id] = (c as any).telefone_preferencial_id;
 
       const { data: phones } = await supabase
