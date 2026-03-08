@@ -1177,7 +1177,9 @@ export type Database = {
       }
       producao: {
         Row: {
+          cancelado: boolean
           created_at: string
+          custo_total: number
           local_estoque_id: string
           observacao: string | null
           producao_id: string
@@ -1187,7 +1189,9 @@ export type Database = {
           usuario_id: string | null
         }
         Insert: {
+          cancelado?: boolean
           created_at?: string
+          custo_total?: number
           local_estoque_id: string
           observacao?: string | null
           producao_id?: string
@@ -1197,7 +1201,9 @@ export type Database = {
           usuario_id?: string | null
         }
         Update: {
+          cancelado?: boolean
           created_at?: string
+          custo_total?: number
           local_estoque_id?: string
           observacao?: string | null
           producao_id?: string
