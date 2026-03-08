@@ -727,6 +727,38 @@ const Financeiro = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ══════════ DIALOG CONFIRMAÇÃO DE COBRANÇA ══════════ */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-yellow-500" /> Confirmar Cobrança</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Cobranças foram enviadas recentemente. Tem certeza que deseja enviar novamente?</p>
+            <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
+              {recentLogs.map((log, idx) => {
+                const count = Array.isArray(log.payload) ? log.payload.length : "?";
+                return (
+                  <div key={idx} className="px-3 py-2 text-sm flex justify-between items-center">
+                    <span>{format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{count} cobranças</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${log.status === "sucesso" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                        {log.status || "—"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => { setConfirmDialogOpen(false); pendingConfirmAction?.(); }}>
+              Enviar mesmo assim
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
