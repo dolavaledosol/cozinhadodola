@@ -34,8 +34,9 @@ const Configuracoes = () => {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [webhookValues, setWebhookValues] = useState<Record<string, string>>({});
+  const [webhookEstoqueValues, setWebhookEstoqueValues] = useState<Record<string, string>>({});
   const [savingWebhook, setSavingWebhook] = useState(false);
-  const { toast } = useToast();
+  const [savingWebhookEstoque, setSavingWebhookEstoque] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
