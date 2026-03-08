@@ -82,6 +82,7 @@ const EstoqueRelatorio = () => {
             preco: e.produto?.preco || 0,
             familia: e.produto?.familia?.nome || "—",
             fabricante: e.produto?.fabricante?.nome || "—",
+            slug: e.produto?.slug || null,
             total_estoque: 0,
             checked: false,
           });
