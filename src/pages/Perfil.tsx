@@ -333,7 +333,7 @@ const Perfil = () => {
                           <Phone className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div>
-                          <span className="text-sm font-medium">{formatTelefone(t.telefone)}</span>
+                          <span className="text-sm font-medium">{displayPhone(t.telefone)}</span>
                           {t.is_whatsapp && (
                             <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                               <MessageCircle className="h-2.5 w-2.5" /> WhatsApp
