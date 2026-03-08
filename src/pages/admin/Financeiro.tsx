@@ -270,7 +270,8 @@ const Financeiro = () => {
       const { data: phones } = await supabase
         .from("cliente_telefone")
         .select("cliente_telefone_id, cliente_id, telefone, pn, lid, is_whatsapp, verificado")
-        .in("cliente_id", clienteIds);
+        .in("cliente_id", clienteIds)
+        .eq("is_whatsapp", true);
       if (phones) {
         for (const p of phones) {
           if (!allPhones[p.cliente_id]) allPhones[p.cliente_id] = [];
