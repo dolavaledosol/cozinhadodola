@@ -241,6 +241,7 @@ const Pedidos = () => {
 
   const { toast } = useToast();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { fetchCep, loading: cepLoading } = useCep();
 
   const load = async () => {
