@@ -75,6 +75,10 @@ const EstoqueRelatorio = () => {
       for (const e of estoque as any[]) {
         const pid = e.produto_id;
         if (!map.has(pid)) {
+          const imagens = e.produto?.produto_imagem || [];
+          const imgPrincipal = imagens.length > 0
+            ? imagens.sort((a: any, b: any) => a.ordem - b.ordem)[0].url_imagem
+            : null;
           map.set(pid, {
             produto_id: pid,
             nome: e.produto?.nome || "—",
@@ -82,7 +86,7 @@ const EstoqueRelatorio = () => {
             preco: e.produto?.preco || 0,
             familia: e.produto?.familia?.nome || "—",
             fabricante: e.produto?.fabricante?.nome || "—",
-            slug: e.produto?.slug || null,
+            imagem_url: imgPrincipal,
             total_estoque: 0,
             checked: false,
           });
