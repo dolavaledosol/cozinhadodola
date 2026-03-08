@@ -256,6 +256,7 @@ const EstoqueRelatorio = () => {
         descricao: p.descricao,
         familia: p.familia,
         fabricante: p.fabricante,
+        url: p.slug ? `${window.location.origin}/produto/${p.slug}` : null,
       })),
       clientes: clientes.map((c) => ({
         cliente_id: c.cliente_id,
