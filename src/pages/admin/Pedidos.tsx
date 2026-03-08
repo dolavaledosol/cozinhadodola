@@ -1482,7 +1482,10 @@ const Pedidos = () => {
     }, "image/png");
   };
 
+  const handleRefresh = useCallback(async () => { await load(); await loadCompras(); }, []);
+
   return (
+    <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Pedidos</h1>
 
