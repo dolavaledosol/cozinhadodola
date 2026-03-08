@@ -643,6 +643,7 @@ const Estoque = () => {
         <TabsList>
           <TabsTrigger value="estoque">Estoque</TabsTrigger>
           <TabsTrigger value="movimentacao">Movimentação</TabsTrigger>
+          <TabsTrigger value="relatorio">Relatório</TabsTrigger>
         </TabsList>
 
         {/* ── Tab Estoque ── */}
