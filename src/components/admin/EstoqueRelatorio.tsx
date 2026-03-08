@@ -267,8 +267,6 @@ const EstoqueRelatorio = () => {
     };
 
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke("webhook-proxy", {
         body: {
           webhook_url: webhookUrl,
           webhook_apikey: webhookApikey,
