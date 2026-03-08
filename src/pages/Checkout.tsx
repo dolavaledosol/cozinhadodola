@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useCep } from "@/hooks/useCep";
 import AppHeader from "@/components/shared/AppHeader";
-import { formatTelefone as formatTelefoneShared } from "@/lib/telefone";
+import { PhoneInput, phoneToDigits, digitsToPhone } from "@/components/ui/phone-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 // interfaces
 interface Endereco { endereco_id: string; cep: string | null; logradouro: string; numero: string | null; complemento: string | null; bairro: string | null; cidade: string; estado: string; }
