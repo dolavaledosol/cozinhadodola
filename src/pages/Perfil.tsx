@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, MapPin, Phone, User, Package, Loader2, MessageCircle, Eye, Shield, ChevronRight } from "lucide-react";
-import { formatTelefone, unformatTelefone } from "@/lib/telefone";
+import { PhoneInput, phoneToDigits, digitsToPhone, displayPhone } from "@/components/ui/phone-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { formatCpfCnpj } from "@/lib/cpfCnpj";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCep } from "@/hooks/useCep";
