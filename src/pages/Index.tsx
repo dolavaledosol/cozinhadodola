@@ -204,6 +204,7 @@ const Index = () => {
           </div>
         )}
       </main>
+      </PullToRefresh>
 
       {/* Footer */}
       <footer className="border-t bg-card/50 py-8 px-4">
