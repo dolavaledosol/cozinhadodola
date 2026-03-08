@@ -584,6 +584,39 @@ const Financeiro = () => {
               <Button onClick={openNewReceber} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
             </div>
           </div>
+          {isMobile ? (
+            <div className="space-y-2">
+              {filteredReceber.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</p>
+              ) : filteredReceber.map((c) => (
+                <div key={c.contas_receber_id} className="border rounded-xl p-3 space-y-2 bg-card">
+                  <div className="flex items-center justify-between">
+                    <button onClick={() => openEditReceber(c)} className="text-xs font-mono text-primary hover:underline">
+                      {c.contas_receber_id.slice(0, 8).toUpperCase()}
+                    </button>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                      {c.recebido ? "Recebido" : "Pendente"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground truncate mr-2">{c.cliente?.nome || "—"}</span>
+                    <span className="font-semibold shrink-0">{fmtMoney(c.valor)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Venc: {fmtDate(c.data_vencimento)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px]">Auto</span>
+                      <Switch
+                        checked={c.cobrar_auto}
+                        onCheckedChange={() => toggleCobrarAuto(c.contas_receber_id, c.cobrar_auto)}
+                        disabled={c.recebido}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
@@ -634,6 +667,7 @@ const Financeiro = () => {
               </TableBody>
             </Table>
           </div>
+          )}
         </TabsContent>
       </Tabs>
 
