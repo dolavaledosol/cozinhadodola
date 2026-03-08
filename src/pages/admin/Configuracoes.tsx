@@ -104,54 +104,6 @@ const Configuracoes = () => {
           </CardContent>
         </Card>
       ))}
-
-      {/* General Configs */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Configurações Gerais</h2>
-        <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Configuração</Button>
-      </div>
-
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Chave</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead className="w-24">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {generalItems.length === 0 ? (
-              <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">Nenhuma configuração encontrada</TableCell></TableRow>
-            ) : generalItems.map((c) => (
-              <TableRow key={c.configuracao_id}>
-                <TableCell className="font-medium font-mono text-sm">{c.chave}</TableCell>
-                <TableCell className="text-muted-foreground">{c.valor || "—"}</TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(c.configuracao_id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editId ? "Editar Configuração" : "Nova Configuração"}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2"><Label>Chave *</Label><Input value={form.chave} onChange={(e) => setForm({ ...form, chave: e.target.value })} placeholder="ex: nome_loja" /></div>
-            <div className="space-y-2"><Label>Valor</Label><Input value={form.valor} onChange={(e) => setForm({ ...form, valor: e.target.value })} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={save} disabled={loading || !form.chave}>{loading ? "Salvando..." : "Salvar"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
