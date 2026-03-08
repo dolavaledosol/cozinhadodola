@@ -19,6 +19,8 @@ export const ADMIN_RESOURCES = [
   "formas_pagamento",
   "usuarios",
   "configuracoes",
+  "receitas",
+  "producao",
 ] as const;
 
 export type AdminResource = (typeof ADMIN_RESOURCES)[number];
@@ -38,6 +40,8 @@ export const RESOURCE_LABELS: Record<AdminResource, string> = {
   formas_pagamento: "Formas Pagamento",
   usuarios: "Usuários",
   configuracoes: "Configurações",
+  receitas: "Receitas",
+  producao: "Produção",
 };
 
 /** Maps route paths to resource keys */
@@ -56,6 +60,8 @@ export const ROUTE_TO_RESOURCE: Record<string, AdminResource> = {
   "/admin/formas-pagamento": "formas_pagamento",
   "/admin/usuarios": "usuarios",
   "/admin/configuracoes": "configuracoes",
+  "/admin/receitas": "receitas",
+  "/admin/producao": "producao",
 };
 
 interface PermissionsContextType {

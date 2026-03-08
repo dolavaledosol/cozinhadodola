@@ -1157,6 +1157,111 @@ export type Database = {
           },
         ]
       }
+      producao: {
+        Row: {
+          created_at: string
+          local_estoque_id: string
+          observacao: string | null
+          producao_id: string
+          produto_id: string
+          quantidade_produzida: number
+          receita_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          local_estoque_id: string
+          observacao?: string | null
+          producao_id?: string
+          produto_id: string
+          quantidade_produzida?: number
+          receita_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          local_estoque_id?: string
+          observacao?: string | null
+          producao_id?: string
+          produto_id?: string
+          quantidade_produzida?: number
+          receita_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_local_estoque_id_fkey"
+            columns: ["local_estoque_id"]
+            isOneToOne: false
+            referencedRelation: "local_estoque"
+            referencedColumns: ["local_estoque_id"]
+          },
+          {
+            foreignKeyName: "producao_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produto"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "producao_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_produtos_catalogo"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "producao_receita_id_fkey"
+            columns: ["receita_id"]
+            isOneToOne: false
+            referencedRelation: "receita"
+            referencedColumns: ["receita_id"]
+          },
+        ]
+      }
+      producao_item: {
+        Row: {
+          producao_id: string
+          producao_item_id: string
+          produto_id: string
+          quantidade: number
+        }
+        Insert: {
+          producao_id: string
+          producao_item_id?: string
+          produto_id: string
+          quantidade?: number
+        }
+        Update: {
+          producao_id?: string
+          producao_item_id?: string
+          produto_id?: string
+          quantidade?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_item_producao_id_fkey"
+            columns: ["producao_id"]
+            isOneToOne: false
+            referencedRelation: "producao"
+            referencedColumns: ["producao_id"]
+          },
+          {
+            foreignKeyName: "producao_item_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produto"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "producao_item_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_produtos_catalogo"
+            referencedColumns: ["produto_id"]
+          },
+        ]
+      }
       produto: {
         Row: {
           aceita_fracionado: boolean
@@ -1294,6 +1399,91 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      receita: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          nome: string
+          produto_id: string
+          receita_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          nome: string
+          produto_id: string
+          receita_id?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          nome?: string
+          produto_id?: string
+          receita_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receita_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produto"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "receita_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_produtos_catalogo"
+            referencedColumns: ["produto_id"]
+          },
+        ]
+      }
+      receita_item: {
+        Row: {
+          produto_id: string
+          quantidade: number
+          receita_id: string
+          receita_item_id: string
+        }
+        Insert: {
+          produto_id: string
+          quantidade?: number
+          receita_id: string
+          receita_item_id?: string
+        }
+        Update: {
+          produto_id?: string
+          quantidade?: number
+          receita_id?: string
+          receita_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receita_item_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produto"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "receita_item_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_produtos_catalogo"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "receita_item_receita_id_fkey"
+            columns: ["receita_id"]
+            isOneToOne: false
+            referencedRelation: "receita"
+            referencedColumns: ["receita_id"]
+          },
+        ]
       }
       user_permissions: {
         Row: {
