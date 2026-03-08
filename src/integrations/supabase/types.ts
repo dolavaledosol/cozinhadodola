@@ -172,6 +172,24 @@ export type Database = {
           },
         ]
       }
+      cliente_adm: {
+        Row: {
+          cliente_adm_id: number
+          created_at: string
+          lid: string | null
+        }
+        Insert: {
+          cliente_adm_id?: number
+          created_at?: string
+          lid?: string | null
+        }
+        Update: {
+          cliente_adm_id?: number
+          created_at?: string
+          lid?: string | null
+        }
+        Relationships: []
+      }
       cliente_endereco: {
         Row: {
           cliente_id: string
