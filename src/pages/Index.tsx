@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFilters from "@/components/catalog/CatalogFilters";
 import ProductCard from "@/components/catalog/ProductCard";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Search as SearchIcon } from "lucide-react";
 
