@@ -27,6 +27,7 @@ import FormasPagamento from "./pages/admin/FormasPagamento";
 import Financeiro from "./pages/admin/Financeiro";
 
 import Usuarios from "./pages/admin/Usuarios";
+import Configuracoes from "./pages/admin/Configuracoes";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
                 <Route path="/admin/financeiro" element={<AdminLayout><Financeiro /></AdminLayout>} />
                 
                 <Route path="/admin/usuarios" element={<AdminLayout><Usuarios /></AdminLayout>} />
+                <Route path="/admin/configuracoes" element={<AdminLayout><Configuracoes /></AdminLayout>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
