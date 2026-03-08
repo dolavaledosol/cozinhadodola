@@ -257,6 +257,7 @@ const Financeiro = () => {
     const clienteIds = [...new Set(items.map((c) => c.cliente_id).filter(Boolean))] as string[];
     let allPhones: Record<string, PhoneOption[]> = {};
     let phoneMap: Record<string, { from: string; pn: string; lid: string }> = {};
+    let prefMap: Record<string, string | null> = {};
 
     if (clienteIds.length > 0) {
       // Fetch preferred phone ids from cliente table
@@ -264,7 +265,6 @@ const Financeiro = () => {
         .from("cliente")
         .select("cliente_id, telefone_preferencial_id")
         .in("cliente_id", clienteIds);
-      const prefMap: Record<string, string | null> = {};
       if (clientePrefs) for (const c of clientePrefs) prefMap[c.cliente_id] = (c as any).telefone_preferencial_id;
 
       const { data: phones } = await supabase
@@ -296,7 +296,7 @@ const Financeiro = () => {
       }
     }
 
-    return { phoneMap, allPhones };
+    return { phoneMap, allPhones, prefMap };
   };
 
   const exportReceber = async () => {
@@ -341,13 +341,16 @@ const Financeiro = () => {
       return;
     }
 
-    const { phoneMap, allPhones } = await buildExportRows(autorizadas);
+    const { phoneMap, allPhones, prefMap } = await buildExportRows(autorizadas);
 
     // Check if any client has multiple eligible phones (is_whatsapp + verified + lid not empty)
     const clientsWithMultiplePhones: { cliente_id: string; clienteNome: string; phones: PhoneOption[] }[] = [];
     for (const c of autorizadas) {
       if (!c.cliente_id || !allPhones[c.cliente_id]) continue;
       const eligible = allPhones[c.cliente_id].filter(p => p.lid);
+      const prefId = prefMap[c.cliente_id];
+      // Skip if client already has a preferred phone set and it's in the eligible list
+      if (prefId && eligible.find(p => p.cliente_telefone_id === prefId)) continue;
       if (eligible.length > 1 && !clientsWithMultiplePhones.find(x => x.cliente_id === c.cliente_id)) {
         clientsWithMultiplePhones.push({
           cliente_id: c.cliente_id,
