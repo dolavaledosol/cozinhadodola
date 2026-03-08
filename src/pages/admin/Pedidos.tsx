@@ -976,7 +976,7 @@ const Pedidos = () => {
     setNewClientNome("");
     setNewClientCpf("");
     setNewClientEmail("");
-    setNewClientTelefones([defaultTelefone()]);
+    setNewClientTelefones([""]);
     setSelectedClienteCpf("");
     setCpfCnpjError(null);
     setNewOrderTipoEntrega("retirada");
