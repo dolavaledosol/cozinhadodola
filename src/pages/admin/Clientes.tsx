@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, Phone, AlertCircle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Phone, AlertCircle, Star } from "lucide-react";
 import { PhoneInput, phoneToDigits, digitsToPhone, displayPhone } from "@/components/ui/phone-input";
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -21,6 +21,7 @@ interface Cliente {
   email: string | null;
   tipo_cliente: string;
   ativo: boolean;
+  telefone_preferencial_id: string | null;
 }
 
 interface TelefoneItem {
@@ -39,6 +40,7 @@ const Clientes = () => {
   const [cpfLocked, setCpfLocked] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [telefones, setTelefones] = useState<TelefoneItem[]>([]);
+  const [telefonePreferencialId, setTelefonePreferencialId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cpfError, setCpfError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -57,7 +59,7 @@ const Clientes = () => {
     return matchText && matchStatus;
   });
 
-  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: "" }]); setCpfError(null); setCpfLocked(false); setDialogOpen(true); };
+  const openNew = () => { setEditId(null); setForm(emptyForm); setTelefones([{ telefone: "" }]); setTelefonePreferencialId(null); setCpfError(null); setCpfLocked(false); setDialogOpen(true); };
   const openEdit = (c: Cliente) => {
     setEditId(c.cliente_id);
     setCpfError(null);
@@ -70,6 +72,7 @@ const Clientes = () => {
       ativo: c.ativo,
     });
     setTelefones([]);
+    setTelefonePreferencialId((c as any).telefone_preferencial_id || null);
     supabase.from("cliente_telefone").select("cliente_telefone_id, telefone").eq("cliente_id", c.cliente_id).then(({ data }) => {
       if (data && data.length > 0) {
         setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: digitsToPhone(t.telefone) })));
@@ -151,14 +154,29 @@ const Clientes = () => {
         for (const del of toDelete) {
           await supabase.from("cliente_telefone").delete().eq("cliente_telefone_id", del.cliente_telefone_id);
         }
-        for (const tel of validPhonesForSave) {
+        // Track new phone IDs for preferencial mapping
+        const newPhoneIds: Record<number, string> = {};
+        for (let i = 0; i < validPhonesForSave.length; i++) {
+          const tel = validPhonesForSave[i];
           const digits = phoneToDigits(tel.telefone);
           if (tel.id) {
             await supabase.from("cliente_telefone").update({ telefone: digits, is_whatsapp: false }).eq("cliente_telefone_id", tel.id);
           } else {
-            await supabase.from("cliente_telefone").insert({ cliente_id: targetId, telefone: digits, is_whatsapp: false });
+            const { data: inserted } = await supabase.from("cliente_telefone").insert({ cliente_id: targetId, telefone: digits, is_whatsapp: false }).select("cliente_telefone_id").single();
+            if (inserted) {
+              tel.id = inserted.cliente_telefone_id;
+            }
           }
         }
+
+        // Save preferred phone
+        let prefId = telefonePreferencialId;
+        // If preferred was a new phone (no id before save), find by index
+        const prefPhone = validPhonesForSave.find(t => t.id === prefId);
+        if (!prefPhone && validPhonesForSave.length > 0) {
+          prefId = validPhonesForSave[0].id || null;
+        }
+        await supabase.from("cliente").update({ telefone_preferencial_id: prefId || null } as any).eq("cliente_id", targetId);
       }
 
       toast({ title: actionLabel });
@@ -280,6 +298,14 @@ const Clientes = () => {
               </div>
               {telefones.map((tel, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
+                  <button
+                    type="button"
+                    title={tel.id && telefonePreferencialId === tel.id ? "Telefone preferencial" : "Definir como preferencial"}
+                    className="shrink-0"
+                    onClick={() => tel.id && setTelefonePreferencialId(tel.id)}
+                  >
+                    <Star className={`h-4 w-4 ${tel.id && telefonePreferencialId === tel.id ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
+                  </button>
                   <PhoneInput
                     value={tel.telefone}
                     onChange={(val) => {
@@ -290,12 +316,16 @@ const Clientes = () => {
                     className="flex-1"
                   />
                   {telefones.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setTelefones(telefones.filter((_, i) => i !== idx))}>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => {
+                      if (tel.id && telefonePreferencialId === tel.id) setTelefonePreferencialId(null);
+                      setTelefones(telefones.filter((_, i) => i !== idx));
+                    }}>
                       <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
                   )}
                 </div>
               ))}
+              <p className="text-[11px] text-muted-foreground">Clique na ★ para definir o telefone preferencial para cobrança</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

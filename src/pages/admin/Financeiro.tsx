@@ -259,6 +259,14 @@ const Financeiro = () => {
     let phoneMap: Record<string, { from: string; pn: string; lid: string }> = {};
 
     if (clienteIds.length > 0) {
+      // Fetch preferred phone ids from cliente table
+      const { data: clientePrefs } = await supabase
+        .from("cliente")
+        .select("cliente_id, telefone_preferencial_id")
+        .in("cliente_id", clienteIds);
+      const prefMap: Record<string, string | null> = {};
+      if (clientePrefs) for (const c of clientePrefs) prefMap[c.cliente_id] = (c as any).telefone_preferencial_id;
+
       const { data: phones } = await supabase
         .from("cliente_telefone")
         .select("cliente_telefone_id, cliente_id, telefone, pn, lid, is_whatsapp, verificado")
@@ -275,11 +283,14 @@ const Financeiro = () => {
           });
         }
         for (const [cid, plist] of Object.entries(allPhones)) {
-          // Use override if provided, else pick the first with lid
+          // Priority: override > preferred > first with lid > first
           const overrideId = phoneOverrides?.[cid];
+          const prefId = prefMap[cid];
           const chosen = overrideId
             ? plist.find(p => p.cliente_telefone_id === overrideId) || plist[0]
-            : plist.find(p => p.lid) || plist[0];
+            : prefId
+              ? plist.find(p => p.cliente_telefone_id === prefId) || plist.find(p => p.lid) || plist[0]
+              : plist.find(p => p.lid) || plist[0];
           phoneMap[cid] = { from: chosen.telefone || "", pn: chosen.pn || "", lid: chosen.lid || "" };
         }
       }
@@ -412,12 +423,12 @@ const Financeiro = () => {
 
     setSendingWebhook(true);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
       const apikey = cfgMap["webhook_cobranca_apikey"];
-      if (apikey) headers["Authorization"] = `Bearer ${apikey}`;
-
-      const res = await fetch(webhookUrl, { method: "POST", headers, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { data, error } = await supabase.functions.invoke("webhook-proxy", {
+        body: { webhook_url: webhookUrl, webhook_apikey: apikey || "", payload },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast({ title: `Webhook enviado com ${items.length} cobranças` });
     } catch (err: any) {
       toast({ title: "Erro ao enviar webhook", description: err.message, variant: "destructive" });
