@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, Check, Download, Send, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Search, Pencil, Trash2, Check, Download, Send, Loader2, AlertTriangle } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 /* ── Shared types ── */
