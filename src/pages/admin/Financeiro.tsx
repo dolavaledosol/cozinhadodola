@@ -487,6 +487,34 @@ const Financeiro = () => {
             </div>
             <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
           </div>
+          {isMobile ? (
+            <div className="space-y-2">
+              {filteredPagar.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</p>
+              ) : filteredPagar.map((c) => (
+                <div key={c.contas_pagar_id} className="border rounded-xl p-3 space-y-2 bg-card">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm truncate mr-2">{c.descricao}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${c.pago ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                      {c.pago ? "Pago" : "Pendente"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{c.fornecedor?.nome || "—"}</span>
+                    <span className="font-semibold">{fmtMoney(c.valor)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Venc: {fmtDate(c.data_vencimento)}</span>
+                    <div className="flex gap-1">
+                      {!c.pago && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => marcarPago(c.contas_pagar_id)} title="Marcar pago"><Check className="h-3.5 w-3.5 text-green-600" /></Button>}
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditPagar(c)}><Pencil className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePagar(c.contas_pagar_id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
@@ -527,6 +555,7 @@ const Financeiro = () => {
               </TableBody>
             </Table>
           </div>
+          )}
         </TabsContent>
 
         {/* ══════════ TAB RECEBER ══════════ */}
