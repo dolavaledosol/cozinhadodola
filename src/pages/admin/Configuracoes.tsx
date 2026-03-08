@@ -59,35 +59,6 @@ const Configuracoes = () => {
 
   useEffect(() => { load(); }, []);
 
-  const openNew = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
-  const openEdit = (c: Configuracao) => {
-    setEditId(c.configuracao_id);
-    setForm({ chave: c.chave, valor: c.valor || "" });
-    setDialogOpen(true);
-  };
-
-  const save = async () => {
-    setLoading(true);
-    const payload = { chave: form.chave, valor: form.valor || null, user_id: null };
-    const { error } = editId
-      ? await supabase.from("configuracao").update(payload).eq("configuracao_id", editId)
-      : await supabase.from("configuracao").insert(payload);
-    setLoading(false);
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: editId ? "Configuração atualizada" : "Configuração criada" });
-      setDialogOpen(false);
-      load();
-    }
-  };
-
-  const remove = async (id: string) => {
-    await supabase.from("configuracao").delete().eq("configuracao_id", id);
-    toast({ title: "Configuração removida" });
-    load();
-  };
-
   const saveWebhookSection = async (sectionTitle: string, keys: typeof WEBHOOK_SECTIONS[0]["keys"]) => {
     setSavingSection(sectionTitle);
     for (const wk of keys) {
