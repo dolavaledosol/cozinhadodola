@@ -189,8 +189,7 @@ const Checkout = () => {
   const handleFinalize = async () => {
     const error = validateCpfCnpj(cpfCnpj);
     if (error) { setCpfCnpjError(error); return; }
-    const firstTelDigits = telefones[0]?.replace(/\D/g, "") || "";
-    if (firstTelDigits.length < 10) { setTelefoneError("Telefone deve ter pelo menos 10 dígitos"); return; }
+    if (!telefones[0] || !isValidPhoneNumber(telefones[0])) { setTelefoneError("Telefone inválido"); return; }
     if (!tipoEntrega) { toast({ title: "Selecione o tipo de entrega", variant: "destructive" }); return; }
     if (tipoEntrega === "entrega" && !enderecoSelecionado) { toast({ title: "Selecione ou cadastre um endereço de entrega", variant: "destructive" }); return; }
 
