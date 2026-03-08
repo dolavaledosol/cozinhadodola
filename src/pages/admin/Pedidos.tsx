@@ -1515,6 +1515,33 @@ const Pedidos = () => {
         </Select>
       </div>
 
+      {isMobile ? (
+        <div className="space-y-2">
+          {filtered.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado</p>
+          ) : filtered.map((p) => {
+            const tipo = getTipoEntrega(p);
+            const TipoIcon = tipo.icon;
+            return (
+              <button key={p.pedido_id} onClick={() => openDetails(p)} className="w-full text-left border rounded-xl p-3 space-y-2 bg-card hover:bg-muted/50 transition-colors active:scale-[0.98]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-primary">{p.pedido_id.slice(0, 8)}</span>
+                  <Badge variant="outline" className={statusColors[p.status]}>{statusLabels[p.status]}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm truncate mr-2">{p.cliente?.nome || "—"}</span>
+                  <span className="font-semibold text-sm shrink-0">R$ {Number(p.total).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>{format(new Date(p.data), "dd/MM/yy HH:mm")}</span>
+                  <span className="inline-flex items-center gap-0.5"><TipoIcon className="h-3 w-3" /> {tipo.label}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-muted">{origemLabels[p.origem] || p.origem}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
@@ -1568,6 +1595,7 @@ const Pedidos = () => {
           </TableBody>
         </Table>
       </div>
+      )}
 
       {/* Detail dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
