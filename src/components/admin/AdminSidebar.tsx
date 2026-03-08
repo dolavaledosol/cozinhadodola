@@ -33,6 +33,9 @@ const cadastroItems: MenuItem[] = [
   { title: "Bancos", url: "/admin/bancos", icon: Landmark, resource: "bancos" },
   { title: "Formas Pgto", url: "/admin/formas-pagamento", icon: CreditCard, resource: "formas_pagamento" },
   { title: "Usuários", url: "/admin/usuarios", icon: UserCog, resource: "usuarios" },
+  { title: "Receitas", url: "/admin/receitas", icon: FlaskConical, resource: "receitas" as any },
+  { title: "Produção", url: "/admin/producao", icon: ChefHat, resource: "producao" as any },
+  { title: "Configurações", url: "/admin/configuracoes", icon: Settings, resource: "configuracoes" as any },
 ];
 
 const AdminSidebar = () => {
