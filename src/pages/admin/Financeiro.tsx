@@ -346,15 +346,32 @@ const Financeiro = () => {
       return;
     }
 
+    // Fetch recent billing logs to warn the user
+    const { data: logs } = await supabase
+      .from("integracao_log")
+      .select("created_at, status, payload")
+      .eq("tipo", "webhook_cobranca")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (logs && logs.length > 0) {
+      setRecentLogs(logs as any);
+      setPendingConfirmAction(() => () => proceedWithWebhook(autorizadas));
+      setConfirmDialogOpen(true);
+      return;
+    }
+
+    await proceedWithWebhook(autorizadas);
+  };
+
+  const proceedWithWebhook = async (autorizadas: ContaReceber[]) => {
     const { phoneMap, allPhones, prefMap } = await buildExportRows(autorizadas);
 
-    // Check if any client has multiple eligible phones (is_whatsapp + verified + lid not empty)
     const clientsWithMultiplePhones: { cliente_id: string; clienteNome: string; phones: PhoneOption[] }[] = [];
     for (const c of autorizadas) {
       if (!c.cliente_id || !allPhones[c.cliente_id]) continue;
       const eligible = allPhones[c.cliente_id].filter(p => p.lid);
       const prefId = prefMap[c.cliente_id];
-      // Skip if client already has a preferred phone set and it's in the eligible list
       if (prefId && eligible.find(p => p.cliente_telefone_id === prefId)) continue;
       if (eligible.length > 1 && !clientsWithMultiplePhones.find(x => x.cliente_id === c.cliente_id)) {
         clientsWithMultiplePhones.push({
@@ -366,7 +383,6 @@ const Financeiro = () => {
     }
 
     if (clientsWithMultiplePhones.length > 0) {
-      // Need user to pick phones
       setPhoneOptions(clientsWithMultiplePhones);
       const defaults: Record<string, string> = {};
       for (const cp of clientsWithMultiplePhones) {
