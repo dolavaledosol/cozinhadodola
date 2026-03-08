@@ -2562,6 +2562,7 @@ const Pedidos = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </PullToRefresh>
   );
 };
 
