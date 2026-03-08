@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Save, Webhook } from "lucide-react";
+import { Save, Webhook } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Configuracao {
@@ -14,8 +12,6 @@ interface Configuracao {
   chave: string;
   valor: string | null;
 }
-
-const emptyForm = { chave: "", valor: "" };
 
 const WEBHOOK_SECTIONS = [
   {
