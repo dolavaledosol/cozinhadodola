@@ -298,6 +298,14 @@ const Clientes = () => {
               </div>
               {telefones.map((tel, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
+                  <button
+                    type="button"
+                    title={tel.id && telefonePreferencialId === tel.id ? "Telefone preferencial" : "Definir como preferencial"}
+                    className="shrink-0"
+                    onClick={() => tel.id && setTelefonePreferencialId(tel.id)}
+                  >
+                    <Star className={`h-4 w-4 ${tel.id && telefonePreferencialId === tel.id ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
+                  </button>
                   <PhoneInput
                     value={tel.telefone}
                     onChange={(val) => {
@@ -308,12 +316,16 @@ const Clientes = () => {
                     className="flex-1"
                   />
                   {telefones.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setTelefones(telefones.filter((_, i) => i !== idx))}>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => {
+                      if (tel.id && telefonePreferencialId === tel.id) setTelefonePreferencialId(null);
+                      setTelefones(telefones.filter((_, i) => i !== idx));
+                    }}>
                       <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
                   )}
                 </div>
               ))}
+              <p className="text-[11px] text-muted-foreground">Clique na ★ para definir o telefone preferencial para cobrança</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
