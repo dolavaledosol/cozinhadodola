@@ -20,6 +20,7 @@ interface ProdutoEstoque {
   preco: number;
   familia: string;
   fabricante: string;
+  slug: string | null;
   total_estoque: number;
   checked: boolean;
 }
