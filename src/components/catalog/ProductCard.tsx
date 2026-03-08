@@ -219,9 +219,14 @@ const ProductCard = memo(function ProductCard({
                     <Weight className="h-3 w-3" /> {pesoStr}
                   </span>
                 )}
+                {aceita_fracionado && pesoPorcao && (
+                  <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                    Porção: {pesoPorcao}
+                  </span>
+                )}
                 {aceita_fracionado && (
                   <span className="text-xs text-primary bg-primary/10 px-2.5 py-1 rounded-full font-medium">
-                    Fracionado
+                    R$ {preco.toFixed(2)} / {ul}
                   </span>
                 )}
               </div>
