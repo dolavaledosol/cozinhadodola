@@ -2012,7 +2012,7 @@ const Pedidos = () => {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <Label className="text-xs text-muted-foreground">Telefones</Label>
-                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setNewClientTelefones([...newClientTelefones, defaultTelefone()])}>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setNewClientTelefones([...newClientTelefones, ""])}>
                           <Plus className="h-3 w-3" /> Adicionar
                         </Button>
                       </div>
