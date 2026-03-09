@@ -729,9 +729,32 @@ const Estoque = () => {
 
         {/* ── Tab Movimentação ── */}
         <TabsContent value="movimentacao" className="space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por produto, documento, tipo..." value={movSearch} onChange={(e) => setMovSearch(e.target.value)} className="pl-10" />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar por produto, documento..." value={movSearch} onChange={(e) => setMovSearch(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={movFilterLocal} onValueChange={setMovFilterLocal}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Local" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos locais</SelectItem>
+                {movLocaisUnicos.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={movFilterFabricante} onValueChange={setMovFilterFabricante}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Fabricante" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos fabricantes</SelectItem>
+                {movFabricantesUnicos.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={movFilterTipo} onValueChange={setMovFilterTipo}>
+              <SelectTrigger className="w-36"><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos tipos</SelectItem>
+                {movTiposUnicos.map(t => <SelectItem key={t} value={t}>{tipoLabel(t)}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="border rounded-lg overflow-auto">
