@@ -9,10 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Search, ArrowRightLeft, Download, Upload } from "lucide-react";
-import { format } from "date-fns";
+import { Search, ArrowRightLeft, Download, Upload, CalendarIcon } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import EstoqueRelatorio from "@/components/admin/EstoqueRelatorio";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 /* ── Types ── */
 interface EstoqueRow {
