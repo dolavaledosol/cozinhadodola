@@ -40,6 +40,7 @@ interface TransferLinha {
   produto_id: string;
   nome: string;
   familia: string;
+  fabricante: string;
   peso_liquido: number | null;
   unidade_medida: string;
   checked: boolean;
