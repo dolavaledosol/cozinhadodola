@@ -89,6 +89,9 @@ const Estoque = () => {
   /* ── Movimentação state ── */
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoRow[]>([]);
   const [movSearch, setMovSearch] = useState("");
+  const [movFilterLocal, setMovFilterLocal] = useState("all");
+  const [movFilterFabricante, setMovFilterFabricante] = useState("all");
+  const [movFilterTipo, setMovFilterTipo] = useState("all");
 
   /* ── Conciliação state ── */
   const [conciliacaoOpen, setConciliacaoOpen] = useState(false);
