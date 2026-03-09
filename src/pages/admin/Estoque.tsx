@@ -24,7 +24,7 @@ interface EstoqueRow {
   preco_promocional: number | null;
   quantidade_disponivel: number;
   quantidade_pedida_nao_separada: number;
-  produto: { nome: string; preco: number; fabricante: { nome: string } | null; familia: { nome: string } | null } | null;
+  produto: { nome: string; preco: number; peso_liquido: number | null; unidade_medida: string; fabricante: { nome: string } | null; familia: { nome: string } | null } | null;
   local_estoque: { nome: string } | null;
 }
 interface LocalEstoque { local_estoque_id: string; nome: string; }
@@ -40,6 +40,8 @@ interface TransferLinha {
   produto_id: string;
   nome: string;
   familia: string;
+  peso_liquido: number | null;
+  unidade_medida: string;
   checked: boolean;
   quantidade: string;
   disponivel: number;
@@ -111,7 +113,7 @@ const Estoque = () => {
 
   const load = async () => {
     const [{ data: est }, { data: prod }, { data: loc }] = await Promise.all([
-      supabase.from("estoque_local").select("*, produto(nome, preco, fabricante(nome), familia(nome)), local_estoque(nome)").order("produto_id"),
+      supabase.from("estoque_local").select("*, produto(nome, preco, peso_liquido, unidade_medida, fabricante(nome), familia(nome)), local_estoque(nome)").order("produto_id"),
       supabase.from("produto").select("produto_id, nome").eq("ativo", true).order("nome"),
       supabase.from("local_estoque").select("local_estoque_id, nome").eq("ativo", true).order("nome"),
     ]);
@@ -472,6 +474,8 @@ const Estoque = () => {
           produto_id: e.produto_id,
           nome: e.produto?.nome || "—",
           familia: e.produto?.familia?.nome || "—",
+          peso_liquido: e.produto?.peso_liquido ?? null,
+          unidade_medida: e.produto?.unidade_medida || "un",
           checked: false,
           quantidade: "1",
           disponivel: Number(e.quantidade_disponivel),
@@ -499,6 +503,8 @@ const Estoque = () => {
             produto_id: e.produto_id,
             nome: e.produto?.nome || "—",
             familia: e.produto?.familia?.nome || "—",
+            peso_liquido: e.produto?.peso_liquido ?? null,
+            unidade_medida: e.produto?.unidade_medida || "un",
             checked: existing?.checked || false,
             quantidade: existing?.quantidade || "1",
             disponivel: Number(e.quantidade_disponivel),
@@ -840,6 +846,8 @@ const Estoque = () => {
                         </TableHead>
                         <TableHead>Produto</TableHead>
                         <TableHead>Família</TableHead>
+                        <TableHead className="text-center">Peso</TableHead>
+                        <TableHead className="text-center">Unid.</TableHead>
                         <TableHead className="text-center w-24">Est. Origem</TableHead>
                         <TableHead className="text-center w-24">Est. Destino</TableHead>
                         <TableHead className="w-24">Qtd Transferir</TableHead>
@@ -853,6 +861,8 @@ const Estoque = () => {
                           </TableCell>
                           <TableCell className="font-medium">{l.nome}</TableCell>
                           <TableCell className="text-muted-foreground">{l.familia}</TableCell>
+                          <TableCell className="text-center text-muted-foreground">{l.peso_liquido != null ? l.peso_liquido : "—"}</TableCell>
+                          <TableCell className="text-center text-muted-foreground">{l.unidade_medida}</TableCell>
                           <TableCell className="text-center font-semibold">{l.disponivel}</TableCell>
                           <TableCell className="text-center text-muted-foreground">{transferDestino ? l.estoqueDestino : "—"}</TableCell>
                           <TableCell>
