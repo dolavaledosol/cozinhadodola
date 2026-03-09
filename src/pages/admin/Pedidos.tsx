@@ -2359,11 +2359,13 @@ const Pedidos = () => {
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                 <TableRow>
+               <TableRow>
                   <TableHead>Código</TableHead>
                   <TableHead>Data Entrada</TableHead>
                   <TableHead>NF</TableHead>
+                  <TableHead>Data NF</TableHead>
                   <TableHead className="hidden sm:table-cell">Fornecedor</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
