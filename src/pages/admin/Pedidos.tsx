@@ -292,7 +292,7 @@ const Pedidos = () => {
   const loadCompras = async () => {
     const { data } = await supabase
       .from("contas_pagar")
-      .select("contas_pagar_id, descricao, valor, data_vencimento, data_pagamento, pago, fornecedor_id, observacao, created_at, status_compra, local_estoque_id, compra_itens, fornecedor(nome)")
+      .select("contas_pagar_id, descricao, valor, data_vencimento, data_pagamento, data_nf, pago, fornecedor_id, observacao, created_at, status_compra, local_estoque_id, compra_itens, fornecedor(nome)")
       .order("created_at", { ascending: false });
     if (data) setCompras(data as any);
   };
