@@ -304,7 +304,7 @@ const Pedidos = () => {
     if (forns) setCompraEditFornecedores(forns);
     setCompraEdit({
       contas_pagar_id: c.contas_pagar_id, descricao: c.descricao, valor: String(c.valor),
-      data_vencimento: c.data_vencimento, pago: c.pago, observacao: c.observacao || "",
+      data_vencimento: c.data_vencimento, data_nf: c.data_nf || "", pago: c.pago, observacao: c.observacao || "",
       fornecedor_id: c.fornecedor_id || "",
     });
     setCompraEditOpen(true);
