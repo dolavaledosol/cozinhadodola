@@ -57,7 +57,7 @@ interface MovimentacaoRow {
   created_at: string;
   usuario_id: string | null;
   usuario_nome?: string;
-  produto: { produto_id: string; nome: string; peso_liquido: number | null; unidade_medida: string; fabricante: { nome: string } | null; familia: { nome: string } | null } | null;
+  produto: { produto_id: string; nome: string; peso_liquido: number | null; unidade_medida: string; fabricante: { nome: string } | null; peso_liquido: number | null; unidade_medida: string; fabricante: { nome: string } | null; familia: { nome: string } | null } | null;
   local_estoque: { nome: string } | null;
   local_estoque_destino: { nome: string } | null;
 }
@@ -125,7 +125,7 @@ const Estoque = () => {
   const loadMovimentacoes = async () => {
     const { data } = await supabase
       .from("movimentacao_estoque")
-      .select("movimentacao_estoque_id, tipo, documento, quantidade, created_at, usuario_id, produto(produto_id, nome, familia(nome)), local_estoque:local_estoque_id(nome), local_estoque_destino:local_estoque_destino_id(nome)")
+      .select("movimentacao_epeso_liquido, unidade_medida, fabricante(nome), stoque_id, tipo, documento, quantidade, created_at, usuario_id, produto(produto_id, nome, familia(nome)), local_estoque:local_estoque_id(nome), local_estoque_destino:local_estoque_destino_id(nome)")
       .order("created_at", { ascending: false })
       .limit(500);
     if (data) {
