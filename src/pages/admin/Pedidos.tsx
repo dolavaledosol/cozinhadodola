@@ -2347,10 +2347,11 @@ const Pedidos = () => {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground truncate mr-2">{c.fornecedor?.nome || "—"}</span>
-                      <span className="text-xs text-muted-foreground">NF {nfNum}</span>
+                      <span className="font-semibold shrink-0">{fmtMoney(c.valor)}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {c.created_at ? format(new Date(c.created_at), "dd/MM/yyyy") : "—"}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>NF {nfNum}{c.data_nf ? ` — ${fmtDate(c.data_nf)}` : ""}</span>
+                      <span>{c.created_at ? format(new Date(c.created_at), "dd/MM/yyyy") : "—"}</span>
                     </div>
                   </button>
                 );
