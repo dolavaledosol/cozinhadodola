@@ -615,14 +615,20 @@ const Estoque = () => {
 
   /* ── Movimentação filtered ── */
   const filteredMov = movimentacoes.filter((m) => {
+    if (movFilterLocal !== "all" && m.local_estoque?.nome !== movFilterLocal) return false;
+    if (movFilterFabricante !== "all" && m.produto?.fabricante?.nome !== movFilterFabricante) return false;
+    if (movFilterTipo !== "all" && m.tipo !== movFilterTipo) return false;
     if (!movSearch) return true;
     const term = movSearch.toLowerCase();
     return (m.produto?.nome || "").toLowerCase().includes(term) ||
       (m.documento || "").toLowerCase().includes(term) ||
       (m.produto?.produto_id || "").toLowerCase().includes(term) ||
-      (m.produto?.familia?.nome || "").toLowerCase().includes(term) ||
       m.tipo.toLowerCase().includes(term);
   });
+
+  const movLocaisUnicos = [...new Set(movimentacoes.map(m => m.local_estoque?.nome).filter(Boolean))] as string[];
+  const movFabricantesUnicos = [...new Set(movimentacoes.map(m => m.produto?.fabricante?.nome).filter(Boolean))] as string[];
+  const movTiposUnicos = [...new Set(movimentacoes.map(m => m.tipo))];
 
   const tipoLabel = (tipo: string) => {
     switch (tipo) {
