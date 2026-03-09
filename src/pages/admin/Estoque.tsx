@@ -533,6 +533,7 @@ const Estoque = () => {
     .filter((l) => {
       if (!transferSearchProd) return true;
       return l.nome.toLowerCase().includes(transferSearchProd.toLowerCase()) ||
+        l.fabricante.toLowerCase().includes(transferSearchProd.toLowerCase()) ||
         l.familia.toLowerCase().includes(transferSearchProd.toLowerCase());
     })
     .sort((a, b) => {
