@@ -503,6 +503,8 @@ const Estoque = () => {
             produto_id: e.produto_id,
             nome: e.produto?.nome || "—",
             familia: e.produto?.familia?.nome || "—",
+            peso_liquido: e.produto?.peso_liquido ?? null,
+            unidade_medida: e.produto?.unidade_medida || "un",
             checked: existing?.checked || false,
             quantidade: existing?.quantidade || "1",
             disponivel: Number(e.quantidade_disponivel),
