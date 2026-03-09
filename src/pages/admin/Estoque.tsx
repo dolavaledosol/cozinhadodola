@@ -848,6 +848,7 @@ const Estoque = () => {
                           />
                         </TableHead>
                         <TableHead>Produto</TableHead>
+                        <TableHead>Fabricante</TableHead>
                         <TableHead>Família</TableHead>
                         <TableHead className="text-center">Peso</TableHead>
                         <TableHead className="text-center">Unid.</TableHead>
@@ -863,6 +864,7 @@ const Estoque = () => {
                             <Checkbox checked={l.checked} onCheckedChange={(v) => updateTransferLinha(l.produto_id, "checked", !!v)} />
                           </TableCell>
                           <TableCell className="font-medium">{l.nome}</TableCell>
+                          <TableCell className="text-muted-foreground">{l.fabricante}</TableCell>
                           <TableCell className="text-muted-foreground">{l.familia}</TableCell>
                           <TableCell className="text-center text-muted-foreground">{l.peso_liquido != null ? l.peso_liquido : "—"}</TableCell>
                           <TableCell className="text-center text-muted-foreground">{l.unidade_medida}</TableCell>
