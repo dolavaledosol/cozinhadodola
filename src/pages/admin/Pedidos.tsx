@@ -2445,10 +2445,14 @@ const Pedidos = () => {
                 <SelectContent>{compraEditFornecedores.map((f) => <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Valor (R$) *</Label>
                 <Input type="number" step="0.01" value={compraEdit.valor} onChange={(e) => setCompraEdit({ ...compraEdit, valor: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Data NF</Label>
+                <Input type="date" value={compraEdit.data_nf} onChange={(e) => setCompraEdit({ ...compraEdit, data_nf: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Vencimento *</Label>
