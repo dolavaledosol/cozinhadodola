@@ -39,7 +39,6 @@ interface ProdutoAgrupado {
 interface TransferLinha {
   produto_id: string;
   nome: string;
-  familia: string;
   fabricante: string;
   peso_liquido: number | null;
   unidade_medida: string;
@@ -474,7 +473,6 @@ const Estoque = () => {
         return {
           produto_id: e.produto_id,
           nome: e.produto?.nome || "—",
-          familia: e.produto?.familia?.nome || "—",
           fabricante: e.produto?.fabricante?.nome || "—",
           peso_liquido: e.produto?.peso_liquido ?? null,
           unidade_medida: e.produto?.unidade_medida || "un",
@@ -504,7 +502,6 @@ const Estoque = () => {
           return {
             produto_id: e.produto_id,
             nome: e.produto?.nome || "—",
-            familia: e.produto?.familia?.nome || "—",
             fabricante: e.produto?.fabricante?.nome || "—",
             peso_liquido: e.produto?.peso_liquido ?? null,
             unidade_medida: e.produto?.unidade_medida || "un",
@@ -533,8 +530,7 @@ const Estoque = () => {
     .filter((l) => {
       if (!transferSearchProd) return true;
       return l.nome.toLowerCase().includes(transferSearchProd.toLowerCase()) ||
-        l.fabricante.toLowerCase().includes(transferSearchProd.toLowerCase()) ||
-        l.familia.toLowerCase().includes(transferSearchProd.toLowerCase());
+        l.fabricante.toLowerCase().includes(transferSearchProd.toLowerCase());
     })
     .sort((a, b) => {
       if (a.checked !== b.checked) return a.checked ? -1 : 1;
@@ -850,7 +846,7 @@ const Estoque = () => {
                         </TableHead>
                         <TableHead>Produto</TableHead>
                         <TableHead>Fabricante</TableHead>
-                        <TableHead>Família</TableHead>
+                        
                         <TableHead className="text-center">Peso</TableHead>
                         <TableHead className="text-center">Unid.</TableHead>
                         <TableHead className="text-center w-24">Est. Origem</TableHead>
@@ -866,7 +862,7 @@ const Estoque = () => {
                           </TableCell>
                           <TableCell className="font-medium">{l.nome}</TableCell>
                           <TableCell className="text-muted-foreground">{l.fabricante}</TableCell>
-                          <TableCell className="text-muted-foreground">{l.familia}</TableCell>
+                          
                           <TableCell className="text-center text-muted-foreground">{l.peso_liquido != null ? l.peso_liquido : "—"}</TableCell>
                           <TableCell className="text-center text-muted-foreground">{l.unidade_medida}</TableCell>
                           <TableCell className="text-center font-semibold">{l.disponivel}</TableCell>
