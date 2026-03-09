@@ -624,6 +624,13 @@ const Estoque = () => {
     if (movFilterLocal !== "all" && m.local_estoque?.nome !== movFilterLocal) return false;
     if (movFilterFabricante !== "all" && m.produto?.fabricante?.nome !== movFilterFabricante) return false;
     if (movFilterTipo !== "all" && m.tipo !== movFilterTipo) return false;
+    const movDate = new Date(m.created_at);
+    if (movDateFrom && movDate < movDateFrom) return false;
+    if (movDateTo) {
+      const endOfDay = new Date(movDateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (movDate > endOfDay) return false;
+    }
     if (!movSearch) return true;
     const term = movSearch.toLowerCase();
     return (m.produto?.nome || "").toLowerCase().includes(term) ||
