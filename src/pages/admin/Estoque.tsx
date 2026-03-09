@@ -846,7 +846,7 @@ const Estoque = () => {
                         </TableHead>
                         <TableHead>Produto</TableHead>
                         <TableHead>Fabricante</TableHead>
-                        <TableHead>Família</TableHead>
+                        
                         <TableHead className="text-center">Peso</TableHead>
                         <TableHead className="text-center">Unid.</TableHead>
                         <TableHead className="text-center w-24">Est. Origem</TableHead>
