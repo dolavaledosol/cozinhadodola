@@ -1077,26 +1077,16 @@ const Pedidos = () => {
       return;
     }
 
-    // Validate CPF/CNPJ
+    // Validate CPF/CNPJ (optional - only validate format if provided)
     if (showNewClient) {
-      if (!newClientCpf) {
-        setCpfCnpjError("CPF/CNPJ é obrigatório");
-        toast({ title: "Informe o CPF/CNPJ do cliente", variant: "destructive" });
-        return;
-      }
-      if (!validateCpfCnpj(newClientCpf)) {
+      if (newClientCpf && !validateCpfCnpj(newClientCpf)) {
         setCpfCnpjError("CPF/CNPJ inválido");
         toast({ title: "CPF/CNPJ inválido", description: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido", variant: "destructive" });
         return;
       }
     } else if (newOrderClienteId && newOrderClienteId !== "__none") {
       const cliente = clientes.find(c => c.cliente_id === newOrderClienteId);
-      if (!cliente?.cpf_cnpj) {
-        if (!selectedClienteCpf) {
-          setCpfCnpjError("CPF/CNPJ é obrigatório");
-          toast({ title: "Informe o CPF/CNPJ do cliente", variant: "destructive" });
-          return;
-        }
+      if (!cliente?.cpf_cnpj && selectedClienteCpf) {
         if (!validateCpfCnpj(selectedClienteCpf)) {
           setCpfCnpjError("CPF/CNPJ inválido");
           toast({ title: "CPF/CNPJ inválido", description: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido", variant: "destructive" });
@@ -2041,7 +2031,7 @@ const Pedidos = () => {
                   <div className="space-y-2">
                     <Input placeholder="Nome *" value={newClientNome} onChange={e => setNewClientNome(e.target.value)} />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="CPF/CNPJ *" value={formatCpfCnpj(newClientCpf)} onChange={e => { setNewClientCpf(unformatCpfCnpj(e.target.value)); setCpfCnpjError(null); }} className={cpfCnpjError && showNewClient ? "border-destructive" : ""} />
+                      <Input placeholder="CPF/CNPJ" value={formatCpfCnpj(newClientCpf)} onChange={e => { setNewClientCpf(unformatCpfCnpj(e.target.value)); setCpfCnpjError(null); }} className={cpfCnpjError && showNewClient ? "border-destructive" : ""} />
                       <Input placeholder="Email" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} />
                     </div>
                     <div className="space-y-1">
@@ -2071,7 +2061,7 @@ const Pedidos = () => {
             {/* CPF/CNPJ - show when existing client has no CPF or for "Consumidor Final" */}
             {!showNewClient && newOrderClienteId && newOrderClienteId !== "__none" && !clientes.find(c => c.cliente_id === newOrderClienteId)?.cpf_cnpj && (
               <div className="space-y-2">
-                <Label>CPF/CNPJ do cliente *</Label>
+                <Label>CPF/CNPJ do cliente</Label>
                 <Input
                   placeholder="000.000.000-00 ou 00.000.000/0000-00"
                   value={formatCpfCnpj(selectedClienteCpf)}
