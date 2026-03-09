@@ -96,6 +96,8 @@ const Estoque = () => {
   const [movFilterLocal, setMovFilterLocal] = useState("all");
   const [movFilterFabricante, setMovFilterFabricante] = useState("all");
   const [movFilterTipo, setMovFilterTipo] = useState("all");
+  const [movDateFrom, setMovDateFrom] = useState<Date>(startOfMonth(new Date()));
+  const [movDateTo, setMovDateTo] = useState<Date>(endOfMonth(new Date()));
 
   /* ── Conciliação state ── */
   const [conciliacaoOpen, setConciliacaoOpen] = useState(false);
