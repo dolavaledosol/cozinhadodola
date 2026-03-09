@@ -1077,26 +1077,16 @@ const Pedidos = () => {
       return;
     }
 
-    // Validate CPF/CNPJ
+    // Validate CPF/CNPJ (optional - only validate format if provided)
     if (showNewClient) {
-      if (!newClientCpf) {
-        setCpfCnpjError("CPF/CNPJ é obrigatório");
-        toast({ title: "Informe o CPF/CNPJ do cliente", variant: "destructive" });
-        return;
-      }
-      if (!validateCpfCnpj(newClientCpf)) {
+      if (newClientCpf && !validateCpfCnpj(newClientCpf)) {
         setCpfCnpjError("CPF/CNPJ inválido");
         toast({ title: "CPF/CNPJ inválido", description: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido", variant: "destructive" });
         return;
       }
     } else if (newOrderClienteId && newOrderClienteId !== "__none") {
       const cliente = clientes.find(c => c.cliente_id === newOrderClienteId);
-      if (!cliente?.cpf_cnpj) {
-        if (!selectedClienteCpf) {
-          setCpfCnpjError("CPF/CNPJ é obrigatório");
-          toast({ title: "Informe o CPF/CNPJ do cliente", variant: "destructive" });
-          return;
-        }
+      if (!cliente?.cpf_cnpj && selectedClienteCpf) {
         if (!validateCpfCnpj(selectedClienteCpf)) {
           setCpfCnpjError("CPF/CNPJ inválido");
           toast({ title: "CPF/CNPJ inválido", description: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido", variant: "destructive" });
