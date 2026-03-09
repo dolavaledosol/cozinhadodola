@@ -2031,7 +2031,7 @@ const Pedidos = () => {
                   <div className="space-y-2">
                     <Input placeholder="Nome *" value={newClientNome} onChange={e => setNewClientNome(e.target.value)} />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="CPF/CNPJ *" value={formatCpfCnpj(newClientCpf)} onChange={e => { setNewClientCpf(unformatCpfCnpj(e.target.value)); setCpfCnpjError(null); }} className={cpfCnpjError && showNewClient ? "border-destructive" : ""} />
+                      <Input placeholder="CPF/CNPJ" value={formatCpfCnpj(newClientCpf)} onChange={e => { setNewClientCpf(unformatCpfCnpj(e.target.value)); setCpfCnpjError(null); }} className={cpfCnpjError && showNewClient ? "border-destructive" : ""} />
                       <Input placeholder="Email" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} />
                     </div>
                     <div className="space-y-1">
