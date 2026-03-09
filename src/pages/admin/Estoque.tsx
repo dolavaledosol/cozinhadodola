@@ -9,10 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Search, ArrowRightLeft, Download, Upload } from "lucide-react";
-import { format } from "date-fns";
+import { Search, ArrowRightLeft, Download, Upload, CalendarIcon } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import EstoqueRelatorio from "@/components/admin/EstoqueRelatorio";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 /* ── Types ── */
 interface EstoqueRow {
@@ -92,6 +96,8 @@ const Estoque = () => {
   const [movFilterLocal, setMovFilterLocal] = useState("all");
   const [movFilterFabricante, setMovFilterFabricante] = useState("all");
   const [movFilterTipo, setMovFilterTipo] = useState("all");
+  const [movDateFrom, setMovDateFrom] = useState<Date>(startOfMonth(new Date()));
+  const [movDateTo, setMovDateTo] = useState<Date>(endOfMonth(new Date()));
 
   /* ── Conciliação state ── */
   const [conciliacaoOpen, setConciliacaoOpen] = useState(false);
@@ -618,6 +624,13 @@ const Estoque = () => {
     if (movFilterLocal !== "all" && m.local_estoque?.nome !== movFilterLocal) return false;
     if (movFilterFabricante !== "all" && m.produto?.fabricante?.nome !== movFilterFabricante) return false;
     if (movFilterTipo !== "all" && m.tipo !== movFilterTipo) return false;
+    const movDate = new Date(m.created_at);
+    if (movDateFrom && movDate < movDateFrom) return false;
+    if (movDateTo) {
+      const endOfDay = new Date(movDateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (movDate > endOfDay) return false;
+    }
     if (!movSearch) return true;
     const term = movSearch.toLowerCase();
     return (m.produto?.nome || "").toLowerCase().includes(term) ||
@@ -755,6 +768,28 @@ const Estoque = () => {
                 {movTiposUnicos.map(t => <SelectItem key={t} value={t}>{tipoLabel(t)}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-[130px] justify-start text-left font-normal text-xs", !movDateFrom && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {movDateFrom ? format(movDateFrom, "dd/MM/yyyy") : "De"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={movDateFrom} onSelect={(d) => d && setMovDateFrom(d)} locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-[130px] justify-start text-left font-normal text-xs", !movDateTo && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  {movDateTo ? format(movDateTo, "dd/MM/yyyy") : "Até"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={movDateTo} onSelect={(d) => d && setMovDateTo(d)} locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="border rounded-lg overflow-auto">
