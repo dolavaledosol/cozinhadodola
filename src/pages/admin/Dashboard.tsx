@@ -221,8 +221,11 @@ const Dashboard = () => {
           <p className="text-xs text-muted-foreground truncate">{fmt(stats.faturamentoMesAnt)}</p>
         </Link>
 
-        {/* Contas a receber */}
-        <Link to="/admin/financeiro" className="rounded-xl bg-[hsl(var(--success))]/5 border border-[hsl(var(--success))]/20 p-3.5 space-y-1 hover:border-[hsl(var(--success))]/40 transition-colors group active:scale-[0.98]">
+      </div>
+
+      {/* Contas a receber / a pagar – centralizados */}
+      <div className="flex justify-center gap-3">
+        <Link to="/admin/financeiro" className="flex-1 max-w-xs rounded-xl bg-[hsl(var(--success))]/5 border border-[hsl(var(--success))]/20 p-3.5 space-y-1 hover:border-[hsl(var(--success))]/40 transition-colors group active:scale-[0.98]">
           <div className="flex items-center justify-between text-[hsl(var(--success))]">
             <div className="flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5" />
@@ -234,8 +237,7 @@ const Dashboard = () => {
           <p className="text-[11px] text-muted-foreground">{stats.qtdReceber} pendente(s)</p>
         </Link>
 
-        {/* Contas a pagar */}
-        <Link to="/admin/financeiro" className="rounded-xl bg-destructive/5 border border-destructive/20 p-3.5 space-y-1 hover:border-destructive/40 transition-colors group active:scale-[0.98]">
+        <Link to="/admin/financeiro" className="flex-1 max-w-xs rounded-xl bg-destructive/5 border border-destructive/20 p-3.5 space-y-1 hover:border-destructive/40 transition-colors group active:scale-[0.98]">
           <div className="flex items-center justify-between text-destructive">
             <div className="flex items-center gap-1.5">
               <TrendingDown className="h-3.5 w-3.5" />
