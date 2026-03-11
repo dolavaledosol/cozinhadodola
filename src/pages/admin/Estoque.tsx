@@ -99,26 +99,20 @@ const Estoque = () => {
   const [movDateFrom, setMovDateFrom] = useState<Date>(startOfMonth(new Date()));
   const [movDateTo, setMovDateTo] = useState<Date>(endOfMonth(new Date()));
 
-  /* ── Conciliação state ── */
+  /* ── Conciliação unificada state ── */
   const [conciliacaoOpen, setConciliacaoOpen] = useState(false);
   const [conciliacaoLoading, setConciliacaoLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const fileInputPedRef = useRef<HTMLInputElement>(null);
 
-  /* ── Conciliação Pedidos state ── */
-  const [concPedOpen, setConcPedOpen] = useState(false);
-  const [concPedLoading, setConcPedLoading] = useState(false);
-  interface ConcPedLinha {
+  interface ConciliacaoUnificadaLinha {
     produto_id: string; nome: string; local: string; local_estoque_id: string;
     estoque_local_id: string | null;
-    pedidos_sistema: number; pedidos_fisico: number; diferenca: number;
+    hasEstoque: boolean;
+    estoque_sistema: number; estoque_fisico: number; diferenca_estoque: number;
+    hasPedidos: boolean;
+    pedidos_sistema: number; pedidos_fisico: number; diferenca_pedidos: number;
   }
-  const [concPedLinhas, setConcPedLinhas] = useState<ConcPedLinha[]>([]);
-  interface ConciliacaoLinha {
-    produto_id: string; nome: string; local: string; local_estoque_id: string;
-    estoque_sistema: number; estoque_fisico: number; diferenca: number;
-  }
-  const [conciliacaoLinhas, setConciliacaoLinhas] = useState<ConciliacaoLinha[]>([]);
+  const [conciliacaoLinhas, setConciliacaoLinhas] = useState<ConciliacaoUnificadaLinha[]>([]);
 
   const load = async () => {
     const [{ data: est }, { data: prod }, { data: loc }] = await Promise.all([
@@ -151,9 +145,8 @@ const Estoque = () => {
     }
   };
 
-  /* ═══════════════════  CONCILIAÇÃO  ═══════════════════ */
+  /* ═══════════════════  EXPORTAÇÃO UNIFICADA  ═══════════════════ */
   const exportExcel = async () => {
-    // Fetch ALL active products (not just those with stock)
     const { data: allProdutos } = await supabase
       .from("produto")
       .select("produto_id, nome, fabricante(nome), familia(nome)")
@@ -161,7 +154,6 @@ const Estoque = () => {
       .order("nome");
     if (!allProdutos) return;
 
-    // Build pivot rows: one row per product, locais as columns
     const rows: any[] = [];
     for (const p of allProdutos as any[]) {
       const row: any = {
@@ -172,8 +164,8 @@ const Estoque = () => {
       };
       for (const l of locais) {
         const estItem = items.find((i) => i.produto_id === p.produto_id && i.local_estoque_id === l.local_estoque_id);
-        // Column name = local name, value = stock quantity
-        row[`${l.nome} (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_disponivel) : 0;
+        row[`${l.nome} Est. (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_disponivel) : 0;
+        row[`${l.nome} Ped. (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_pedida_nao_separada) : 0;
       }
       rows.push(row);
     }
@@ -184,63 +176,124 @@ const Estoque = () => {
     toast({ title: "Planilha exportada com sucesso" });
   };
 
+  /* ═══════════════════  IMPORTAÇÃO UNIFICADA  ═══════════════════ */
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const data = await file.arrayBuffer();
     const wb = XLSX.read(data);
-    const sheetName = wb.SheetNames[0];
-    if (sheetName === "Pedidos") {
-      toast({ title: "Arquivo incorreto", description: "Este é um arquivo de Estoque de Pedidos. Use o botão 'Importar Pedidos'.", variant: "destructive" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<any>(ws);
+
+    const headers = Object.keys(rows[0] || {});
+    // Detect columns: "LocalName Est. (uuid)" and "LocalName Ped. (uuid)"
+    const estColumns = headers.filter((h) => /\bEst\.\s*\([0-9a-f-]{36}\)$/.test(h));
+    const pedColumns = headers.filter((h) => /\bPed\.\s*\([0-9a-f-]{36}\)$/.test(h));
+    // Also support old format without Est./Ped. prefix (plain "(uuid)")
+    const plainColumns = headers.filter((h) => /\(([0-9a-f-]{36})\)$/.test(h) && !estColumns.includes(h) && !pedColumns.includes(h));
+
+    if (estColumns.length === 0 && pedColumns.length === 0 && plainColumns.length === 0) {
+      toast({ title: "Formato inválido", description: "Nenhuma coluna de local de estoque encontrada.", variant: "destructive" });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<any>(ws);
 
-    // Detect local_estoque columns: header contains "(uuid)" pattern
-    const headers = Object.keys(rows[0] || {});
-    const localColumns = headers.filter((h) => {
-      const match = h.match(/\(([0-9a-f-]{36})\)$/);
-      return !!match;
-    });
+    const extractLocalId = (colName: string) => {
+      const match = colName.match(/\(([0-9a-f-]{36})\)$/);
+      return match ? match[1] : null;
+    };
 
-    // Build conciliation lines from pivot format
-    const linhas: ConciliacaoLinha[] = [];
+    const linhaMap = new Map<string, ConciliacaoUnificadaLinha>();
+    const getKey = (prodId: string, localId: string) => `${prodId}|${localId}`;
+
     for (const row of rows) {
       const prodId = row.produto_id;
       if (!prodId) continue;
 
-      for (const colName of localColumns) {
-        const localIdMatch = colName.match(/\(([0-9a-f-]{36})\)$/);
-        if (!localIdMatch) continue;
-        const localId = localIdMatch[1];
-        const estoqueFisico = Number(row[colName] ?? 0);
-
-        // Find current system stock
+      // Process Est. columns
+      for (const colName of estColumns) {
+        const localId = extractLocalId(colName);
+        if (!localId) continue;
+        const key = getKey(prodId, localId);
         const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
+        const estoqueFisico = Number(row[colName] ?? 0);
         const estoqueSistema = sysItem ? Number(sysItem.quantidade_disponivel) : 0;
-        const diff = estoqueFisico - estoqueSistema;
-        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || colName;
+        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || localId;
 
-        linhas.push({
-          produto_id: prodId,
-          nome: sysItem?.produto?.nome || row.produto || prodId,
-          local_estoque_id: localId,
-          local: localNome,
-          estoque_sistema: estoqueSistema,
-          estoque_fisico: estoqueFisico,
-          diferenca: diff,
-        });
+        if (!linhaMap.has(key)) {
+          linhaMap.set(key, {
+            produto_id: prodId, nome: sysItem?.produto?.nome || row.produto || prodId,
+            local: localNome, local_estoque_id: localId,
+            estoque_local_id: sysItem?.estoque_local_id || null,
+            hasEstoque: false, estoque_sistema: estoqueSistema, estoque_fisico: 0, diferenca_estoque: 0,
+            hasPedidos: false, pedidos_sistema: sysItem ? Number(sysItem.quantidade_pedida_nao_separada) : 0, pedidos_fisico: 0, diferenca_pedidos: 0,
+          });
+        }
+        const linha = linhaMap.get(key)!;
+        linha.hasEstoque = true;
+        linha.estoque_fisico = estoqueFisico;
+        linha.diferenca_estoque = estoqueFisico - linha.estoque_sistema;
+      }
+
+      // Process Ped. columns
+      for (const colName of pedColumns) {
+        const localId = extractLocalId(colName);
+        if (!localId) continue;
+        const key = getKey(prodId, localId);
+        const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
+        const pedidosFisico = Number(row[colName] ?? 0);
+        const pedidosSistema = sysItem ? Number(sysItem.quantidade_pedida_nao_separada) : 0;
+        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || localId;
+
+        if (!linhaMap.has(key)) {
+          linhaMap.set(key, {
+            produto_id: prodId, nome: sysItem?.produto?.nome || row.produto || prodId,
+            local: localNome, local_estoque_id: localId,
+            estoque_local_id: sysItem?.estoque_local_id || null,
+            hasEstoque: false, estoque_sistema: sysItem ? Number(sysItem.quantidade_disponivel) : 0, estoque_fisico: 0, diferenca_estoque: 0,
+            hasPedidos: false, pedidos_sistema: pedidosSistema, pedidos_fisico: 0, diferenca_pedidos: 0,
+          });
+        }
+        const linha = linhaMap.get(key)!;
+        linha.hasPedidos = true;
+        linha.pedidos_fisico = pedidosFisico;
+        linha.diferenca_pedidos = pedidosFisico - linha.pedidos_sistema;
+      }
+
+      // Process old plain columns (treat as estoque only)
+      for (const colName of plainColumns) {
+        const localId = extractLocalId(colName);
+        if (!localId) continue;
+        const key = getKey(prodId, localId);
+        const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
+        const estoqueFisico = Number(row[colName] ?? 0);
+        const estoqueSistema = sysItem ? Number(sysItem.quantidade_disponivel) : 0;
+        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || localId;
+
+        if (!linhaMap.has(key)) {
+          linhaMap.set(key, {
+            produto_id: prodId, nome: sysItem?.produto?.nome || row.produto || prodId,
+            local: localNome, local_estoque_id: localId,
+            estoque_local_id: sysItem?.estoque_local_id || null,
+            hasEstoque: false, estoque_sistema: estoqueSistema, estoque_fisico: 0, diferenca_estoque: 0,
+            hasPedidos: false, pedidos_sistema: 0, pedidos_fisico: 0, diferenca_pedidos: 0,
+          });
+        }
+        const linha = linhaMap.get(key)!;
+        linha.hasEstoque = true;
+        linha.estoque_fisico = estoqueFisico;
+        linha.diferenca_estoque = estoqueFisico - linha.estoque_sistema;
       }
     }
-    setConciliacaoLinhas(linhas);
+
+    setConciliacaoLinhas(Array.from(linhaMap.values()));
     setConciliacaoOpen(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  /* ═══════════════════  SALVAR CONCILIAÇÃO UNIFICADA  ═══════════════════ */
   const saveConciliacao = async () => {
-    const linhasComDif = conciliacaoLinhas.filter((l) => l.diferenca !== 0);
+    const linhasComDif = conciliacaoLinhas.filter((l) => l.diferenca_estoque !== 0 || l.diferenca_pedidos !== 0);
     if (linhasComDif.length === 0) {
       toast({ title: "Nenhuma diferença encontrada" });
       setConciliacaoOpen(false);
@@ -248,36 +301,43 @@ const Estoque = () => {
     }
     setConciliacaoLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       for (const linha of linhasComDif) {
-        // Update or create estoque_local
         const sysItem = items.find((i) => i.produto_id === linha.produto_id && i.local_estoque_id === linha.local_estoque_id);
+        const updates: any = {};
+        if (linha.hasEstoque && linha.diferenca_estoque !== 0) {
+          updates.quantidade_disponivel = linha.estoque_fisico;
+        }
+        if (linha.hasPedidos && linha.diferenca_pedidos !== 0) {
+          updates.quantidade_pedida_nao_separada = linha.pedidos_fisico;
+        }
+
         if (sysItem) {
-          await supabase.from("estoque_local").update({
-            quantidade_disponivel: linha.estoque_fisico,
-          }).eq("estoque_local_id", sysItem.estoque_local_id);
+          await supabase.from("estoque_local").update(updates).eq("estoque_local_id", sysItem.estoque_local_id);
         } else {
-          // Create new estoque_local record for product not yet in this location
           await supabase.from("estoque_local").insert({
             produto_id: linha.produto_id,
             local_estoque_id: linha.local_estoque_id,
-            quantidade_disponivel: linha.estoque_fisico,
+            quantidade_disponivel: linha.hasEstoque ? linha.estoque_fisico : 0,
+            quantidade_pedida_nao_separada: linha.hasPedidos ? linha.pedidos_fisico : 0,
             preco: 0,
           });
         }
 
-        // Log movimentação
-        const tipo = linha.diferenca > 0 ? "entrada" : "saida";
-        const { data: { session } } = await supabase.auth.getSession();
-        await supabase.from("movimentacao_estoque").insert({
-          tipo,
-          produto_id: linha.produto_id,
-          local_estoque_id: linha.local_estoque_id,
-          quantidade: Math.abs(linha.diferenca),
-          documento: "Conciliação de estoque",
-          usuario_id: session?.user?.id || null,
-        });
+        // Log movimentação only for estoque changes
+        if (linha.hasEstoque && linha.diferenca_estoque !== 0) {
+          const tipo = linha.diferenca_estoque > 0 ? "entrada" : "saida";
+          await supabase.from("movimentacao_estoque").insert({
+            tipo,
+            produto_id: linha.produto_id,
+            local_estoque_id: linha.local_estoque_id,
+            quantidade: Math.abs(linha.diferenca_estoque),
+            documento: "Conciliação de estoque",
+            usuario_id: session?.user?.id || null,
+          });
+        }
       }
-      toast({ title: `Conciliação aplicada: ${linhasComDif.length} produto(s) ajustado(s)` });
+      toast({ title: `Conciliação aplicada: ${linhasComDif.length} item(ns) ajustado(s)` });
       setConciliacaoOpen(false);
       setConciliacaoLinhas([]);
       load();
@@ -286,118 +346,6 @@ const Estoque = () => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
       setConciliacaoLoading(false);
-    }
-  };
-
-  /* ═══════════════════  CONCILIAÇÃO PEDIDOS  ═══════════════════ */
-  const exportPedidosExcel = async () => {
-    const { data: allProdutos } = await supabase
-      .from("produto")
-      .select("produto_id, nome, fabricante(nome), familia(nome)")
-      .eq("ativo", true)
-      .order("nome");
-    if (!allProdutos) return;
-
-    const rows: any[] = [];
-    for (const p of allProdutos as any[]) {
-      const row: any = {
-        produto_id: p.produto_id,
-        produto: p.nome,
-        fabricante: p.fabricante?.nome || "",
-        familia: p.familia?.nome || "",
-      };
-      for (const l of locais) {
-        const estItem = items.find((i) => i.produto_id === p.produto_id && i.local_estoque_id === l.local_estoque_id);
-        row[`${l.nome} (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_pedida_nao_separada) : 0;
-      }
-      rows.push(row);
-    }
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
-    XLSX.writeFile(wb, `estoque_pedidos_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-    toast({ title: "Planilha de pedidos exportada com sucesso" });
-  };
-
-  const handleImportPedidosFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data);
-    const sheetName = wb.SheetNames[0];
-    if (sheetName === "Estoque") {
-      toast({ title: "Arquivo incorreto", description: "Este é um arquivo de Estoque Físico. Use o botão 'Importar Estoque'.", variant: "destructive" });
-      if (fileInputPedRef.current) fileInputPedRef.current.value = "";
-      return;
-    }
-    const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<any>(ws);
-
-    const headers = Object.keys(rows[0] || {});
-    const localColumns = headers.filter((h) => !!h.match(/\(([0-9a-f-]{36})\)$/));
-
-    const linhas: ConcPedLinha[] = [];
-    for (const row of rows) {
-      const prodId = row.produto_id;
-      if (!prodId) continue;
-      for (const colName of localColumns) {
-        const localIdMatch = colName.match(/\(([0-9a-f-]{36})\)$/);
-        if (!localIdMatch) continue;
-        const localId = localIdMatch[1];
-        const pedidosFisico = Number(row[colName] ?? 0);
-        const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
-        const pedidosSistema = sysItem ? Number(sysItem.quantidade_pedida_nao_separada) : 0;
-        const diff = pedidosFisico - pedidosSistema;
-        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || colName;
-        linhas.push({
-          produto_id: prodId,
-          nome: sysItem?.produto?.nome || row.produto || prodId,
-          local_estoque_id: localId,
-          estoque_local_id: sysItem?.estoque_local_id || null,
-          local: localNome,
-          pedidos_sistema: pedidosSistema,
-          pedidos_fisico: pedidosFisico,
-          diferenca: diff,
-        });
-      }
-    }
-    setConcPedLinhas(linhas);
-    setConcPedOpen(true);
-    if (fileInputPedRef.current) fileInputPedRef.current.value = "";
-  };
-
-  const saveConciliacaoPedidos = async () => {
-    const linhasComDif = concPedLinhas.filter((l) => l.diferenca !== 0);
-    if (linhasComDif.length === 0) {
-      toast({ title: "Nenhuma diferença encontrada" });
-      setConcPedOpen(false);
-      return;
-    }
-    setConcPedLoading(true);
-    try {
-      for (const linha of linhasComDif) {
-        if (linha.estoque_local_id) {
-          await supabase.from("estoque_local").update({
-            quantidade_pedida_nao_separada: linha.pedidos_fisico,
-          }).eq("estoque_local_id", linha.estoque_local_id);
-        } else {
-          await supabase.from("estoque_local").insert({
-            produto_id: linha.produto_id,
-            local_estoque_id: linha.local_estoque_id,
-            quantidade_pedida_nao_separada: linha.pedidos_fisico,
-            quantidade_disponivel: 0,
-            preco: 0,
-          });
-        }
-      }
-      toast({ title: `Conciliação de pedidos aplicada: ${linhasComDif.length} item(ns) ajustado(s)` });
-      setConcPedOpen(false);
-      setConcPedLinhas([]);
-      load();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setConcPedLoading(false);
     }
   };
 
@@ -657,12 +605,9 @@ const Estoque = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Estoque</h1>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar Estoque</Button>
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar Estoque</Button>
+          <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar</Button>
           <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
-          <Button variant="outline" onClick={exportPedidosExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar Pedidos</Button>
-          <Button variant="outline" onClick={() => fileInputPedRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar Pedidos</Button>
-          <input ref={fileInputPedRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportPedidosFile} />
           <Button onClick={openTransfer} className="gap-2"><ArrowRightLeft className="h-4 w-4" /> Transferir</Button>
         </div>
       </div>
@@ -968,14 +913,14 @@ const Estoque = () => {
 
       {/* ═══════════════════  DIALOG CONCILIAÇÃO  ═══════════════════ */}
       <Dialog open={conciliacaoOpen} onOpenChange={setConciliacaoOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Conciliação de Estoque</DialogTitle></DialogHeader>
           {conciliacaoLinhas.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">Nenhum dado importado.</p>
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                {conciliacaoLinhas.filter((l) => l.diferenca !== 0).length} produto(s) com diferença de {conciliacaoLinhas.length} importado(s).
+                {conciliacaoLinhas.filter((l) => l.diferenca_estoque !== 0 || l.diferenca_pedidos !== 0).length} item(ns) com diferença de {conciliacaoLinhas.length} importado(s).
               </p>
               <div className="border rounded-lg overflow-auto max-h-[400px]">
                 <Table>
@@ -983,23 +928,50 @@ const Estoque = () => {
                     <TableRow>
                       <TableHead>Produto</TableHead>
                       <TableHead>Local</TableHead>
-                      <TableHead className="text-center">Sistema</TableHead>
-                      <TableHead className="text-center">Físico</TableHead>
-                      <TableHead className="text-center">Diferença</TableHead>
+                      {conciliacaoLinhas.some((l) => l.hasEstoque) && (
+                        <>
+                          <TableHead className="text-center">Est. Sistema</TableHead>
+                          <TableHead className="text-center">Est. Físico</TableHead>
+                          <TableHead className="text-center">Dif. Est.</TableHead>
+                        </>
+                      )}
+                      {conciliacaoLinhas.some((l) => l.hasPedidos) && (
+                        <>
+                          <TableHead className="text-center">Ped. Sistema</TableHead>
+                          <TableHead className="text-center">Ped. Planilha</TableHead>
+                          <TableHead className="text-center">Dif. Ped.</TableHead>
+                        </>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {conciliacaoLinhas.map((l) => (
-                      <TableRow key={`${l.produto_id}-${l.local_estoque_id}`} className={l.diferenca !== 0 ? "bg-muted/30" : ""}>
-                        <TableCell className="font-medium">{l.nome}</TableCell>
-                        <TableCell className="text-muted-foreground">{l.local}</TableCell>
-                        <TableCell className="text-center">{l.estoque_sistema}</TableCell>
-                        <TableCell className="text-center">{l.estoque_fisico}</TableCell>
-                        <TableCell className={`text-center font-semibold ${l.diferenca > 0 ? "text-green-600" : l.diferenca < 0 ? "text-red-600" : ""}`}>
-                          {l.diferenca > 0 ? `+${l.diferenca}` : l.diferenca}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {conciliacaoLinhas.map((l) => {
+                      const hasDif = l.diferenca_estoque !== 0 || l.diferenca_pedidos !== 0;
+                      return (
+                        <TableRow key={`${l.produto_id}-${l.local_estoque_id}`} className={hasDif ? "bg-muted/30" : ""}>
+                          <TableCell className="font-medium">{l.nome}</TableCell>
+                          <TableCell className="text-muted-foreground">{l.local}</TableCell>
+                          {conciliacaoLinhas.some((ll) => ll.hasEstoque) && (
+                            <>
+                              <TableCell className="text-center">{l.hasEstoque ? l.estoque_sistema : "—"}</TableCell>
+                              <TableCell className="text-center">{l.hasEstoque ? l.estoque_fisico : "—"}</TableCell>
+                              <TableCell className={`text-center font-semibold ${l.diferenca_estoque > 0 ? "text-green-600" : l.diferenca_estoque < 0 ? "text-red-600" : ""}`}>
+                                {l.hasEstoque ? (l.diferenca_estoque > 0 ? `+${l.diferenca_estoque}` : l.diferenca_estoque) : "—"}
+                              </TableCell>
+                            </>
+                          )}
+                          {conciliacaoLinhas.some((ll) => ll.hasPedidos) && (
+                            <>
+                              <TableCell className="text-center">{l.hasPedidos ? l.pedidos_sistema : "—"}</TableCell>
+                              <TableCell className="text-center">{l.hasPedidos ? l.pedidos_fisico : "—"}</TableCell>
+                              <TableCell className={`text-center font-semibold ${l.diferenca_pedidos > 0 ? "text-green-600" : l.diferenca_pedidos < 0 ? "text-red-600" : ""}`}>
+                                {l.hasPedidos ? (l.diferenca_pedidos > 0 ? `+${l.diferenca_pedidos}` : l.diferenca_pedidos) : "—"}
+                              </TableCell>
+                            </>
+                          )}
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -1007,56 +979,8 @@ const Estoque = () => {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConciliacaoOpen(false)}>Cancelar</Button>
-            <Button onClick={saveConciliacao} disabled={conciliacaoLoading || conciliacaoLinhas.filter((l) => l.diferenca !== 0).length === 0}>
+            <Button onClick={saveConciliacao} disabled={conciliacaoLoading || conciliacaoLinhas.filter((l) => l.diferenca_estoque !== 0 || l.diferenca_pedidos !== 0).length === 0}>
               {conciliacaoLoading ? "Aplicando..." : "Aplicar Conciliação"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ═══════════════════  DIALOG CONCILIAÇÃO PEDIDOS  ═══════════════════ */}
-      <Dialog open={concPedOpen} onOpenChange={setConcPedOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Conciliação de Estoque de Pedidos</DialogTitle></DialogHeader>
-          {concPedLinhas.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Nenhum dado importado.</p>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {concPedLinhas.filter((l) => l.diferenca !== 0).length} item(ns) com diferença de {concPedLinhas.length} importado(s).
-              </p>
-              <div className="border rounded-lg overflow-auto max-h-[400px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Produto</TableHead>
-                      <TableHead>Local</TableHead>
-                      <TableHead className="text-center">Sistema</TableHead>
-                      <TableHead className="text-center">Planilha</TableHead>
-                      <TableHead className="text-center">Diferença</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {concPedLinhas.map((l) => (
-                      <TableRow key={`${l.produto_id}-${l.local_estoque_id}`} className={l.diferenca !== 0 ? "bg-muted/30" : ""}>
-                        <TableCell className="font-medium">{l.nome}</TableCell>
-                        <TableCell className="text-muted-foreground">{l.local}</TableCell>
-                        <TableCell className="text-center">{l.pedidos_sistema}</TableCell>
-                        <TableCell className="text-center">{l.pedidos_fisico}</TableCell>
-                        <TableCell className={`text-center font-semibold ${l.diferenca > 0 ? "text-green-600" : l.diferenca < 0 ? "text-red-600" : ""}`}>
-                          {l.diferenca > 0 ? `+${l.diferenca}` : l.diferenca}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConcPedOpen(false)}>Cancelar</Button>
-            <Button onClick={saveConciliacaoPedidos} disabled={concPedLoading || concPedLinhas.filter((l) => l.diferenca !== 0).length === 0}>
-              {concPedLoading ? "Aplicando..." : "Aplicar Conciliação de Pedidos"}
             </Button>
           </DialogFooter>
         </DialogContent>
