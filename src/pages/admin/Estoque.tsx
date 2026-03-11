@@ -145,9 +145,8 @@ const Estoque = () => {
     }
   };
 
-  /* ═══════════════════  CONCILIAÇÃO  ═══════════════════ */
+  /* ═══════════════════  EXPORTAÇÃO UNIFICADA  ═══════════════════ */
   const exportExcel = async () => {
-    // Fetch ALL active products (not just those with stock)
     const { data: allProdutos } = await supabase
       .from("produto")
       .select("produto_id, nome, fabricante(nome), familia(nome)")
@@ -155,7 +154,6 @@ const Estoque = () => {
       .order("nome");
     if (!allProdutos) return;
 
-    // Build pivot rows: one row per product, locais as columns
     const rows: any[] = [];
     for (const p of allProdutos as any[]) {
       const row: any = {
@@ -166,8 +164,8 @@ const Estoque = () => {
       };
       for (const l of locais) {
         const estItem = items.find((i) => i.produto_id === p.produto_id && i.local_estoque_id === l.local_estoque_id);
-        // Column name = local name, value = stock quantity
-        row[`${l.nome} (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_disponivel) : 0;
+        row[`${l.nome} Est. (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_disponivel) : 0;
+        row[`${l.nome} Ped. (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_pedida_nao_separada) : 0;
       }
       rows.push(row);
     }
@@ -178,63 +176,124 @@ const Estoque = () => {
     toast({ title: "Planilha exportada com sucesso" });
   };
 
+  /* ═══════════════════  IMPORTAÇÃO UNIFICADA  ═══════════════════ */
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const data = await file.arrayBuffer();
     const wb = XLSX.read(data);
-    const sheetName = wb.SheetNames[0];
-    if (sheetName === "Pedidos") {
-      toast({ title: "Arquivo incorreto", description: "Este é um arquivo de Estoque de Pedidos. Use o botão 'Importar Pedidos'.", variant: "destructive" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<any>(ws);
+
+    const headers = Object.keys(rows[0] || {});
+    // Detect columns: "LocalName Est. (uuid)" and "LocalName Ped. (uuid)"
+    const estColumns = headers.filter((h) => /\bEst\.\s*\([0-9a-f-]{36}\)$/.test(h));
+    const pedColumns = headers.filter((h) => /\bPed\.\s*\([0-9a-f-]{36}\)$/.test(h));
+    // Also support old format without Est./Ped. prefix (plain "(uuid)")
+    const plainColumns = headers.filter((h) => /\(([0-9a-f-]{36})\)$/.test(h) && !estColumns.includes(h) && !pedColumns.includes(h));
+
+    if (estColumns.length === 0 && pedColumns.length === 0 && plainColumns.length === 0) {
+      toast({ title: "Formato inválido", description: "Nenhuma coluna de local de estoque encontrada.", variant: "destructive" });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<any>(ws);
 
-    // Detect local_estoque columns: header contains "(uuid)" pattern
-    const headers = Object.keys(rows[0] || {});
-    const localColumns = headers.filter((h) => {
-      const match = h.match(/\(([0-9a-f-]{36})\)$/);
-      return !!match;
-    });
+    const extractLocalId = (colName: string) => {
+      const match = colName.match(/\(([0-9a-f-]{36})\)$/);
+      return match ? match[1] : null;
+    };
 
-    // Build conciliation lines from pivot format
-    const linhas: ConciliacaoLinha[] = [];
+    const linhaMap = new Map<string, ConciliacaoUnificadaLinha>();
+    const getKey = (prodId: string, localId: string) => `${prodId}|${localId}`;
+
     for (const row of rows) {
       const prodId = row.produto_id;
       if (!prodId) continue;
 
-      for (const colName of localColumns) {
-        const localIdMatch = colName.match(/\(([0-9a-f-]{36})\)$/);
-        if (!localIdMatch) continue;
-        const localId = localIdMatch[1];
-        const estoqueFisico = Number(row[colName] ?? 0);
-
-        // Find current system stock
+      // Process Est. columns
+      for (const colName of estColumns) {
+        const localId = extractLocalId(colName);
+        if (!localId) continue;
+        const key = getKey(prodId, localId);
         const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
+        const estoqueFisico = Number(row[colName] ?? 0);
         const estoqueSistema = sysItem ? Number(sysItem.quantidade_disponivel) : 0;
-        const diff = estoqueFisico - estoqueSistema;
-        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || colName;
+        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || localId;
 
-        linhas.push({
-          produto_id: prodId,
-          nome: sysItem?.produto?.nome || row.produto || prodId,
-          local_estoque_id: localId,
-          local: localNome,
-          estoque_sistema: estoqueSistema,
-          estoque_fisico: estoqueFisico,
-          diferenca: diff,
-        });
+        if (!linhaMap.has(key)) {
+          linhaMap.set(key, {
+            produto_id: prodId, nome: sysItem?.produto?.nome || row.produto || prodId,
+            local: localNome, local_estoque_id: localId,
+            estoque_local_id: sysItem?.estoque_local_id || null,
+            hasEstoque: false, estoque_sistema: estoqueSistema, estoque_fisico: 0, diferenca_estoque: 0,
+            hasPedidos: false, pedidos_sistema: sysItem ? Number(sysItem.quantidade_pedida_nao_separada) : 0, pedidos_fisico: 0, diferenca_pedidos: 0,
+          });
+        }
+        const linha = linhaMap.get(key)!;
+        linha.hasEstoque = true;
+        linha.estoque_fisico = estoqueFisico;
+        linha.diferenca_estoque = estoqueFisico - linha.estoque_sistema;
+      }
+
+      // Process Ped. columns
+      for (const colName of pedColumns) {
+        const localId = extractLocalId(colName);
+        if (!localId) continue;
+        const key = getKey(prodId, localId);
+        const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
+        const pedidosFisico = Number(row[colName] ?? 0);
+        const pedidosSistema = sysItem ? Number(sysItem.quantidade_pedida_nao_separada) : 0;
+        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || localId;
+
+        if (!linhaMap.has(key)) {
+          linhaMap.set(key, {
+            produto_id: prodId, nome: sysItem?.produto?.nome || row.produto || prodId,
+            local: localNome, local_estoque_id: localId,
+            estoque_local_id: sysItem?.estoque_local_id || null,
+            hasEstoque: false, estoque_sistema: sysItem ? Number(sysItem.quantidade_disponivel) : 0, estoque_fisico: 0, diferenca_estoque: 0,
+            hasPedidos: false, pedidos_sistema: pedidosSistema, pedidos_fisico: 0, diferenca_pedidos: 0,
+          });
+        }
+        const linha = linhaMap.get(key)!;
+        linha.hasPedidos = true;
+        linha.pedidos_fisico = pedidosFisico;
+        linha.diferenca_pedidos = pedidosFisico - linha.pedidos_sistema;
+      }
+
+      // Process old plain columns (treat as estoque only)
+      for (const colName of plainColumns) {
+        const localId = extractLocalId(colName);
+        if (!localId) continue;
+        const key = getKey(prodId, localId);
+        const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
+        const estoqueFisico = Number(row[colName] ?? 0);
+        const estoqueSistema = sysItem ? Number(sysItem.quantidade_disponivel) : 0;
+        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || localId;
+
+        if (!linhaMap.has(key)) {
+          linhaMap.set(key, {
+            produto_id: prodId, nome: sysItem?.produto?.nome || row.produto || prodId,
+            local: localNome, local_estoque_id: localId,
+            estoque_local_id: sysItem?.estoque_local_id || null,
+            hasEstoque: false, estoque_sistema: estoqueSistema, estoque_fisico: 0, diferenca_estoque: 0,
+            hasPedidos: false, pedidos_sistema: 0, pedidos_fisico: 0, diferenca_pedidos: 0,
+          });
+        }
+        const linha = linhaMap.get(key)!;
+        linha.hasEstoque = true;
+        linha.estoque_fisico = estoqueFisico;
+        linha.diferenca_estoque = estoqueFisico - linha.estoque_sistema;
       }
     }
-    setConciliacaoLinhas(linhas);
+
+    setConciliacaoLinhas(Array.from(linhaMap.values()));
     setConciliacaoOpen(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  /* ═══════════════════  SALVAR CONCILIAÇÃO UNIFICADA  ═══════════════════ */
   const saveConciliacao = async () => {
-    const linhasComDif = conciliacaoLinhas.filter((l) => l.diferenca !== 0);
+    const linhasComDif = conciliacaoLinhas.filter((l) => l.diferenca_estoque !== 0 || l.diferenca_pedidos !== 0);
     if (linhasComDif.length === 0) {
       toast({ title: "Nenhuma diferença encontrada" });
       setConciliacaoOpen(false);
@@ -242,36 +301,43 @@ const Estoque = () => {
     }
     setConciliacaoLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       for (const linha of linhasComDif) {
-        // Update or create estoque_local
         const sysItem = items.find((i) => i.produto_id === linha.produto_id && i.local_estoque_id === linha.local_estoque_id);
+        const updates: any = {};
+        if (linha.hasEstoque && linha.diferenca_estoque !== 0) {
+          updates.quantidade_disponivel = linha.estoque_fisico;
+        }
+        if (linha.hasPedidos && linha.diferenca_pedidos !== 0) {
+          updates.quantidade_pedida_nao_separada = linha.pedidos_fisico;
+        }
+
         if (sysItem) {
-          await supabase.from("estoque_local").update({
-            quantidade_disponivel: linha.estoque_fisico,
-          }).eq("estoque_local_id", sysItem.estoque_local_id);
+          await supabase.from("estoque_local").update(updates).eq("estoque_local_id", sysItem.estoque_local_id);
         } else {
-          // Create new estoque_local record for product not yet in this location
           await supabase.from("estoque_local").insert({
             produto_id: linha.produto_id,
             local_estoque_id: linha.local_estoque_id,
-            quantidade_disponivel: linha.estoque_fisico,
+            quantidade_disponivel: linha.hasEstoque ? linha.estoque_fisico : 0,
+            quantidade_pedida_nao_separada: linha.hasPedidos ? linha.pedidos_fisico : 0,
             preco: 0,
           });
         }
 
-        // Log movimentação
-        const tipo = linha.diferenca > 0 ? "entrada" : "saida";
-        const { data: { session } } = await supabase.auth.getSession();
-        await supabase.from("movimentacao_estoque").insert({
-          tipo,
-          produto_id: linha.produto_id,
-          local_estoque_id: linha.local_estoque_id,
-          quantidade: Math.abs(linha.diferenca),
-          documento: "Conciliação de estoque",
-          usuario_id: session?.user?.id || null,
-        });
+        // Log movimentação only for estoque changes
+        if (linha.hasEstoque && linha.diferenca_estoque !== 0) {
+          const tipo = linha.diferenca_estoque > 0 ? "entrada" : "saida";
+          await supabase.from("movimentacao_estoque").insert({
+            tipo,
+            produto_id: linha.produto_id,
+            local_estoque_id: linha.local_estoque_id,
+            quantidade: Math.abs(linha.diferenca_estoque),
+            documento: "Conciliação de estoque",
+            usuario_id: session?.user?.id || null,
+          });
+        }
       }
-      toast({ title: `Conciliação aplicada: ${linhasComDif.length} produto(s) ajustado(s)` });
+      toast({ title: `Conciliação aplicada: ${linhasComDif.length} item(ns) ajustado(s)` });
       setConciliacaoOpen(false);
       setConciliacaoLinhas([]);
       load();
@@ -280,118 +346,6 @@ const Estoque = () => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
       setConciliacaoLoading(false);
-    }
-  };
-
-  /* ═══════════════════  CONCILIAÇÃO PEDIDOS  ═══════════════════ */
-  const exportPedidosExcel = async () => {
-    const { data: allProdutos } = await supabase
-      .from("produto")
-      .select("produto_id, nome, fabricante(nome), familia(nome)")
-      .eq("ativo", true)
-      .order("nome");
-    if (!allProdutos) return;
-
-    const rows: any[] = [];
-    for (const p of allProdutos as any[]) {
-      const row: any = {
-        produto_id: p.produto_id,
-        produto: p.nome,
-        fabricante: p.fabricante?.nome || "",
-        familia: p.familia?.nome || "",
-      };
-      for (const l of locais) {
-        const estItem = items.find((i) => i.produto_id === p.produto_id && i.local_estoque_id === l.local_estoque_id);
-        row[`${l.nome} (${l.local_estoque_id})`] = estItem ? Number(estItem.quantidade_pedida_nao_separada) : 0;
-      }
-      rows.push(row);
-    }
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
-    XLSX.writeFile(wb, `estoque_pedidos_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-    toast({ title: "Planilha de pedidos exportada com sucesso" });
-  };
-
-  const handleImportPedidosFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data);
-    const sheetName = wb.SheetNames[0];
-    if (sheetName === "Estoque") {
-      toast({ title: "Arquivo incorreto", description: "Este é um arquivo de Estoque Físico. Use o botão 'Importar Estoque'.", variant: "destructive" });
-      if (fileInputPedRef.current) fileInputPedRef.current.value = "";
-      return;
-    }
-    const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<any>(ws);
-
-    const headers = Object.keys(rows[0] || {});
-    const localColumns = headers.filter((h) => !!h.match(/\(([0-9a-f-]{36})\)$/));
-
-    const linhas: ConcPedLinha[] = [];
-    for (const row of rows) {
-      const prodId = row.produto_id;
-      if (!prodId) continue;
-      for (const colName of localColumns) {
-        const localIdMatch = colName.match(/\(([0-9a-f-]{36})\)$/);
-        if (!localIdMatch) continue;
-        const localId = localIdMatch[1];
-        const pedidosFisico = Number(row[colName] ?? 0);
-        const sysItem = items.find((i) => i.produto_id === prodId && i.local_estoque_id === localId);
-        const pedidosSistema = sysItem ? Number(sysItem.quantidade_pedida_nao_separada) : 0;
-        const diff = pedidosFisico - pedidosSistema;
-        const localNome = locais.find((l) => l.local_estoque_id === localId)?.nome || colName;
-        linhas.push({
-          produto_id: prodId,
-          nome: sysItem?.produto?.nome || row.produto || prodId,
-          local_estoque_id: localId,
-          estoque_local_id: sysItem?.estoque_local_id || null,
-          local: localNome,
-          pedidos_sistema: pedidosSistema,
-          pedidos_fisico: pedidosFisico,
-          diferenca: diff,
-        });
-      }
-    }
-    setConcPedLinhas(linhas);
-    setConcPedOpen(true);
-    if (fileInputPedRef.current) fileInputPedRef.current.value = "";
-  };
-
-  const saveConciliacaoPedidos = async () => {
-    const linhasComDif = concPedLinhas.filter((l) => l.diferenca !== 0);
-    if (linhasComDif.length === 0) {
-      toast({ title: "Nenhuma diferença encontrada" });
-      setConcPedOpen(false);
-      return;
-    }
-    setConcPedLoading(true);
-    try {
-      for (const linha of linhasComDif) {
-        if (linha.estoque_local_id) {
-          await supabase.from("estoque_local").update({
-            quantidade_pedida_nao_separada: linha.pedidos_fisico,
-          }).eq("estoque_local_id", linha.estoque_local_id);
-        } else {
-          await supabase.from("estoque_local").insert({
-            produto_id: linha.produto_id,
-            local_estoque_id: linha.local_estoque_id,
-            quantidade_pedida_nao_separada: linha.pedidos_fisico,
-            quantidade_disponivel: 0,
-            preco: 0,
-          });
-        }
-      }
-      toast({ title: `Conciliação de pedidos aplicada: ${linhasComDif.length} item(ns) ajustado(s)` });
-      setConcPedOpen(false);
-      setConcPedLinhas([]);
-      load();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setConcPedLoading(false);
     }
   };
 
