@@ -103,9 +103,14 @@ const Estoque = () => {
   const [conciliacaoOpen, setConciliacaoOpen] = useState(false);
   const [conciliacaoLoading, setConciliacaoLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  interface ConciliacaoLinha {
+
+  interface ConciliacaoUnificadaLinha {
     produto_id: string; nome: string; local: string; local_estoque_id: string;
-    estoque_sistema: number; estoque_fisico: number; diferenca: number;
+    estoque_local_id: string | null;
+    hasEstoque: boolean;
+    estoque_sistema: number; estoque_fisico: number; diferenca_estoque: number;
+    hasPedidos: boolean;
+    pedidos_sistema: number; pedidos_fisico: number; diferenca_pedidos: number;
   }
   const [conciliacaoLinhas, setConciliacaoLinhas] = useState<ConciliacaoLinha[]>([]);
 
