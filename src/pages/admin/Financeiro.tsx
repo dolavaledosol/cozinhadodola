@@ -161,6 +161,7 @@ const Financeiro = () => {
   /* Billing confirmation dialog state */
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [recentLogs, setRecentLogs] = useState<{ created_at: string; status: string | null; payload: any }[]>([]);
+  const [expandedLogIdx, setExpandedLogIdx] = useState<number | null>(null);
   const [pendingConfirmAction, setPendingConfirmAction] = useState<(() => void) | null>(null);
   const loadReceber = async () => {
     const { data } = await supabase
@@ -803,18 +804,41 @@ const Financeiro = () => {
           <DialogHeader><DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-yellow-500" /> Confirmar Cobrança</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Cobranças foram enviadas recentemente. Tem certeza que deseja enviar novamente?</p>
-            <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
+            <div className="border rounded-lg divide-y max-h-64 overflow-y-auto">
               {recentLogs.map((log, idx) => {
-                const count = Array.isArray(log.payload) ? log.payload.length : "?";
+                const items = Array.isArray(log.payload) ? log.payload : [];
+                const count = items.length || "?";
+                const isExpanded = expandedLogIdx === idx;
                 return (
-                  <div key={idx} className="px-3 py-2 text-sm flex justify-between items-center">
-                    <span>{format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{count} cobranças</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${log.status === "sucesso" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                        {log.status || "—"}
-                      </span>
-                    </div>
+                  <div key={idx}>
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-sm flex justify-between items-center hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => setExpandedLogIdx(isExpanded ? null : idx)}
+                    >
+                      <span className="underline decoration-dotted">{format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{count} cobranças</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${log.status === "sucesso" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          {log.status || "—"}
+                        </span>
+                      </div>
+                    </button>
+                    {isExpanded && items.length > 0 && (
+                      <div className="px-3 pb-2 space-y-1">
+                        <div className="border rounded bg-muted/30 divide-y text-xs max-h-40 overflow-y-auto">
+                          {items.map((item: any, i: number) => (
+                            <div key={i} className="px-2 py-1.5 flex justify-between items-center gap-2">
+                              <span className="font-medium truncate">{item.cliente || "—"}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-muted-foreground">{item.valor != null ? `R$ ${Number(item.valor).toFixed(2)}` : ""}</span>
+                                {item.lid && <span className="text-muted-foreground font-mono">LID: {item.lid}</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
