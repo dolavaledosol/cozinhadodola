@@ -156,8 +156,6 @@ const Clientes = () => {
         for (const del of toDelete) {
           await supabase.from("cliente_telefone").delete().eq("cliente_telefone_id", del.cliente_telefone_id);
         }
-        // Track new phone IDs for preferencial mapping
-        const newPhoneIds: Record<number, string> = {};
         for (let i = 0; i < validPhonesForSave.length; i++) {
           const tel = validPhonesForSave[i];
           const digits = phoneToDigits(tel.telefone);
