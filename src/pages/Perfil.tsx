@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, MapPin, Phone, User, Package, Loader2, MessageCircle, Eye, Shield, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Phone, User, Package, Loader2, MessageCircle, Eye, Shield, ChevronRight, Star } from "lucide-react";
 import { PhoneInput, phoneToDigits, digitsToPhone, displayPhone } from "@/components/ui/phone-input";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { formatCpfCnpj } from "@/lib/cpfCnpj";
@@ -41,6 +41,7 @@ interface Telefone {
   cliente_telefone_id: string;
   telefone: string;
   is_whatsapp: boolean;
+  verificado: boolean;
 }
 
 interface Pedido {
@@ -84,6 +85,7 @@ const Perfil = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdminOrVendedor, setIsAdminOrVendedor] = useState(false);
+  const [telefonePreferencialId, setTelefonePreferencialId] = useState<string | null>(null);
 
   const [editNome, setEditNome] = useState("");
   const [editCpf, setEditCpf] = useState("");
@@ -126,6 +128,7 @@ const Perfil = () => {
       setCliente(clienteData as any);
       setEditNome((clienteData as any).nome);
       setEditCpf((clienteData as any).cpf_cnpj || "");
+      setTelefonePreferencialId((clienteData as any).telefone_preferencial_id || null);
       const [endRes, telRes, pedRes] = await Promise.all([
         supabase.from("cliente_endereco").select("endereco_id, endereco:endereco_id(*)").eq("cliente_id", (clienteData as any).cliente_id),
         supabase.from("cliente_telefone").select("*").eq("cliente_id", (clienteData as any).cliente_id),
@@ -332,10 +335,15 @@ const Perfil = () => {
                         <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
                           <Phone className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-sm font-medium">{displayPhone(t.telefone)}</span>
-                          {t.is_whatsapp && (
-                            <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          {t.verificado && t.is_whatsapp && telefonePreferencialId === t.cliente_telefone_id && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium" title="Telefone preferencial">
+                              <Star className="h-2.5 w-2.5 fill-yellow-400" /> Preferencial
+                            </span>
+                          )}
+                          {t.verificado && t.is_whatsapp && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium" title="WhatsApp verificado">
                               <MessageCircle className="h-2.5 w-2.5" /> WhatsApp
                             </span>
                           )}

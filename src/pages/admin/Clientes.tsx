@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, Phone, AlertCircle, Star } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Phone, AlertCircle, Star, MessageCircle } from "lucide-react";
 import { PhoneInput, phoneToDigits, digitsToPhone, displayPhone } from "@/components/ui/phone-input";
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -27,6 +27,8 @@ interface Cliente {
 interface TelefoneItem {
   id?: string;
   telefone: string; // E.164 format
+  is_whatsapp?: boolean;
+  verificado?: boolean;
 }
 
 const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true };
@@ -73,9 +75,9 @@ const Clientes = () => {
     });
     setTelefones([]);
     setTelefonePreferencialId((c as any).telefone_preferencial_id || null);
-    supabase.from("cliente_telefone").select("cliente_telefone_id, telefone").eq("cliente_id", c.cliente_id).then(({ data }) => {
+    supabase.from("cliente_telefone").select("cliente_telefone_id, telefone, is_whatsapp, verificado").eq("cliente_id", c.cliente_id).then(({ data }) => {
       if (data && data.length > 0) {
-        setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: digitsToPhone(t.telefone) })));
+        setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: digitsToPhone(t.telefone), is_whatsapp: t.is_whatsapp, verificado: t.verificado })));
       } else {
         setTelefones([{ telefone: "" }]);
       }
@@ -306,6 +308,11 @@ const Clientes = () => {
                   >
                     <Star className={`h-4 w-4 ${tel.id && telefonePreferencialId === tel.id ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
                   </button>
+                  {tel.verificado && tel.is_whatsapp && (
+                    <span title="WhatsApp verificado" className="shrink-0">
+                      <MessageCircle className="h-4 w-4 text-green-600" />
+                    </span>
+                  )}
                   <PhoneInput
                     value={tel.telefone}
                     onChange={(val) => {
