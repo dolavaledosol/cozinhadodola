@@ -128,6 +128,7 @@ const Perfil = () => {
       setCliente(clienteData as any);
       setEditNome((clienteData as any).nome);
       setEditCpf((clienteData as any).cpf_cnpj || "");
+      setTelefonePreferencialId((clienteData as any).telefone_preferencial_id || null);
       const [endRes, telRes, pedRes] = await Promise.all([
         supabase.from("cliente_endereco").select("endereco_id, endereco:endereco_id(*)").eq("cliente_id", (clienteData as any).cliente_id),
         supabase.from("cliente_telefone").select("*").eq("cliente_id", (clienteData as any).cliente_id),
