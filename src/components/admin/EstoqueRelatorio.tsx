@@ -72,6 +72,9 @@ async function fetchLids(clienteIds: string[]): Promise<Map<string, string>> {
   return lidMap;
 }
 
+type SortKey = "nome" | "familia" | "fabricante" | "preco" | "total_estoque";
+type SortDir = "asc" | "desc";
+
 const EstoqueRelatorio = () => {
   const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
   const [familias, setFamilias] = useState<FamiliaOption[]>([]);
@@ -88,6 +91,8 @@ const EstoqueRelatorio = () => {
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [sending, setSending] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("nome");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const { toast } = useToast();
 
   useEffect(() => {
