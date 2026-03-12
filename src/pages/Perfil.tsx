@@ -85,6 +85,7 @@ const Perfil = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdminOrVendedor, setIsAdminOrVendedor] = useState(false);
+  const [telefonePreferencialId, setTelefonePreferencialId] = useState<string | null>(null);
 
   const [editNome, setEditNome] = useState("");
   const [editCpf, setEditCpf] = useState("");
