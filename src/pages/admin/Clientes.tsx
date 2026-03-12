@@ -308,6 +308,11 @@ const Clientes = () => {
                   >
                     <Star className={`h-4 w-4 ${tel.id && telefonePreferencialId === tel.id ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
                   </button>
+                  {tel.verificado && tel.is_whatsapp && (
+                    <span title="WhatsApp verificado" className="shrink-0">
+                      <MessageCircle className="h-4 w-4 text-green-600" />
+                    </span>
+                  )}
                   <PhoneInput
                     value={tel.telefone}
                     onChange={(val) => {
