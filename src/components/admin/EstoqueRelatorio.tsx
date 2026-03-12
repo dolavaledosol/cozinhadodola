@@ -106,7 +106,18 @@ const EstoqueRelatorio = () => {
 
   useEffect(() => {
     loadData();
+    loadWebhookLogs();
   }, []);
+
+  const loadWebhookLogs = async () => {
+    const { data } = await supabase
+      .from("integracao_log")
+      .select("integracao_log_id, created_at, status, payload")
+      .eq("tipo", "webhook_estoque")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setWebhookLogs(data as WebhookLog[]);
+  };
 
   const loadData = async () => {
     const [{ data: estoque }, { data: fam }, { data: fab }] = await Promise.all([
