@@ -75,9 +75,9 @@ const Clientes = () => {
     });
     setTelefones([]);
     setTelefonePreferencialId((c as any).telefone_preferencial_id || null);
-    supabase.from("cliente_telefone").select("cliente_telefone_id, telefone").eq("cliente_id", c.cliente_id).then(({ data }) => {
+    supabase.from("cliente_telefone").select("cliente_telefone_id, telefone, is_whatsapp, verificado").eq("cliente_id", c.cliente_id).then(({ data }) => {
       if (data && data.length > 0) {
-        setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: digitsToPhone(t.telefone) })));
+        setTelefones(data.map(t => ({ id: t.cliente_telefone_id, telefone: digitsToPhone(t.telefone), is_whatsapp: t.is_whatsapp, verificado: t.verificado })));
       } else {
         setTelefones([{ telefone: "" }]);
       }
