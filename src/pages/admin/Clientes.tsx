@@ -161,9 +161,10 @@ const Clientes = () => {
           const tel = validPhonesForSave[i];
           const digits = phoneToDigits(tel.telefone);
           if (tel.id) {
-            await supabase.from("cliente_telefone").update({ telefone: digits }).eq("cliente_telefone_id", tel.id);
+            const changed = tel.originalTelefone !== tel.telefone;
+            await supabase.from("cliente_telefone").update({ telefone: digits, ...(changed ? { verificado: false, is_whatsapp: false } : {}) }).eq("cliente_telefone_id", tel.id);
           } else {
-            const { data: inserted } = await supabase.from("cliente_telefone").insert({ cliente_id: targetId, telefone: digits }).select("cliente_telefone_id").single();
+            const { data: inserted } = await supabase.from("cliente_telefone").insert({ cliente_id: targetId, telefone: digits, verificado: false }).select("cliente_telefone_id").single();
             if (inserted) {
               tel.id = inserted.cliente_telefone_id;
             }
