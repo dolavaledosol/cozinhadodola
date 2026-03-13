@@ -78,6 +78,7 @@ const Financeiro = () => {
   /* ═══════════════════════  CONTAS A PAGAR  ═══════════════════════ */
   const [pagar, setPagar] = useState<ContaPagar[]>([]);
   const [searchPagar, setSearchPagar] = useState("");
+  const [statusFilterPagar, setStatusFilterPagar] = useState<"pendente" | "pago" | "todos">("pendente");
   const [dialogPagar, setDialogPagar] = useState(false);
   const [editPagarId, setEditPagarId] = useState<string | null>(null);
   const [formPagar, setFormPagar] = useState(emptyPagar);
@@ -95,7 +96,9 @@ const Financeiro = () => {
 
   const filteredPagar = pagar.filter((c) => {
     const t = searchPagar.toLowerCase();
-    return !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
+    const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
+    const matchStatus = statusFilterPagar === "todos" || (statusFilterPagar === "pago" ? c.pago : !c.pago);
+    return matchSearch && matchStatus;
   });
 
   const openNewPagar = () => { setEditPagarId(null); setFormPagar(emptyPagar); setDialogPagar(true); };
@@ -480,9 +483,19 @@ const Financeiro = () => {
         {/* ══════════ TAB PAGAR ══════════ */}
         <TabsContent value="pagar" className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar..." value={searchPagar} onChange={(e) => setSearchPagar(e.target.value)} className="pl-10" />
+            <div className="flex flex-1 gap-2 items-center max-w-lg">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar..." value={searchPagar} onChange={(e) => setSearchPagar(e.target.value)} className="pl-10" />
+              </div>
+              <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
           </div>
