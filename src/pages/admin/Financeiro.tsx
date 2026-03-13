@@ -27,6 +27,7 @@ interface ContaPagar {
   contas_pagar_id: string; descricao: string; valor: number;
   data_vencimento: string; data_pagamento: string | null;
   pago: boolean; observacao: string | null; created_at: string;
+  compra_itens: any | null;
   fornecedor_id: string | null; banco_id: string | null; forma_pagamento_id: string | null;
   fornecedor: { nome: string } | null; banco: { nome: string } | null; forma_pagamento: { nome: string } | null;
 }
