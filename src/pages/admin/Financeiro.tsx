@@ -96,7 +96,9 @@ const Financeiro = () => {
 
   const filteredPagar = pagar.filter((c) => {
     const t = searchPagar.toLowerCase();
-    return !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
+    const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
+    const matchStatus = statusFilterPagar === "todos" || (statusFilterPagar === "pago" ? c.pago : !c.pago);
+    return matchSearch && matchStatus;
   });
 
   const openNewPagar = () => { setEditPagarId(null); setFormPagar(emptyPagar); setDialogPagar(true); };
