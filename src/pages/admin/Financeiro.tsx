@@ -499,22 +499,25 @@ const Financeiro = () => {
               ) : filteredPagar.map((c) => (
                 <div key={c.contas_pagar_id} className="border rounded-xl p-3 space-y-2 bg-card">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm truncate mr-2">{c.descricao}</span>
+                    <button onClick={() => openEditPagar(c)} className="text-xs font-mono text-primary hover:underline">
+                      {c.contas_pagar_id.slice(0, 8).toUpperCase()}
+                    </button>
                     <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${c.pago ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
                       {c.pago ? "Pago" : "Pendente"}
                     </span>
                   </div>
+                  <span className="font-medium text-sm truncate block">{c.descricao}</span>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{c.fornecedor?.nome || "—"}</span>
+                    <span className="text-muted-foreground">
+                      {c.fornecedor?.nome
+                        ? (c.descricao.toLowerCase().includes("frete") ? `Frete - ${c.fornecedor.nome}` : c.fornecedor.nome)
+                        : "—"}
+                    </span>
                     <span className="font-semibold">{fmtMoney(c.valor)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Venc: {fmtDate(c.data_vencimento)}</span>
-                    <div className="flex gap-1">
-                      {!c.pago && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => marcarPago(c.contas_pagar_id)} title="Marcar pago"><Check className="h-3.5 w-3.5 text-green-600" /></Button>}
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditPagar(c)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePagar(c.contas_pagar_id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
-                    </div>
+                    <span className="text-xs text-muted-foreground">Criação: {c.created_at ? format(new Date(c.created_at), "dd/MM/yy") : "—"}</span>
                   </div>
                 </div>
               ))}
