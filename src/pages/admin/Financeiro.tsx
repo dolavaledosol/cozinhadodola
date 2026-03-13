@@ -26,7 +26,7 @@ interface PhoneOption { cliente_telefone_id: string; telefone: string; pn: strin
 interface ContaPagar {
   contas_pagar_id: string; descricao: string; valor: number;
   data_vencimento: string; data_pagamento: string | null;
-  pago: boolean; observacao: string | null;
+  pago: boolean; observacao: string | null; created_at: string;
   fornecedor_id: string | null; banco_id: string | null; forma_pagamento_id: string | null;
   fornecedor: { nome: string } | null; banco: { nome: string } | null; forma_pagamento: { nome: string } | null;
 }
