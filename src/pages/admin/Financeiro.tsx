@@ -136,12 +136,6 @@ const Financeiro = () => {
     loadPagar();
   };
 
-  const marcarPago = async (id: string) => {
-    await supabase.from("contas_pagar").update({ pago: true, data_pagamento: new Date().toISOString().slice(0, 10) }).eq("contas_pagar_id", id);
-    toast({ title: "Marcado como pago" });
-    loadPagar();
-  };
-
   /* ═══════════════════════  CONTAS A RECEBER  ═══════════════════════ */
   const [receber, setReceber] = useState<ContaReceber[]>([]);
   const [searchReceber, setSearchReceber] = useState("");
