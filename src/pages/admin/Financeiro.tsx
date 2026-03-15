@@ -605,10 +605,6 @@ const Financeiro = () => {
                        {c.contas_pagar_id.slice(0, 8).toUpperCase()}
                       </button>
                     </TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">
-                      {c.compra_itens ? c.contas_pagar_id.slice(0, 8).toUpperCase() : "—"}
-                    </TableCell>
-                    
                     <TableCell className="hidden sm:table-cell text-muted-foreground">{fornecedorDisplay}</TableCell>
                     <TableCell className="text-muted-foreground">{c.created_at ? format(new Date(c.created_at), "dd/MM/yy") : "—"}</TableCell>
                      <TableCell>{fmtDate(c.data_vencimento)}</TableCell>
