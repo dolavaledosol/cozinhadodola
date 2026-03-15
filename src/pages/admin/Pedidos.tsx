@@ -339,7 +339,12 @@ const Pedidos = () => {
     const t = searchCompras.toLowerCase();
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
     const matchStatus = statusCompraFilter === "todos" || (c.status_compra || "pendente") === statusCompraFilter;
-    return matchSearch && matchStatus;
+    // Date filter on created_at
+    const compraDate = new Date(c.created_at);
+    const matchDate = compraDate >= compraDateFrom && compraDate <= compraDateTo;
+    // Fornecedor filter
+    const matchFornecedor = compraFornecedorFilter === "todos" || c.fornecedor_id === compraFornecedorFilter;
+    return matchSearch && matchStatus && matchDate && matchFornecedor;
   });
 
   const fmtDate = (d: string | null) => d ? format(new Date(d + "T00:00:00"), "dd/MM/yyyy") : "—";
