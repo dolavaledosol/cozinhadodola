@@ -582,7 +582,6 @@ const Financeiro = () => {
                <TableHeader>
                  <TableRow>
                    <TableHead>Código</TableHead>
-                   <TableHead>Cód Compra</TableHead>
                    <TableHead className="hidden sm:table-cell">Fornecedor</TableHead>
                    <TableHead>Criação</TableHead>
                    <TableHead>Vencimento</TableHead>
