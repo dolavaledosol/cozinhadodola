@@ -2386,24 +2386,59 @@ const Pedidos = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por descrição ou fornecedor..." value={searchCompras} onChange={(e) => setSearchCompras(e.target.value)} className="pl-10" />
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={statusCompraFilter} onValueChange={setStatusCompraFilter}>
-                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="recebido">Recebido</SelectItem>
-                  <SelectItem value="pago">Pago</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
-            </div>
-          </div>
-
-          {isMobile ? (
-            <div className="space-y-2">
-              {filteredCompras.length === 0 ? (
+           <div className="flex flex-col gap-3">
+             <div className="flex items-center gap-2">
+               <Select value={statusCompraFilter} onValueChange={setStatusCompraFilter}>
+                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="todos">Todos</SelectItem>
+                   <SelectItem value="pendente">Pendente</SelectItem>
+                   <SelectItem value="recebido">Recebido</SelectItem>
+                   <SelectItem value="pago">Pago</SelectItem>
+                   <SelectItem value="cancelado">Cancelado</SelectItem>
+                 </SelectContent>
+               </Select>
+               <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
+             </div>
+             <div className="flex flex-wrap gap-2">
+               {/* Date From */}
+               <Popover>
+                 <PopoverTrigger asChild>
+                   <Button variant="outline" className={cn("w-[140px] justify-start text-left text-xs font-normal", !compraDateFrom && "text-muted-foreground")}>
+                     <CalendarIcon className="mr-1 h-3 w-3" />
+                     {compraDateFrom ? format(compraDateFrom, "dd/MM/yyyy") : "De"}
+                   </Button>
+                 </PopoverTrigger>
+                 <PopoverContent className="w-auto p-0" align="start">
+                   <Calendar mode="single" selected={compraDateFrom} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setCompraDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
+                 </PopoverContent>
+               </Popover>
+               {/* Date To */}
+               <Popover>
+                 <PopoverTrigger asChild>
+                   <Button variant="outline" className={cn("w-[140px] justify-start text-left text-xs font-normal", !compraDateTo && "text-muted-foreground")}>
+                     <CalendarIcon className="mr-1 h-3 w-3" />
+                     {compraDateTo ? format(compraDateTo, "dd/MM/yyyy") : "Até"}
+                   </Button>
+                 </PopoverTrigger>
+                 <PopoverContent className="w-auto p-0" align="start">
+                   <Calendar mode="single" selected={compraDateTo} onSelect={(d) => { if (d) { d.setHours(23,59,59,999); setCompraDateTo(d); }}} initialFocus className="p-3 pointer-events-auto" />
+                 </PopoverContent>
+               </Popover>
+               {/* Fornecedor filter */}
+               <Select value={compraFornecedorFilter} onValueChange={setCompraFornecedorFilter}>
+                 <SelectTrigger className="w-[180px] text-xs"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="todos">Todos fornecedores</SelectItem>
+                   {(() => {
+                     const fornMap = new Map<string, string>();
+                     compras.forEach(c => { if (c.fornecedor_id && c.fornecedor?.nome) fornMap.set(c.fornecedor_id, c.fornecedor.nome); });
+                     return Array.from(fornMap.entries()).sort((a, b) => a[1].localeCompare(b[1])).map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>);
+                   })()}
+                 </SelectContent>
+               </Select>
+             </div>
+           </div>
                 <p className="text-center py-8 text-muted-foreground">Nenhum pedido de compra encontrado</p>
               ) : filteredCompras.map((c) => {
                 const nfMatch = c.descricao.match(/NF\s+([^\s-]+)/i);
