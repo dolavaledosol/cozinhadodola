@@ -585,7 +585,7 @@ const Pedidos = () => {
     }
     // Date filter
     const pedidoDate = new Date(p.data);
-    const matchDate = pedidoDate >= dateFrom && pedidoDate <= dateTo;
+    const matchDate = (!dateFrom || pedidoDate >= dateFrom) && (!dateTo || pedidoDate <= dateTo);
     // Local filter
     const matchLocal = localFilter === "todos" || (localFilter === "sem_local" ? !p.local_estoque_id : p.local_estoque_id === localFilter);
     // Tipo filter (entrega = sem local_estoque_id, retirada = com local_estoque_id)
