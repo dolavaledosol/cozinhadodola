@@ -2439,6 +2439,10 @@ const Pedidos = () => {
                </Select>
              </div>
            </div>
+
+          {isMobile ? (
+            <div className="space-y-2">
+              {filteredCompras.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">Nenhum pedido de compra encontrado</p>
               ) : filteredCompras.map((c) => {
                 const nfMatch = c.descricao.match(/NF\s+([^\s-]+)/i);
