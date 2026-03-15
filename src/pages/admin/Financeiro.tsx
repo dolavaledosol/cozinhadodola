@@ -214,7 +214,10 @@ const Financeiro = () => {
     const t = searchReceber.toLowerCase();
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.cliente?.nome?.toLowerCase().includes(t);
     const matchStatus = statusFilterReceber === "todos" || (statusFilterReceber === "recebido" ? c.recebido : !c.recebido);
-    return matchSearch && matchStatus;
+    const cDate = new Date(c.data_vencimento + "T00:00:00");
+    const matchDate = cDate >= receberDateFrom && cDate <= receberDateTo;
+    const matchCliente = receberClienteFilter === "todos" || c.cliente_id === receberClienteFilter;
+    return matchSearch && matchStatus && matchDate && matchCliente;
   });
 
   const openNewReceber = () => { setEditReceberId(null); setFormReceber(emptyReceber); setDialogReceber(true); };
