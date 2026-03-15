@@ -2410,7 +2410,7 @@ const Pedidos = () => {
                    </Button>
                  </PopoverTrigger>
                  <PopoverContent className="w-auto p-0" align="start">
-                   <Calendar mode="single" selected={compraDateFrom} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setCompraDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
+                   <Calendar mode="single" selected={compraDateFrom ?? undefined} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setCompraDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
                  </PopoverContent>
                </Popover>
                {/* Date To */}
