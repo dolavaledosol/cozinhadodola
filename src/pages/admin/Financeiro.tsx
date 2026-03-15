@@ -215,7 +215,7 @@ const Financeiro = () => {
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.cliente?.nome?.toLowerCase().includes(t);
     const matchStatus = statusFilterReceber === "todos" || (statusFilterReceber === "recebido" ? c.recebido : !c.recebido);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
-    const matchDate = cDate >= receberDateFrom && cDate <= receberDateTo;
+    const matchDate = (!receberDateFrom || cDate >= receberDateFrom) && (!receberDateTo || cDate <= receberDateTo);
     const matchCliente = receberClienteFilter === "todos" || c.cliente_id === receberClienteFilter;
     return matchSearch && matchStatus && matchDate && matchCliente;
   });

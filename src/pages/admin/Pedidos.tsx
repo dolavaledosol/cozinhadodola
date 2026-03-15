@@ -341,7 +341,7 @@ const Pedidos = () => {
     const matchStatus = statusCompraFilter === "todos" || (c.status_compra || "pendente") === statusCompraFilter;
     // Date filter on created_at
     const compraDate = new Date(c.created_at);
-    const matchDate = compraDate >= compraDateFrom && compraDate <= compraDateTo;
+    const matchDate = (!compraDateFrom || compraDate >= compraDateFrom) && (!compraDateTo || compraDate <= compraDateTo);
     // Fornecedor filter
     const matchFornecedor = compraFornecedorFilter === "todos" || c.fornecedor_id === compraFornecedorFilter;
     return matchSearch && matchStatus && matchDate && matchFornecedor;
