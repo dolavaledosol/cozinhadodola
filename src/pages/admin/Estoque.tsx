@@ -76,6 +76,8 @@ const Estoque = () => {
   const [produtos, setProdutos] = useState<SelectOption[]>([]);
   const [locais, setLocais] = useState<LocalEstoque[]>([]);
   const [search, setSearch] = useState("");
+  const [estoqueLocalFilter, setEstoqueLocalFilter] = useState("todos");
+  const [estoqueTipoFilter, setEstoqueTipoFilter] = useState<"ambos" | "estoque" | "pedidos">("ambos");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
