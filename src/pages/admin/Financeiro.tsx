@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Download, Send, Loader2, AlertTriangle, CalendarIcon } from "lucide-react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -84,8 +84,8 @@ const Financeiro = () => {
   const [pagar, setPagar] = useState<ContaPagar[]>([]);
   const [searchPagar, setSearchPagar] = useState("");
   const [statusFilterPagar, setStatusFilterPagar] = useState<"pendente" | "pago" | "todos">("pendente");
-  const [pagarDateFrom, setPagarDateFrom] = useState<Date>(startOfMonth(new Date()));
-  const [pagarDateTo, setPagarDateTo] = useState<Date>(endOfMonth(new Date()));
+  const [pagarDateFrom, setPagarDateFrom] = useState<Date | null>(null);
+  const [pagarDateTo, setPagarDateTo] = useState<Date | null>(null);
   const [pagarFornecedorFilter, setPagarFornecedorFilter] = useState("todos");
   const [dialogPagar, setDialogPagar] = useState(false);
   const [editPagarId, setEditPagarId] = useState<string | null>(null);
@@ -107,7 +107,7 @@ const Financeiro = () => {
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
     const matchStatus = statusFilterPagar === "todos" || (statusFilterPagar === "pago" ? c.pago : !c.pago);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
-    const matchDate = cDate >= pagarDateFrom && cDate <= pagarDateTo;
+    const matchDate = (!pagarDateFrom || cDate >= pagarDateFrom) && (!pagarDateTo || cDate <= pagarDateTo);
     const matchFornecedor = pagarFornecedorFilter === "todos" || c.fornecedor_id === pagarFornecedorFilter;
     return matchSearch && matchStatus && matchDate && matchFornecedor;
   });
@@ -154,8 +154,8 @@ const Financeiro = () => {
   const [receber, setReceber] = useState<ContaReceber[]>([]);
   const [searchReceber, setSearchReceber] = useState("");
   const [statusFilterReceber, setStatusFilterReceber] = useState<"pendente" | "recebido" | "todos">("pendente");
-  const [receberDateFrom, setReceberDateFrom] = useState<Date>(startOfMonth(new Date()));
-  const [receberDateTo, setReceberDateTo] = useState<Date>(endOfMonth(new Date()));
+  const [receberDateFrom, setReceberDateFrom] = useState<Date | null>(null);
+  const [receberDateTo, setReceberDateTo] = useState<Date | null>(null);
   const [receberClienteFilter, setReceberClienteFilter] = useState("todos");
   const [dialogReceber, setDialogReceber] = useState(false);
   const [editReceberId, setEditReceberId] = useState<string | null>(null);
@@ -215,7 +215,7 @@ const Financeiro = () => {
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.cliente?.nome?.toLowerCase().includes(t);
     const matchStatus = statusFilterReceber === "todos" || (statusFilterReceber === "recebido" ? c.recebido : !c.recebido);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
-    const matchDate = cDate >= receberDateFrom && cDate <= receberDateTo;
+    const matchDate = (!receberDateFrom || cDate >= receberDateFrom) && (!receberDateTo || cDate <= receberDateTo);
     const matchCliente = receberClienteFilter === "todos" || c.cliente_id === receberClienteFilter;
     return matchSearch && matchStatus && matchDate && matchCliente;
   });
@@ -522,11 +522,11 @@ const Financeiro = () => {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !pagarDateFrom && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(pagarDateFrom, "dd/MM/yyyy")}
+                    {pagarDateFrom ? format(pagarDateFrom, "dd/MM/yyyy") : "De"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={pagarDateFrom} onSelect={(d) => d && setPagarDateFrom(d)} locale={ptBR} className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={pagarDateFrom ?? undefined} onSelect={(d) => d && setPagarDateFrom(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
               <span className="text-muted-foreground text-sm">até</span>
@@ -534,11 +534,11 @@ const Financeiro = () => {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !pagarDateTo && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(pagarDateTo, "dd/MM/yyyy")}
+                    {pagarDateTo ? format(pagarDateTo, "dd/MM/yyyy") : "Até"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={pagarDateTo} onSelect={(d) => d && setPagarDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={pagarDateTo ?? undefined} onSelect={(d) => d && setPagarDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
               <Select value={pagarFornecedorFilter} onValueChange={setPagarFornecedorFilter}>
@@ -660,25 +660,25 @@ const Financeiro = () => {
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal")}>
+                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !receberDateFrom && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(receberDateFrom, "dd/MM/yyyy")}
+                    {receberDateFrom ? format(receberDateFrom, "dd/MM/yyyy") : "De"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={receberDateFrom} onSelect={(d) => d && setReceberDateFrom(d)} locale={ptBR} className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={receberDateFrom ?? undefined} onSelect={(d) => d && setReceberDateFrom(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
               <span className="text-muted-foreground text-sm">até</span>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal")}>
+                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !receberDateTo && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(receberDateTo, "dd/MM/yyyy")}
+                    {receberDateTo ? format(receberDateTo, "dd/MM/yyyy") : "Até"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={receberDateTo} onSelect={(d) => d && setReceberDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={receberDateTo ?? undefined} onSelect={(d) => d && setReceberDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
               <Select value={receberClienteFilter} onValueChange={setReceberClienteFilter}>

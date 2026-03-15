@@ -185,9 +185,9 @@ const Pedidos = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ativos");
-  // Date range filter – default to current month
-  const [dateFrom, setDateFrom] = useState<Date>(() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; });
-  const [dateTo, setDateTo] = useState<Date>(() => { const d = new Date(); d.setMonth(d.getMonth() + 1, 0); d.setHours(23,59,59,999); return d; });
+  // Date range filter – default: no date restriction
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
   const [localFilter, setLocalFilter] = useState("todos");
   const [tipoFilter, setTipoFilter] = useState("todos");
   const [origemFilter, setOrigemFilter] = useState("todos");
@@ -278,8 +278,8 @@ const Pedidos = () => {
   const [compras, setCompras] = useState<ContaPagarCompra[]>([]);
   const [searchCompras, setSearchCompras] = useState("");
   const [statusCompraFilter, setStatusCompraFilter] = useState("pendente");
-  const [compraDateFrom, setCompraDateFrom] = useState<Date>(() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; });
-  const [compraDateTo, setCompraDateTo] = useState<Date>(() => { const d = new Date(); d.setMonth(d.getMonth() + 1, 0); d.setHours(23,59,59,999); return d; });
+  const [compraDateFrom, setCompraDateFrom] = useState<Date | null>(null);
+  const [compraDateTo, setCompraDateTo] = useState<Date | null>(null);
   const [compraFornecedorFilter, setCompraFornecedorFilter] = useState("todos");
   const [entradaOpen, setEntradaOpen] = useState(false);
   const [entradaFornecedores, setEntradaFornecedores] = useState<{ fornecedor_id: string; nome: string }[]>([]);
@@ -341,7 +341,7 @@ const Pedidos = () => {
     const matchStatus = statusCompraFilter === "todos" || (c.status_compra || "pendente") === statusCompraFilter;
     // Date filter on created_at
     const compraDate = new Date(c.created_at);
-    const matchDate = compraDate >= compraDateFrom && compraDate <= compraDateTo;
+    const matchDate = (!compraDateFrom || compraDate >= compraDateFrom) && (!compraDateTo || compraDate <= compraDateTo);
     // Fornecedor filter
     const matchFornecedor = compraFornecedorFilter === "todos" || c.fornecedor_id === compraFornecedorFilter;
     return matchSearch && matchStatus && matchDate && matchFornecedor;
@@ -585,7 +585,7 @@ const Pedidos = () => {
     }
     // Date filter
     const pedidoDate = new Date(p.data);
-    const matchDate = pedidoDate >= dateFrom && pedidoDate <= dateTo;
+    const matchDate = (!dateFrom || pedidoDate >= dateFrom) && (!dateTo || pedidoDate <= dateTo);
     // Local filter
     const matchLocal = localFilter === "todos" || (localFilter === "sem_local" ? !p.local_estoque_id : p.local_estoque_id === localFilter);
     // Tipo filter (entrega = sem local_estoque_id, retirada = com local_estoque_id)
@@ -1543,7 +1543,7 @@ const Pedidos = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={dateFrom} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
+              <Calendar mode="single" selected={dateFrom ?? undefined} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
             </PopoverContent>
           </Popover>
           {/* Date To */}
@@ -1555,7 +1555,7 @@ const Pedidos = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={dateTo} onSelect={(d) => { if (d) { d.setHours(23,59,59,999); setDateTo(d); }}} initialFocus className="p-3 pointer-events-auto" />
+              <Calendar mode="single" selected={dateTo ?? undefined} onSelect={(d) => { if (d) { d.setHours(23,59,59,999); setDateTo(d); }}} initialFocus className="p-3 pointer-events-auto" />
             </PopoverContent>
           </Popover>
           {/* Local filter */}
@@ -2410,7 +2410,7 @@ const Pedidos = () => {
                    </Button>
                  </PopoverTrigger>
                  <PopoverContent className="w-auto p-0" align="start">
-                   <Calendar mode="single" selected={compraDateFrom} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setCompraDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
+                   <Calendar mode="single" selected={compraDateFrom ?? undefined} onSelect={(d) => { if (d) { d.setHours(0,0,0,0); setCompraDateFrom(d); }}} initialFocus className="p-3 pointer-events-auto" />
                  </PopoverContent>
                </Popover>
                {/* Date To */}
@@ -2422,7 +2422,7 @@ const Pedidos = () => {
                    </Button>
                  </PopoverTrigger>
                  <PopoverContent className="w-auto p-0" align="start">
-                   <Calendar mode="single" selected={compraDateTo} onSelect={(d) => { if (d) { d.setHours(23,59,59,999); setCompraDateTo(d); }}} initialFocus className="p-3 pointer-events-auto" />
+                   <Calendar mode="single" selected={compraDateTo ?? undefined} onSelect={(d) => { if (d) { d.setHours(23,59,59,999); setCompraDateTo(d); }}} initialFocus className="p-3 pointer-events-auto" />
                  </PopoverContent>
                </Popover>
                {/* Fornecedor filter */}
