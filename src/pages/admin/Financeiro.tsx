@@ -672,9 +672,9 @@ const Financeiro = () => {
               <span className="text-muted-foreground text-sm">até</span>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal")}>
+                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !receberDateTo && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(receberDateTo, "dd/MM/yyyy")}
+                    {receberDateTo ? format(receberDateTo, "dd/MM/yyyy") : "Até"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
