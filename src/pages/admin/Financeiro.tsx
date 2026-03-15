@@ -660,9 +660,9 @@ const Financeiro = () => {
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal")}>
+                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !receberDateFrom && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(receberDateFrom, "dd/MM/yyyy")}
+                    {receberDateFrom ? format(receberDateFrom, "dd/MM/yyyy") : "De"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
