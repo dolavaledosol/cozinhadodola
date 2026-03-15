@@ -11,8 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Download, Send, Loader2, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Search, Download, Send, Loader2, AlertTriangle, CalendarIcon } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 /* ── Shared types ── */
@@ -80,6 +84,9 @@ const Financeiro = () => {
   const [pagar, setPagar] = useState<ContaPagar[]>([]);
   const [searchPagar, setSearchPagar] = useState("");
   const [statusFilterPagar, setStatusFilterPagar] = useState<"pendente" | "pago" | "todos">("pendente");
+  const [pagarDateFrom, setPagarDateFrom] = useState<Date>(startOfMonth(new Date()));
+  const [pagarDateTo, setPagarDateTo] = useState<Date>(endOfMonth(new Date()));
+  const [pagarFornecedorFilter, setPagarFornecedorFilter] = useState("todos");
   const [dialogPagar, setDialogPagar] = useState(false);
   const [editPagarId, setEditPagarId] = useState<string | null>(null);
   const [formPagar, setFormPagar] = useState(emptyPagar);
@@ -99,7 +106,10 @@ const Financeiro = () => {
     const t = searchPagar.toLowerCase();
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
     const matchStatus = statusFilterPagar === "todos" || (statusFilterPagar === "pago" ? c.pago : !c.pago);
-    return matchSearch && matchStatus;
+    const cDate = new Date(c.data_vencimento + "T00:00:00");
+    const matchDate = cDate >= pagarDateFrom && cDate <= pagarDateTo;
+    const matchFornecedor = pagarFornecedorFilter === "todos" || c.fornecedor_id === pagarFornecedorFilter;
+    return matchSearch && matchStatus && matchDate && matchFornecedor;
   });
 
   const openNewPagar = () => { setEditPagarId(null); setFormPagar(emptyPagar); setDialogPagar(true); };
@@ -483,22 +493,58 @@ const Financeiro = () => {
 
         {/* ══════════ TAB PAGAR ══════════ */}
         <TabsContent value="pagar" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex flex-1 gap-2 items-center max-w-lg">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar..." value={searchPagar} onChange={(e) => setSearchPagar(e.target.value)} className="pl-10" />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex flex-1 gap-2 items-center max-w-lg">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Buscar..." value={searchPagar} onChange={(e) => setSearchPagar(e.target.value)} className="pl-10" />
+                </div>
+                <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="todos">Todos</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
-                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+              <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !pagarDateFrom && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(pagarDateFrom, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={pagarDateFrom} onSelect={(d) => d && setPagarDateFrom(d)} locale={ptBR} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground text-sm">até</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !pagarDateTo && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(pagarDateTo, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={pagarDateTo} onSelect={(d) => d && setPagarDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <Select value={pagarFornecedorFilter} onValueChange={setPagarFornecedorFilter}>
+                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="pago">Pago</SelectItem>
-                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="todos">Todos fornecedores</SelectItem>
+                  {fornecedores.map((f) => (
+                    <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
           </div>
           {isMobile ? (
             <div className="space-y-2">
