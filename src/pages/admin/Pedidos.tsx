@@ -342,8 +342,7 @@ const Pedidos = () => {
   const saveCompraEdit = async () => {
     setCompraEditLoading(true);
     const totalItens = compraEditItens.reduce((s, i) => s + i.quantidade * i.preco_custo, 0);
-    const frete = Number(compraEdit.frete) || 0;
-    const valorFinal = compraEditItens.length > 0 ? totalItens + frete : Number(compraEdit.valor);
+    const valorFinal = compraEditItens.length > 0 ? totalItens : Number(compraEdit.valor);
     const { error } = await supabase.from("contas_pagar").update({
       descricao: compraEdit.descricao, valor: valorFinal,
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
@@ -2811,7 +2810,7 @@ const Pedidos = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Valor Total {temItens ? "(calculado)" : "(R$) *"}</Label>
-                <Input type="number" step="0.01" value={temItens ? (totalItens + frete).toFixed(2) : compraEdit.valor} onChange={(e) => setCompraEdit({ ...compraEdit, valor: e.target.value })} disabled={temItens || isPago} />
+                <Input type="number" step="0.01" value={temItens ? totalItens.toFixed(2) : compraEdit.valor} onChange={(e) => setCompraEdit({ ...compraEdit, valor: e.target.value })} disabled={temItens || isPago} />
               </div>
               <div className="space-y-2">
                 <Label>Data NF</Label>
@@ -2881,9 +2880,7 @@ const Pedidos = () => {
                         <Input type="number" step="0.01" className="h-8 text-xs" value={compraEdit.frete} onChange={(e) => setCompraEdit({ ...compraEdit, frete: e.target.value })} />
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Itens: R$ {totalItens.toFixed(2)}</p>
-                        {frete > 0 && <p className="text-xs text-muted-foreground">Frete: R$ {frete.toFixed(2)}</p>}
-                        <p className="text-sm font-semibold">Total: R$ {(totalItens + frete).toFixed(2)}</p>
+                        <p className="text-sm font-semibold">Total: R$ {totalItens.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
