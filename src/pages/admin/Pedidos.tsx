@@ -3020,6 +3020,28 @@ const Pedidos = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* ── Confirmação Cancelamento Compra ── */}
+      <AlertDialog open={!!compraConfirmCancelado} onOpenChange={(open) => { if (!open) setCompraConfirmCancelado(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar cancelamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja realmente cancelar este pedido de compra? {compraConfirmCancelado?.status_compra === "recebido" ? "Os itens lançados no estoque serão estornados." : "Esta ação não poderá ser desfeita facilmente."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => {
+              if (compraConfirmCancelado) {
+                changeCompraStatus(compraConfirmCancelado, "cancelado");
+                setCompraConfirmCancelado(null);
+                setCompraEditOpen(false);
+              }
+            }}>Cancelar Compra</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* ── Entrada dialog ── */}
       <Dialog open={entradaOpen} onOpenChange={setEntradaOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
