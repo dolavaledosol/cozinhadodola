@@ -2810,7 +2810,7 @@ const Pedidos = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Valor Total {temItens ? "(calculado)" : "(R$) *"}</Label>
-                <Input type="number" step="0.01" value={temItens ? (totalItens + frete).toFixed(2) : compraEdit.valor} onChange={(e) => setCompraEdit({ ...compraEdit, valor: e.target.value })} disabled={temItens || isPago} />
+                <Input type="number" step="0.01" value={temItens ? totalItens.toFixed(2) : compraEdit.valor} onChange={(e) => setCompraEdit({ ...compraEdit, valor: e.target.value })} disabled={temItens || isPago} />
               </div>
               <div className="space-y-2">
                 <Label>Data NF</Label>
