@@ -1619,12 +1619,12 @@ const Pedidos = () => {
         }
       }
 
-      const text = `*Cozinha DoDola*%0APedido: %23${pedido.pedido_id.slice(0, 8)}%0AStatus: ${statusLabels[pedido.status] || pedido.status}%0ATotal: R$ ${Number(pedido.total).toFixed(2)}`;
+      const text = `*CozinhaDoDola*%0APedido: %23${pedido.pedido_id.slice(0, 8)}%0AStatus: ${statusLabels[pedido.status] || pedido.status}%0ATotal: R$ ${Number(pedido.total).toFixed(2)}`;
 
       // Try Web Share API first (mobile)
       if (navigator.share && navigator.canShare) {
         const file = new File([blob], "pedido-status.png", { type: "image/png" });
-        const shareData = { files: [file], text: `Cozinha DoDola\nPedido: #${pedido.pedido_id.slice(0, 8)}\nStatus: ${statusLabels[pedido.status] || pedido.status}\nTotal: R$ ${Number(pedido.total).toFixed(2)}` };
+        const shareData = { files: [file], text: `CozinhaDoDola\nPedido: #${pedido.pedido_id.slice(0, 8)}\nStatus: ${statusLabels[pedido.status] || pedido.status}\nTotal: R$ ${Number(pedido.total).toFixed(2)}` };
         if (navigator.canShare(shareData)) {
           try {
             await navigator.share(shareData);
