@@ -335,7 +335,7 @@ const Pedidos = () => {
     setCompraEdit({
       contas_pagar_id: c.contas_pagar_id, descricao: c.descricao, valor: String(c.valor),
       data_vencimento: c.data_vencimento, data_nf: c.data_nf || "", pago: c.pago, observacao: c.observacao || "",
-      fornecedor_id: c.fornecedor_id || "", frete: "0", status_compra: c.status_compra || "pendente",
+      fornecedor_id: c.fornecedor_id || "", frete: String(freteItem?.preco_custo || freteItem?.quantidade || 0), status_compra: c.status_compra || "pendente",
     });
     setCompraEditOpen(true);
   };
