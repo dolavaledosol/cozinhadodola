@@ -344,13 +344,18 @@ const Pedidos = () => {
     setCompraEditLoading(true);
     const totalItens = compraEditItens.reduce((s, i) => s + i.quantidade * i.preco_custo, 0);
     const valorFinal = compraEditItens.length > 0 ? totalItens : Number(compraEdit.valor);
+    const freteVal = Number(compraEdit.frete) || 0;
+    const itensToSave = [...compraEditItens.map(i => ({ ...i }))];
+    if (freteVal > 0) {
+      itensToSave.push({ produto_id: "__frete__", nome: "Frete", quantidade: 1, preco_custo: freteVal, aceita_fracionado: false } as any);
+    }
     const { error } = await supabase.from("contas_pagar").update({
       descricao: compraEdit.descricao, valor: valorFinal,
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
       observacao: compraEdit.observacao || null,
       fornecedor_id: compraEdit.fornecedor_id || null,
       data_pagamento: compraEdit.pago ? (new Date().toISOString().slice(0, 10)) : null,
-      compra_itens: compraEditItens.length > 0 ? JSON.parse(JSON.stringify(compraEditItens)) : null,
+      compra_itens: itensToSave.length > 0 ? JSON.parse(JSON.stringify(itensToSave)) : null,
     }).eq("contas_pagar_id", compraEdit.contas_pagar_id);
     setCompraEditLoading(false);
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
