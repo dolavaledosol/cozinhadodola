@@ -158,18 +158,13 @@ const Producao = () => {
         ).throwOnError();
       }
 
-      // Deduct ingredients
+      // Deduct ingredients atomically
       for (const item of itens) {
-        const estoque = estoquesLocal.find(
-          (el) => el.produto_id === item.produto_id && el.local_estoque_id === localEstoqueId
-        );
-        if (estoque) {
-          await supabase.from("estoque_local")
-            .update({ quantidade_disponivel: Number(estoque.quantidade_disponivel) - item.quantidade })
-            .eq("produto_id", item.produto_id)
-            .eq("local_estoque_id", localEstoqueId)
-            .throwOnError();
-        }
+        await supabase.rpc("ajustar_estoque", {
+          _produto_id: item.produto_id,
+          _local_estoque_id: localEstoqueId,
+          _delta: -item.quantidade,
+        });
         await supabase.from("movimentacao_estoque").insert({
           produto_id: item.produto_id,
           local_estoque_id: localEstoqueId,
@@ -181,24 +176,12 @@ const Producao = () => {
         }).throwOnError();
       }
 
-      // Add finished product
-      const estoqueFinal = estoquesLocal.find(
-        (el) => el.produto_id === produtoId && el.local_estoque_id === localEstoqueId
-      );
-      if (estoqueFinal) {
-        await supabase.from("estoque_local")
-          .update({ quantidade_disponivel: Number(estoqueFinal.quantidade_disponivel) + qtdProduzir })
-          .eq("produto_id", produtoId)
-          .eq("local_estoque_id", localEstoqueId)
-          .throwOnError();
-      } else {
-        await supabase.from("estoque_local").insert({
-          produto_id: produtoId,
-          local_estoque_id: localEstoqueId,
-          quantidade_disponivel: qtdProduzir,
-          preco: 0,
-        }).throwOnError();
-      }
+      // Add finished product atomically
+      await supabase.rpc("ajustar_estoque", {
+        _produto_id: produtoId,
+        _local_estoque_id: localEstoqueId,
+        _delta: qtdProduzir,
+      });
 
       await supabase.from("movimentacao_estoque").insert({
         produto_id: produtoId,
