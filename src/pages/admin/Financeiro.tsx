@@ -483,7 +483,7 @@ const Financeiro = () => {
         cliente_id: c.cliente_id || "",
         whatsapp_from: phone?.from || "",
         pn: phone?.pn || "",
-        lid: phone?.lid || "",
+        lid: phone?.lid || phone?.pn || "",
         pedido_id: c.pedido_id || "",
         pedido_codigo: c.pedido_id ? c.pedido_id.slice(0, 8).toUpperCase() : "",
         data_pedido: pedido?.data || "",

@@ -154,8 +154,8 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
 
     const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: telefones }] = await Promise.all([
       supabase.from("cliente").select("cliente_id, nome").eq("ativo", true).order("nome"),
-      supabase.from("clientewhats").select("clientewhats_id, nome, lid, cliente_id"),
-      supabase.from("cliente_telefone").select("cliente_id, lid").not("lid", "is", null),
+      supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, cliente_id"),
+      supabase.from("cliente_telefone").select("cliente_id, lid, pn"),
     ]);
 
     const lidSet = new Set<string>();
@@ -163,9 +163,10 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
 
     if (clienteWhatsDb) {
       for (const cw of clienteWhatsDb as any[]) {
-        if (cw.lid && !lidSet.has(cw.lid)) {
-          lidSet.add(cw.lid);
-          result.push({ cliente_id: cw.cliente_id || `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", lid: cw.lid });
+        const effectiveLid = cw.lid || cw.pn || null;
+        if (effectiveLid && !lidSet.has(effectiveLid)) {
+          lidSet.add(effectiveLid);
+          result.push({ cliente_id: cw.cliente_id || `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", lid: effectiveLid });
         }
       }
     }
@@ -173,7 +174,8 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
     const telLidMap = new Map<string, string>();
     if (telefones) {
       for (const t of telefones as any[]) {
-        if (t.lid && !telLidMap.has(t.cliente_id)) telLidMap.set(t.cliente_id, t.lid);
+        const effectiveLid = t.lid || t.pn || null;
+        if (effectiveLid && !telLidMap.has(t.cliente_id)) telLidMap.set(t.cliente_id, effectiveLid);
       }
     }
 

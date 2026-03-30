@@ -98,9 +98,13 @@ Deno.serve(async (req) => {
       .eq("ativo", true);
 
     const cwIds = (clientes || []).map(c => c.clientewhats_id).filter(Boolean) as number[];
+    const clienteIds = (clientes || []).map(c => c.cliente_id);
     const cwPromise = cwIds.length > 0
-      ? supabase.from("clientewhats").select("clientewhats_id, lid").in("clientewhats_id", cwIds)
-      : Promise.resolve({ data: [] as { clientewhats_id: number; lid: string | null }[] });
+      ? supabase.from("clientewhats").select("clientewhats_id, lid, pn").in("clientewhats_id", cwIds)
+      : Promise.resolve({ data: [] as { clientewhats_id: number; lid: string | null; pn: string | null }[] });
+    const telPromise = clienteIds.length > 0
+      ? supabase.from("cliente_telefone").select("cliente_id, lid, pn").in("cliente_id", clienteIds)
+      : Promise.resolve({ data: [] as { cliente_id: string; lid: string | null; pn: string | null }[] });
 
     // --- Step 3: Fetch pedidos for these clients, then items ---
     const { data: clientePedidos } = await supabase
