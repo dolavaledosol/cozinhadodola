@@ -1064,14 +1064,11 @@ const Pedidos = () => {
         if (wasAfterPago && localId) {
           for (const item of items) {
             // Restore stock by adding back the deducted quantity
-            const { data: el } = await supabase.from("estoque_local")
-              .select("estoque_local_id, quantidade_disponivel")
-              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
-            if (el) {
-              await supabase.from("estoque_local").update({
-                quantidade_disponivel: Number(el.quantidade_disponivel) + Number(item.quantidade),
-              }).eq("estoque_local_id", el.estoque_local_id);
-            }
+            await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: localId,
+              _delta: Number(item.quantidade),
+            });
             // Log movimentação de devolução
             await supabase.from("movimentacao_estoque").insert({
               tipo: "entrada",
