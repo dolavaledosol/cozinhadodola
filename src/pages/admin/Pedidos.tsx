@@ -2855,6 +2855,8 @@ const Pedidos = () => {
                           if (s !== currentSt) {
                             if (s === "recebido") {
                               setCompraConfirmRecebido(currentCompra);
+                            } else if (s === "cancelado") {
+                              setCompraConfirmCancelado(currentCompra);
                             } else {
                               changeCompraStatus(currentCompra, s);
                             }
