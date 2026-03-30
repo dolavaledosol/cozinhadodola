@@ -341,7 +341,7 @@ const Financeiro = () => {
             : prefId
               ? plist.find(p => p.cliente_telefone_id === prefId) || plist.find(p => p.lid) || plist[0]
               : plist.find(p => p.lid) || plist[0];
-          phoneMap[cid] = { from: chosen.telefone || "", pn: chosen.pn || "", lid: chosen.lid || "" };
+          phoneMap[cid] = { from: chosen.telefone || "", pn: chosen.pn || "", lid: chosen.lid || chosen.pn || "" };
         }
       }
     }
