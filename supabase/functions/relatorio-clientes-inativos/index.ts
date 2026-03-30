@@ -199,7 +199,8 @@ Deno.serve(async (req) => {
         const cliente = (clientes || []).find(c => c.cliente_id === cid);
         if (!cliente) return null;
 
-        const lid = cliente.clientewhats_id ? cwMap.get(cliente.clientewhats_id) || null : null;
+        const cwLid = cliente.clientewhats_id ? cwMap.get(cliente.clientewhats_id) || null : null;
+        const lid = cwLid || telLidMap.get(cid) || null;
 
         const produtos: any[] = [];
         for (const [key, agg] of aggMap) {
