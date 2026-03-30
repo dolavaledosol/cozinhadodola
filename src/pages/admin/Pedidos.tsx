@@ -342,8 +342,7 @@ const Pedidos = () => {
   const saveCompraEdit = async () => {
     setCompraEditLoading(true);
     const totalItens = compraEditItens.reduce((s, i) => s + i.quantidade * i.preco_custo, 0);
-    const frete = Number(compraEdit.frete) || 0;
-    const valorFinal = compraEditItens.length > 0 ? totalItens + frete : Number(compraEdit.valor);
+    const valorFinal = compraEditItens.length > 0 ? totalItens : Number(compraEdit.valor);
     const { error } = await supabase.from("contas_pagar").update({
       descricao: compraEdit.descricao, valor: valorFinal,
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
