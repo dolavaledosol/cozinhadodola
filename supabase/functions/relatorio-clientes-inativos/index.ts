@@ -130,10 +130,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const [cwResult, ...itemResults] = await Promise.all([cwPromise, ...itemBatches]);
+    const [cwResult, telResult, ...itemResults] = await Promise.all([cwPromise, telPromise, ...itemBatches]);
 
     const cwMap = new Map<number, string | null>();
-    for (const cw of (cwResult.data || []) as any[]) cwMap.set(cw.clientewhats_id, cw.lid);
+    for (const cw of (cwResult.data || []) as any[]) cwMap.set(cw.clientewhats_id, cw.lid || cw.pn || null);
+
+    // Build telefone lid/pn fallback map per cliente_id
+    const telLidMap = new Map<string, string>();
+    for (const t of (telResult.data || []) as any[]) {
+      const effectiveLid = t.lid || t.pn || null;
+      if (effectiveLid && !telLidMap.has(t.cliente_id)) telLidMap.set(t.cliente_id, effectiveLid);
+    }
 
     for (const res of itemResults) {
       if (res.data) allItems.push(...res.data);
