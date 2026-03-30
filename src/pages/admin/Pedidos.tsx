@@ -3010,6 +3010,7 @@ const Pedidos = () => {
               if (compraConfirmRecebido) {
                 changeCompraStatus(compraConfirmRecebido, "recebido");
                 setCompraConfirmRecebido(null);
+                setCompraEditOpen(false);
               }
             }}>Confirmar</AlertDialogAction>
           </AlertDialogFooter>
