@@ -1428,226 +1428,245 @@ const Pedidos = () => {
   const shareOrderStatus = async (pedido: Pedido) => {
     const w = 540;
     const allItems = items;
-    const maxVisibleItems = 20;
-    const displayItems = allItems.slice(0, maxVisibleItems);
-    const extraItems = allItems.length > maxVisibleItems ? 1 : 0;
+    const ITEMS_PER_PAGE = 12;
+    const totalPages = Math.max(1, Math.ceil(allItems.length / ITEMS_PER_PAGE));
 
-    // Compact sizing
-    const baseHeight = 340;
-    const fieldCount = 5 + (pedido.frete > 0 ? 1 : 0) + (pedido.local_estoque?.nome ? 1 : 0);
-    const cardHeight = fieldCount * 22 + 16;
-    const itemsHeight = (displayItems.length + extraItems) * 18 + 36;
-    const footerHeight = 80;
-    const h = baseHeight + cardHeight + itemsHeight + footerHeight;
+    // Helper: draw common header (logo + title + decorative line)
+    const drawHeader = async (ctx: CanvasRenderingContext2D, pageNum: number) => {
+      ctx.fillStyle = "#FFF8F0";
+      ctx.fillRect(0, 0, w, ctx.canvas.height);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d")!;
+      const topGrad = ctx.createLinearGradient(0, 0, w, 0);
+      topGrad.addColorStop(0, "#5D4037");
+      topGrad.addColorStop(0.5, "#8D6E63");
+      topGrad.addColorStop(1, "#5D4037");
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(0, 0, w, 6);
 
-    ctx.fillStyle = "#FFF8F0";
-    ctx.fillRect(0, 0, w, h);
-
-    // Top accent bar
-    const topGrad = ctx.createLinearGradient(0, 0, w, 0);
-    topGrad.addColorStop(0, "#5D4037");
-    topGrad.addColorStop(0.5, "#8D6E63");
-    topGrad.addColorStop(1, "#5D4037");
-    ctx.fillStyle = topGrad;
-    ctx.fillRect(0, 0, w, 6);
-
-    ctx.fillStyle = "#5D4037";
-    ctx.fillRect(0, 6, 2, h - 12);
-    ctx.fillRect(w - 2, 6, 2, h - 12);
-
-    // Load logo
-    const logo = new Image();
-    logo.crossOrigin = "anonymous";
-    logo.src = "/images/logo-cozinha-dodola.png";
-    await new Promise<void>((resolve) => {
-      logo.onload = () => resolve();
-      logo.onerror = () => resolve();
-    });
-
-    if (logo.complete && logo.naturalWidth > 0) {
-      const logoSize = 70;
-      ctx.drawImage(logo, (w - logoSize) / 2, 18, logoSize, logoSize);
-    }
-
-    // Title
-    ctx.fillStyle = "#5D4037";
-    ctx.font = "bold 18px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("Status do Pedido", w / 2, 110);
-
-    // Decorative line
-    const lineGrad = ctx.createLinearGradient(100, 0, w - 100, 0);
-    lineGrad.addColorStop(0, "transparent");
-    lineGrad.addColorStop(0.3, "#D7CCC8");
-    lineGrad.addColorStop(0.7, "#D7CCC8");
-    lineGrad.addColorStop(1, "transparent");
-    ctx.strokeStyle = lineGrad;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(100, 120);
-    ctx.lineTo(w - 100, 120);
-    ctx.stroke();
-
-    // Info card
-    let y = 132;
-    const cardTop = y;
-    const rx = 10, cardX = 30, cardW = w - 60;
-    ctx.fillStyle = "#EFEBE9";
-    ctx.beginPath();
-    ctx.moveTo(cardX + rx, cardTop);
-    ctx.lineTo(cardX + cardW - rx, cardTop);
-    ctx.quadraticCurveTo(cardX + cardW, cardTop, cardX + cardW, cardTop + rx);
-    ctx.lineTo(cardX + cardW, cardTop + cardHeight - rx);
-    ctx.quadraticCurveTo(cardX + cardW, cardTop + cardHeight, cardX + cardW - rx, cardTop + cardHeight);
-    ctx.lineTo(cardX + rx, cardTop + cardHeight);
-    ctx.quadraticCurveTo(cardX, cardTop + cardHeight, cardX, cardTop + cardHeight - rx);
-    ctx.lineTo(cardX, cardTop + rx);
-    ctx.quadraticCurveTo(cardX, cardTop, cardX + rx, cardTop);
-    ctx.fill();
-
-    y = cardTop + 18;
-    const gap = 22;
-
-    const drawField = (label: string, value: string) => {
-      ctx.font = "bold 11px sans-serif";
       ctx.fillStyle = "#5D4037";
-      ctx.textAlign = "left";
-      ctx.fillText(label, 50, y);
-      ctx.font = "12px sans-serif";
-      ctx.fillStyle = "#6D4C41";
-      ctx.fillText(value, 160, y);
-      y += gap;
+      ctx.fillRect(0, 6, 2, ctx.canvas.height - 12);
+      ctx.fillRect(w - 2, 6, 2, ctx.canvas.height - 12);
+
+      const logo = new Image();
+      logo.crossOrigin = "anonymous";
+      logo.src = "/images/logo-cozinha-dodola.png";
+      await new Promise<void>((resolve) => {
+        logo.onload = () => resolve();
+        logo.onerror = () => resolve();
+      });
+
+      if (logo.complete && logo.naturalWidth > 0) {
+        const logoSize = 50;
+        ctx.drawImage(logo, (w - logoSize) / 2, 14, logoSize, logoSize);
+      }
+
+      ctx.fillStyle = "#5D4037";
+      ctx.font = "bold 16px sans-serif";
+      ctx.textAlign = "center";
+      const titleText = totalPages > 1
+        ? `Status do Pedido (${pageNum}/${totalPages})`
+        : "Status do Pedido";
+      ctx.fillText(titleText, w / 2, 84);
+
+      const lineGrad = ctx.createLinearGradient(100, 0, w - 100, 0);
+      lineGrad.addColorStop(0, "transparent");
+      lineGrad.addColorStop(0.3, "#D7CCC8");
+      lineGrad.addColorStop(0.7, "#D7CCC8");
+      lineGrad.addColorStop(1, "transparent");
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(100, 92);
+      ctx.lineTo(w - 100, 92);
+      ctx.stroke();
     };
 
-    drawField("Pedido:", `#${pedido.pedido_id.slice(0, 8)}`);
-    drawField("Cliente:", pedido.cliente?.nome || "—");
-    drawField("Data:", format(new Date(pedido.data), "dd/MM/yyyy HH:mm"));
-    drawField("Status:", statusLabels[pedido.status] || pedido.status);
-    drawField("Total:", `R$ ${Number(pedido.total).toFixed(2)}`);
-    if (pedido.frete > 0) drawField("Frete:", `R$ ${Number(pedido.frete).toFixed(2)}`);
-    if (pedido.local_estoque?.nome) drawField("Local:", pedido.local_estoque.nome);
+    // Helper: draw footer
+    const drawFooter = (ctx: CanvasRenderingContext2D, y: number) => {
+      const footGrad = ctx.createLinearGradient(45, 0, w - 45, 0);
+      footGrad.addColorStop(0, "transparent");
+      footGrad.addColorStop(0.2, "#D7CCC8");
+      footGrad.addColorStop(0.8, "#D7CCC8");
+      footGrad.addColorStop(1, "transparent");
+      ctx.strokeStyle = footGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(45, y);
+      ctx.lineTo(w - 45, y);
+      ctx.stroke();
+      y += 16;
 
-    // Items section
-    y = cardTop + cardHeight + 14;
-    ctx.font = "bold 12px sans-serif";
-    ctx.fillStyle = "#5D4037";
-    ctx.textAlign = "left";
-    ctx.fillText("Itens do Pedido", 45, y);
-    y += 6;
-
-    ctx.strokeStyle = "#D7CCC8";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(45, y);
-    ctx.lineTo(w - 45, y);
-    ctx.stroke();
-    y += 14;
-
-    ctx.font = "11px sans-serif";
-    ctx.fillStyle = "#6D4C41";
-    for (const item of displayItems) {
-      const name = item.produto?.nome || "—";
-      const truncName = name.length > 35 ? name.slice(0, 33) + "…" : name;
-      const qty = `${item.quantidade}x R$ ${Number(item.preco_unitario).toFixed(2)}`;
-      ctx.textAlign = "left";
-      ctx.fillText(`• ${truncName}`, 50, y);
-      ctx.textAlign = "right";
-      ctx.fillText(qty, w - 45, y);
-      y += 18;
-    }
-    if (allItems.length > maxVisibleItems) {
+      ctx.textAlign = "center";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = "#5D4037";
+      ctx.fillText("www.cozinhadodola.com.br", w / 2, y);
+      y += 16;
+      ctx.font = "bold 11px sans-serif";
       ctx.fillStyle = "#8D6E63";
-      ctx.font = "italic 10px sans-serif";
+      ctx.fillText("Instagram: @cozinhadodola", w / 2, y);
+
+      const botGrad = ctx.createLinearGradient(0, 0, w, 0);
+      botGrad.addColorStop(0, "#5D4037");
+      botGrad.addColorStop(0.5, "#8D6E63");
+      botGrad.addColorStop(1, "#5D4037");
+      ctx.fillStyle = botGrad;
+      ctx.fillRect(0, ctx.canvas.height - 6, w, 6);
+    };
+
+    // Helper: draw items section
+    const drawItems = (ctx: CanvasRenderingContext2D, pageItems: typeof allItems, startY: number, pageNum: number) => {
+      let y = startY;
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = "#5D4037";
       ctx.textAlign = "left";
-      ctx.fillText(`... e mais ${allItems.length - maxVisibleItems} itens`, 50, y);
-      y += 18;
+      const label = totalPages > 1 ? `Itens do Pedido (pág. ${pageNum})` : "Itens do Pedido";
+      ctx.fillText(label, 45, y);
+      y += 6;
+
+      ctx.strokeStyle = "#D7CCC8";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(45, y);
+      ctx.lineTo(w - 45, y);
+      ctx.stroke();
+      y += 14;
+
+      ctx.font = "11px sans-serif";
+      ctx.fillStyle = "#6D4C41";
+      for (const item of pageItems) {
+        const name = item.produto?.nome || "—";
+        const truncName = name.length > 35 ? name.slice(0, 33) + "…" : name;
+        const qty = `${item.quantidade}x R$ ${Number(item.preco_unitario).toFixed(2)}`;
+        ctx.textAlign = "left";
+        ctx.fillText(`• ${truncName}`, 50, y);
+        ctx.textAlign = "right";
+        ctx.fillText(qty, w - 45, y);
+        y += 18;
+      }
+      return y;
+    };
+
+    const canvasBlobs: Blob[] = [];
+
+    for (let page = 0; page < totalPages; page++) {
+      const pageItems = allItems.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+      const isFirstPage = page === 0;
+
+      // Calculate height for this page
+      const headerH = 100;
+      const fieldCount = 5 + (pedido.frete > 0 ? 1 : 0) + (pedido.local_estoque?.nome ? 1 : 0);
+      const infoCardH = isFirstPage ? fieldCount * 22 + 16 : 0;
+      const infoGap = isFirstPage ? 14 : 0;
+      const itemsSectionH = pageItems.length * 18 + 36;
+      const footerH = 60;
+      const h = headerH + infoGap + infoCardH + itemsSectionH + footerH + 20;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d")!;
+
+      await drawHeader(ctx, page + 1);
+
+      let y = 100;
+
+      // Info card only on first page
+      if (isFirstPage) {
+        const cardTop = y;
+        const cardHeight = infoCardH;
+        const rx = 10, cardX = 30, cardW2 = w - 60;
+        ctx.fillStyle = "#EFEBE9";
+        ctx.beginPath();
+        ctx.moveTo(cardX + rx, cardTop);
+        ctx.lineTo(cardX + cardW2 - rx, cardTop);
+        ctx.quadraticCurveTo(cardX + cardW2, cardTop, cardX + cardW2, cardTop + rx);
+        ctx.lineTo(cardX + cardW2, cardTop + cardHeight - rx);
+        ctx.quadraticCurveTo(cardX + cardW2, cardTop + cardHeight, cardX + cardW2 - rx, cardTop + cardHeight);
+        ctx.lineTo(cardX + rx, cardTop + cardHeight);
+        ctx.quadraticCurveTo(cardX, cardTop + cardHeight, cardX, cardTop + cardHeight - rx);
+        ctx.lineTo(cardX, cardTop + rx);
+        ctx.quadraticCurveTo(cardX, cardTop, cardX + rx, cardTop);
+        ctx.fill();
+
+        y = cardTop + 18;
+        const gap = 22;
+
+        const drawField = (label: string, value: string) => {
+          ctx.font = "bold 11px sans-serif";
+          ctx.fillStyle = "#5D4037";
+          ctx.textAlign = "left";
+          ctx.fillText(label, 50, y);
+          ctx.font = "12px sans-serif";
+          ctx.fillStyle = "#6D4C41";
+          ctx.fillText(value, 160, y);
+          y += gap;
+        };
+
+        drawField("Pedido:", `#${pedido.pedido_id.slice(0, 8)}`);
+        drawField("Cliente:", pedido.cliente?.nome || "—");
+        drawField("Data:", format(new Date(pedido.data), "dd/MM/yyyy HH:mm"));
+        drawField("Status:", statusLabels[pedido.status] || pedido.status);
+        drawField("Total:", `R$ ${Number(pedido.total).toFixed(2)}`);
+        if (pedido.frete > 0) drawField("Frete:", `R$ ${Number(pedido.frete).toFixed(2)}`);
+        if (pedido.local_estoque?.nome) drawField("Local:", pedido.local_estoque.nome);
+
+        y = cardTop + cardHeight + 14;
+      }
+
+      y = drawItems(ctx, pageItems, y, page + 1);
+      y += 10;
+      drawFooter(ctx, y);
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (blob) canvasBlobs.push(blob);
     }
 
-    // Footer
-    y += 8;
-    const footGrad = ctx.createLinearGradient(45, 0, w - 45, 0);
-    footGrad.addColorStop(0, "transparent");
-    footGrad.addColorStop(0.2, "#D7CCC8");
-    footGrad.addColorStop(0.8, "#D7CCC8");
-    footGrad.addColorStop(1, "transparent");
-    ctx.strokeStyle = footGrad;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(45, y);
-    ctx.lineTo(w - 45, y);
-    ctx.stroke();
-    y += 18;
+    if (canvasBlobs.length === 0) return;
 
-    ctx.textAlign = "center";
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillStyle = "#5D4037";
-    ctx.fillText("www.cozinhadodola.com.br", w / 2, y);
-    y += 20;
-
-    ctx.font = "bold 12px sans-serif";
-    ctx.fillStyle = "#8D6E63";
-    ctx.fillText("Instagram: @cozinhadodola", w / 2, y);
-
-    // Bottom accent bar
-    const botGrad = ctx.createLinearGradient(0, 0, w, 0);
-    botGrad.addColorStop(0, "#5D4037");
-    botGrad.addColorStop(0.5, "#8D6E63");
-    botGrad.addColorStop(1, "#5D4037");
-    ctx.fillStyle = botGrad;
-    ctx.fillRect(0, h - 6, w, 6);
-
-    // Convert to blob and share
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      // Try fetching client phone
-      let phone = "";
-      if (pedido.cliente_id) {
-        const { data: phones } = await supabase
-          .from("cliente_telefone")
-          .select("telefone")
-          .eq("cliente_id", pedido.cliente_id)
-          .limit(1);
-        if (phones && phones.length > 0) {
-          phone = phones[0].telefone.replace(/\D/g, "");
-          if (!phone.startsWith("55")) phone = "55" + phone;
-        }
+    // Try fetching client phone
+    let phone = "";
+    if (pedido.cliente_id) {
+      const { data: phones } = await supabase
+        .from("cliente_telefone")
+        .select("telefone")
+        .eq("cliente_id", pedido.cliente_id)
+        .limit(1);
+      if (phones && phones.length > 0) {
+        phone = phones[0].telefone.replace(/\D/g, "");
+        if (!phone.startsWith("55")) phone = "55" + phone;
       }
+    }
 
-      const text = `*CozinhaDoDola*%0APedido: %23${pedido.pedido_id.slice(0, 8)}%0AStatus: ${statusLabels[pedido.status] || pedido.status}%0ATotal: R$ ${Number(pedido.total).toFixed(2)}`;
+    const text = `*CozinhaDoDola*%0APedido: %23${pedido.pedido_id.slice(0, 8)}%0AStatus: ${statusLabels[pedido.status] || pedido.status}%0ATotal: R$ ${Number(pedido.total).toFixed(2)}`;
 
-      // Try Web Share API first (mobile)
-      if (navigator.share && navigator.canShare) {
-        const file = new File([blob], "pedido-status.png", { type: "image/png" });
-        const shareData = { files: [file], text: `CozinhaDoDola\nPedido: #${pedido.pedido_id.slice(0, 8)}\nStatus: ${statusLabels[pedido.status] || pedido.status}\nTotal: R$ ${Number(pedido.total).toFixed(2)}` };
-        if (navigator.canShare(shareData)) {
-          try {
-            await navigator.share(shareData);
-            return;
-          } catch { /* user cancelled */ }
-        }
+    // Try Web Share API first (mobile) — share all images
+    if (navigator.share && navigator.canShare) {
+      const files = canvasBlobs.map((b, i) => new File([b], `pedido-${pedido.pedido_id.slice(0, 8)}-${i + 1}.png`, { type: "image/png" }));
+      const shareData = { files, text: `CozinhaDoDola\nPedido: #${pedido.pedido_id.slice(0, 8)}\nStatus: ${statusLabels[pedido.status] || pedido.status}\nTotal: R$ ${Number(pedido.total).toFixed(2)}` };
+      if (navigator.canShare(shareData)) {
+        try {
+          await navigator.share(shareData);
+          return;
+        } catch { /* user cancelled */ }
       }
+    }
 
-      // Fallback: download image + open WhatsApp
-      const url = URL.createObjectURL(blob);
+    // Fallback: download all images + open WhatsApp
+    for (let i = 0; i < canvasBlobs.length; i++) {
+      const url = URL.createObjectURL(canvasBlobs[i]);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `pedido-${pedido.pedido_id.slice(0, 8)}.png`;
+      a.download = `pedido-${pedido.pedido_id.slice(0, 8)}-${i + 1}.png`;
       a.click();
       URL.revokeObjectURL(url);
+    }
 
-      const whatsUrl = phone
-        ? `https://wa.me/${phone}?text=${text}`
-        : `https://wa.me/?text=${text}`;
-      window.open(whatsUrl, "_blank");
+    const whatsUrl = phone
+      ? `https://wa.me/${phone}?text=${text}`
+      : `https://wa.me/?text=${text}`;
+    window.open(whatsUrl, "_blank");
 
-      toast({ title: "Imagem gerada e WhatsApp aberto" });
-    }, "image/png");
+    toast({ title: `${canvasBlobs.length} imagem(ns) gerada(s) e WhatsApp aberto` });
   };
 
   const handleRefresh = useCallback(async () => { await load(); await loadCompras(); }, []);
