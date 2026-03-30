@@ -523,6 +523,7 @@ const Pedidos = () => {
   /* ── Compra status transition ── */
   const [compraStatusLoading, setCompraStatusLoading] = useState(false);
   const [compraConfirmRecebido, setCompraConfirmRecebido] = useState<ContaPagarCompra | null>(null);
+  const [compraConfirmCancelado, setCompraConfirmCancelado] = useState<ContaPagarCompra | null>(null);
 
   const changeCompraStatus = async (compra: ContaPagarCompra, newStatus: string) => {
     if (compraStatusLoading) return;
