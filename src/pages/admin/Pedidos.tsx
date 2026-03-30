@@ -2931,6 +2931,27 @@ const Pedidos = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ── Confirmação Recebido ── */}
+      <AlertDialog open={!!compraConfirmRecebido} onOpenChange={(open) => { if (!open) setCompraConfirmRecebido(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar recebimento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao marcar como recebido, os itens serão lançados no estoque e os preços atualizados. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (compraConfirmRecebido) {
+                changeCompraStatus(compraConfirmRecebido, "recebido");
+                setCompraConfirmRecebido(null);
+              }
+            }}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* ── Entrada dialog ── */}
       <Dialog open={entradaOpen} onOpenChange={setEntradaOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
