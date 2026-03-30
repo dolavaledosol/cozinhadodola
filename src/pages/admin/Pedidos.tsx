@@ -834,10 +834,11 @@ const Pedidos = () => {
         if (remaining <= 0) break;
         const deduct = Math.min(remaining, Number(stock.quantidade_disponivel));
         const actualDeduct = allowNegativeStock ? remaining : deduct;
-        await supabase
-          .from("estoque_local")
-          .update({ quantidade_disponivel: Number(stock.quantidade_disponivel) - actualDeduct })
-          .eq("estoque_local_id", stock.estoque_local_id);
+        await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: stock.local_estoque_id,
+              _delta: -actualDeduct,
+            });
 
         // Log saída movimentação
         if (actualDeduct > 0) {
