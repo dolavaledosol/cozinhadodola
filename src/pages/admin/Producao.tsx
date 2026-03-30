@@ -207,29 +207,14 @@ const Producao = () => {
     mutationFn: async (prod: any) => {
       // Re-fetch current stock for accurate values
       const ingredientIds = (prod.producao_item || []).map((i: any) => i.produto_id);
-      const allIds = [...ingredientIds, prod.produto_id];
 
-      const { data: currentEstoques } = await supabase
-        .from("estoque_local")
-        .select("produto_id, local_estoque_id, quantidade_disponivel")
-        .eq("local_estoque_id", prod.local_estoque_id)
-        .in("produto_id", allIds);
-
-      const estoqueMap = Object.fromEntries(
-        (currentEstoques || []).map((e) => [`${e.produto_id}_${e.local_estoque_id}`, e])
-      );
-
-      // Return ingredients to stock
+      // Return ingredients to stock atomically
       for (const item of (prod.producao_item || [])) {
-        const key = `${item.produto_id}_${prod.local_estoque_id}`;
-        const est = estoqueMap[key];
-        if (est) {
-          await supabase.from("estoque_local")
-            .update({ quantidade_disponivel: Number(est.quantidade_disponivel) + Number(item.quantidade) })
-            .eq("produto_id", item.produto_id)
-            .eq("local_estoque_id", prod.local_estoque_id)
-            .throwOnError();
-        }
+        await supabase.rpc("ajustar_estoque", {
+          _produto_id: item.produto_id,
+          _local_estoque_id: prod.local_estoque_id,
+          _delta: Number(item.quantidade),
+        });
         await supabase.from("movimentacao_estoque").insert({
           produto_id: item.produto_id,
           local_estoque_id: prod.local_estoque_id,
@@ -241,16 +226,12 @@ const Producao = () => {
         }).throwOnError();
       }
 
-      // Remove finished product from stock
-      const keyFinal = `${prod.produto_id}_${prod.local_estoque_id}`;
-      const estFinal = estoqueMap[keyFinal];
-      if (estFinal) {
-        await supabase.from("estoque_local")
-          .update({ quantidade_disponivel: Math.max(0, Number(estFinal.quantidade_disponivel) - Number(prod.quantidade_produzida)) })
-          .eq("produto_id", prod.produto_id)
-          .eq("local_estoque_id", prod.local_estoque_id)
-          .throwOnError();
-      }
+      // Remove finished product from stock atomically
+      await supabase.rpc("ajustar_estoque", {
+        _produto_id: prod.produto_id,
+        _local_estoque_id: prod.local_estoque_id,
+        _delta: -Number(prod.quantidade_produzida),
+      });
       await supabase.from("movimentacao_estoque").insert({
         produto_id: prod.produto_id,
         local_estoque_id: prod.local_estoque_id,
