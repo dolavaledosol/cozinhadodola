@@ -523,6 +523,7 @@ const Pedidos = () => {
   /* ── Compra status transition ── */
   const [compraStatusLoading, setCompraStatusLoading] = useState(false);
   const [compraConfirmRecebido, setCompraConfirmRecebido] = useState<ContaPagarCompra | null>(null);
+  const [compraConfirmCancelado, setCompraConfirmCancelado] = useState<ContaPagarCompra | null>(null);
 
   const changeCompraStatus = async (compra: ContaPagarCompra, newStatus: string) => {
     if (compraStatusLoading) return;
@@ -2854,6 +2855,8 @@ const Pedidos = () => {
                           if (s !== currentSt) {
                             if (s === "recebido") {
                               setCompraConfirmRecebido(currentCompra);
+                            } else if (s === "cancelado") {
+                              setCompraConfirmCancelado(currentCompra);
                             } else {
                               changeCompraStatus(currentCompra, s);
                             }
@@ -3013,6 +3016,28 @@ const Pedidos = () => {
                 setCompraEditOpen(false);
               }
             }}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Confirmação Cancelamento Compra ── */}
+      <AlertDialog open={!!compraConfirmCancelado} onOpenChange={(open) => { if (!open) setCompraConfirmCancelado(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar cancelamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja realmente cancelar este pedido de compra? {compraConfirmCancelado?.status_compra === "recebido" ? "Os itens lançados no estoque serão estornados." : "Esta ação não poderá ser desfeita facilmente."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => {
+              if (compraConfirmCancelado) {
+                changeCompraStatus(compraConfirmCancelado, "cancelado");
+                setCompraConfirmCancelado(null);
+                setCompraEditOpen(false);
+              }
+            }}>Cancelar Compra</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
