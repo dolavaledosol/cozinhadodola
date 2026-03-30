@@ -574,13 +574,11 @@ const Pedidos = () => {
         const localId = compra.local_estoque_id;
         if (itens.length > 0 && localId) {
           for (const item of itens) {
-            const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
-              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
-            if (existing) {
-              await supabase.from("estoque_local").update({
-                quantidade_disponivel: Math.max(0, Number(existing.quantidade_disponivel) - item.quantidade),
-              }).eq("estoque_local_id", existing.estoque_local_id);
-            }
+            await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: localId,
+              _delta: -item.quantidade,
+            });
             // Remove movimentacao related to this compra
             const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
             if (nfMatch) {

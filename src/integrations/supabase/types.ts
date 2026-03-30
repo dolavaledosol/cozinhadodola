@@ -1582,6 +1582,16 @@ export type Database = {
       }
     }
     Functions: {
+      ajustar_estoque: {
+        Args: {
+          _delta: number
+          _local_estoque_id: string
+          _preco_custo?: number
+          _preco_venda?: number
+          _produto_id: string
+        }
+        Returns: undefined
+      }
       find_or_link_cliente_by_cpf: {
         Args: {
           _cpf_cnpj: string
