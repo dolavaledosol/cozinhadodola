@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, Plus, Minus, Trash2, UserPlus, MapPin, PackagePlus, Share2, Download } from "lucide-react";
+import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, Plus, Minus, Trash2, UserPlus, MapPin, PackagePlus, Share2, Download, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useCep } from "@/hooks/useCep";
@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import * as XLSX from "xlsx";
 
 
 const statusOptions = [
@@ -411,6 +412,64 @@ const Pedidos = () => {
 
   const updateLinha = (produto_id: string, field: keyof EntradaLinha, value: any) => {
     setEntradaLinhas((prev) => prev.map((l) => l.produto_id === produto_id ? { ...l, [field]: value } : l));
+  };
+
+  const exportEntradaPlanilha = () => {
+    if (entradaLinhas.length === 0) { toast({ title: "Selecione um fornecedor primeiro", variant: "destructive" }); return; }
+    const fornNome = entradaFornecedores.find(f => f.fornecedor_id === entradaFornecedor)?.nome || "fornecedor";
+    const rows = entradaLinhas.map(l => ({
+      "Produto": l.nome,
+      "Quantidade": "",
+      "Custo Unitário": Number(l.preco_custo) || "",
+      "Valor Venda": Number(l.preco_venda) || "",
+      "produto_id": l.produto_id,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 38 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Entrada");
+    XLSX.writeFile(wb, `entrada_${fornNome.replace(/\s+/g, "_")}.xlsx`);
+    toast({ title: "Planilha exportada! Preencha a coluna Quantidade e importe de volta." });
+  };
+
+  const importEntradaPlanilha = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target?.result, { type: "binary" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json<any>(ws);
+        if (!data.length) { toast({ title: "Planilha vazia", variant: "destructive" }); return; }
+        setEntradaLinhas(prev => {
+          const updated = [...prev];
+          let importCount = 0;
+          for (const row of data) {
+            const pid = row["produto_id"];
+            const qty = Number(row["Quantidade"]);
+            if (!pid || !qty || qty <= 0) continue;
+            const idx = updated.findIndex(l => l.produto_id === pid);
+            if (idx >= 0) {
+              updated[idx] = {
+                ...updated[idx],
+                checked: true,
+                quantidade: String(qty),
+                preco_custo: row["Custo Unitário"] != null && row["Custo Unitário"] !== "" ? String(Number(row["Custo Unitário"])) : updated[idx].preco_custo,
+                preco_venda: row["Valor Venda"] != null && row["Valor Venda"] !== "" ? String(Number(row["Valor Venda"])) : updated[idx].preco_venda,
+              };
+              importCount++;
+            }
+          }
+          toast({ title: `${importCount} produto(s) importado(s)` });
+          return updated;
+        });
+      } catch (err: any) {
+        toast({ title: "Erro ao ler planilha", description: err.message, variant: "destructive" });
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = "";
   };
 
   const filteredEntradaLinhas = entradaLinhas
@@ -2980,11 +3039,18 @@ const Pedidos = () => {
 
             {entradaLinhas.length > 0 && (
               <>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Filtrar produtos..." value={entradaSearchProd} onChange={(e) => setEntradaSearchProd(e.target.value)} className="pl-10" />
                   </div>
+                  <Button type="button" variant="outline" size="sm" onClick={exportEntradaPlanilha}>
+                    <Download className="h-3 w-3 mr-1" /> Exportar
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("import-entrada-file")?.click()}>
+                    <Upload className="h-3 w-3 mr-1" /> Importar
+                  </Button>
+                  <input id="import-entrada-file" type="file" accept=".xlsx,.xls" className="hidden" onChange={importEntradaPlanilha} />
                   <span className="text-sm text-muted-foreground whitespace-nowrap">{checkedLinhas.length} selecionado(s)</span>
                 </div>
                 <div className="border rounded-lg overflow-auto max-h-64">
