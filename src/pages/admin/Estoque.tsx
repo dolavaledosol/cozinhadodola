@@ -543,32 +543,22 @@ const Estoque = () => {
       for (const linha of checkedTransferLinhas) {
         const qty = Number(linha.quantidade);
 
-        // Subtract from origin
-        const origemItem = items.find((i) => i.produto_id === linha.produto_id && i.local_estoque_id === transferOrigem);
-        if (origemItem) {
-          await supabase.from("estoque_local").update({
-            quantidade_disponivel: Number(origemItem.quantidade_disponivel) - qty,
-          }).eq("estoque_local_id", origemItem.estoque_local_id);
-        }
+        // Subtract from origin atomically
+        await supabase.rpc("ajustar_estoque", {
+          _produto_id: linha.produto_id,
+          _local_estoque_id: transferOrigem,
+          _delta: -qty,
+        });
 
-        // Add to destination (upsert)
-        const destItem = items.find((i) => i.produto_id === linha.produto_id && i.local_estoque_id === transferDestino);
-        if (destItem) {
-          await supabase.from("estoque_local").update({
-            quantidade_disponivel: Number(destItem.quantidade_disponivel) + qty,
-          }).eq("estoque_local_id", destItem.estoque_local_id);
-        } else {
-          // Get price info from origin
-          const precoVal = origemItem?.preco || 0;
-          const custoVal = origemItem?.preco_custo || 0;
-          await supabase.from("estoque_local").insert({
-            produto_id: linha.produto_id,
-            local_estoque_id: transferDestino,
-            quantidade_disponivel: qty,
-            preco: precoVal,
-            preco_custo: custoVal,
-          });
-        }
+        // Add to destination atomically (creates record if not exists)
+        const origemItem = items.find((i) => i.produto_id === linha.produto_id && i.local_estoque_id === transferOrigem);
+        await supabase.rpc("ajustar_estoque", {
+          _produto_id: linha.produto_id,
+          _local_estoque_id: transferDestino,
+          _delta: qty,
+          _preco_custo: origemItem?.preco_custo || 0,
+          _preco_venda: origemItem?.preco || 0,
+        });
 
         // Log movimentação
         const { data: { session } } = await supabase.auth.getSession();

@@ -549,19 +549,13 @@ const Pedidos = () => {
         const localId = compra.local_estoque_id;
         if (itens.length > 0 && localId) {
           for (const item of itens) {
-            const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
-              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
-            if (existing) {
-              await supabase.from("estoque_local").update({
-                quantidade_disponivel: Number(existing.quantidade_disponivel) + item.quantidade,
-                preco_custo: item.preco_custo, preco: item.preco_venda,
-              }).eq("estoque_local_id", existing.estoque_local_id);
-            } else {
-              await supabase.from("estoque_local").insert({
-                produto_id: item.produto_id, local_estoque_id: localId,
-                quantidade_disponivel: item.quantidade, preco_custo: item.preco_custo, preco: item.preco_venda,
-              });
-            }
+            await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: localId,
+              _delta: item.quantidade,
+              _preco_custo: item.preco_custo,
+              _preco_venda: item.preco_venda,
+            });
             await supabase.from("produto").update({ preco: item.preco_venda }).eq("produto_id", item.produto_id);
             const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
             await supabase.from("movimentacao_estoque").insert({
@@ -580,13 +574,11 @@ const Pedidos = () => {
         const localId = compra.local_estoque_id;
         if (itens.length > 0 && localId) {
           for (const item of itens) {
-            const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
-              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
-            if (existing) {
-              await supabase.from("estoque_local").update({
-                quantidade_disponivel: Math.max(0, Number(existing.quantidade_disponivel) - item.quantidade),
-              }).eq("estoque_local_id", existing.estoque_local_id);
-            }
+            await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: localId,
+              _delta: -item.quantidade,
+            });
             // Remove movimentacao related to this compra
             const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
             if (nfMatch) {
@@ -842,10 +834,11 @@ const Pedidos = () => {
         if (remaining <= 0) break;
         const deduct = Math.min(remaining, Number(stock.quantidade_disponivel));
         const actualDeduct = allowNegativeStock ? remaining : deduct;
-        await supabase
-          .from("estoque_local")
-          .update({ quantidade_disponivel: Number(stock.quantidade_disponivel) - actualDeduct })
-          .eq("estoque_local_id", stock.estoque_local_id);
+        await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: stock.local_estoque_id,
+              _delta: -actualDeduct,
+            });
 
         // Log saída movimentação
         if (actualDeduct > 0) {
@@ -1071,14 +1064,11 @@ const Pedidos = () => {
         if (wasAfterPago && localId) {
           for (const item of items) {
             // Restore stock by adding back the deducted quantity
-            const { data: el } = await supabase.from("estoque_local")
-              .select("estoque_local_id, quantidade_disponivel")
-              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
-            if (el) {
-              await supabase.from("estoque_local").update({
-                quantidade_disponivel: Number(el.quantidade_disponivel) + Number(item.quantidade),
-              }).eq("estoque_local_id", el.estoque_local_id);
-            }
+            await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: localId,
+              _delta: Number(item.quantidade),
+            });
             // Log movimentação de devolução
             await supabase.from("movimentacao_estoque").insert({
               tipo: "entrada",
