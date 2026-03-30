@@ -206,7 +206,7 @@ const Producao = () => {
   const cancelMutation = useMutation({
     mutationFn: async (prod: any) => {
       // Re-fetch current stock for accurate values
-      const ingredientIds = (prod.producao_item || []).map((i: any) => i.produto_id);
+      
 
       // Return ingredients to stock atomically
       for (const item of (prod.producao_item || [])) {
