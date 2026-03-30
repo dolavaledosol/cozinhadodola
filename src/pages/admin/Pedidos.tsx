@@ -549,19 +549,13 @@ const Pedidos = () => {
         const localId = compra.local_estoque_id;
         if (itens.length > 0 && localId) {
           for (const item of itens) {
-            const { data: existing } = await supabase.from("estoque_local").select("estoque_local_id, quantidade_disponivel")
-              .eq("produto_id", item.produto_id).eq("local_estoque_id", localId).maybeSingle();
-            if (existing) {
-              await supabase.from("estoque_local").update({
-                quantidade_disponivel: Number(existing.quantidade_disponivel) + item.quantidade,
-                preco_custo: item.preco_custo, preco: item.preco_venda,
-              }).eq("estoque_local_id", existing.estoque_local_id);
-            } else {
-              await supabase.from("estoque_local").insert({
-                produto_id: item.produto_id, local_estoque_id: localId,
-                quantidade_disponivel: item.quantidade, preco_custo: item.preco_custo, preco: item.preco_venda,
-              });
-            }
+            await supabase.rpc("ajustar_estoque", {
+              _produto_id: item.produto_id,
+              _local_estoque_id: localId,
+              _delta: item.quantidade,
+              _preco_custo: item.preco_custo,
+              _preco_venda: item.preco_venda,
+            });
             await supabase.from("produto").update({ preco: item.preco_venda }).eq("produto_id", item.produto_id);
             const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
             await supabase.from("movimentacao_estoque").insert({
