@@ -1426,36 +1426,39 @@ const Pedidos = () => {
   };
 
   const shareOrderStatus = async (pedido: Pedido) => {
-    const w = 600;
-    // Calculate dynamic height based on items
-    const displayItems = items.slice(0, 10);
-    const extraItems = items.length > 10 ? 1 : 0;
-    const baseHeight = 520; // logo + header + fields
-    const itemsHeight = (displayItems.length + extraItems) * 24 + 50;
-    const footerHeight = 110; // footer with links
-    const h = baseHeight + itemsHeight + footerHeight;
+    const w = 540;
+    const allItems = items;
+    const maxVisibleItems = 20;
+    const displayItems = allItems.slice(0, maxVisibleItems);
+    const extraItems = allItems.length > maxVisibleItems ? 1 : 0;
+
+    // Compact sizing
+    const baseHeight = 340;
+    const fieldCount = 5 + (pedido.frete > 0 ? 1 : 0) + (pedido.local_estoque?.nome ? 1 : 0);
+    const cardHeight = fieldCount * 22 + 16;
+    const itemsHeight = (displayItems.length + extraItems) * 18 + 36;
+    const footerHeight = 80;
+    const h = baseHeight + cardHeight + itemsHeight + footerHeight;
 
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d")!;
 
-    // Background gradient effect
     ctx.fillStyle = "#FFF8F0";
     ctx.fillRect(0, 0, w, h);
 
-    // Top accent bar with gradient
+    // Top accent bar
     const topGrad = ctx.createLinearGradient(0, 0, w, 0);
     topGrad.addColorStop(0, "#5D4037");
     topGrad.addColorStop(0.5, "#8D6E63");
     topGrad.addColorStop(1, "#5D4037");
     ctx.fillStyle = topGrad;
-    ctx.fillRect(0, 0, w, 8);
+    ctx.fillRect(0, 0, w, 6);
 
-    // Subtle side accents
     ctx.fillStyle = "#5D4037";
-    ctx.fillRect(0, 8, 3, h - 16);
-    ctx.fillRect(w - 3, 8, 3, h - 16);
+    ctx.fillRect(0, 6, 2, h - 12);
+    ctx.fillRect(w - 2, 6, 2, h - 12);
 
     // Load logo
     const logo = new Image();
@@ -1467,37 +1470,33 @@ const Pedidos = () => {
     });
 
     if (logo.complete && logo.naturalWidth > 0) {
-      const logoSize = 100;
-      ctx.drawImage(logo, (w - logoSize) / 2, 28, logoSize, logoSize);
+      const logoSize = 70;
+      ctx.drawImage(logo, (w - logoSize) / 2, 18, logoSize, logoSize);
     }
 
     // Title
     ctx.fillStyle = "#5D4037";
-    ctx.font = "bold 24px sans-serif";
+    ctx.font = "bold 18px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Status do Pedido", w / 2, 160);
+    ctx.fillText("Status do Pedido", w / 2, 110);
 
-    // Decorative line under title
-    const lineGrad = ctx.createLinearGradient(120, 0, w - 120, 0);
+    // Decorative line
+    const lineGrad = ctx.createLinearGradient(100, 0, w - 100, 0);
     lineGrad.addColorStop(0, "transparent");
     lineGrad.addColorStop(0.3, "#D7CCC8");
     lineGrad.addColorStop(0.7, "#D7CCC8");
     lineGrad.addColorStop(1, "transparent");
     ctx.strokeStyle = lineGrad;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(120, 175);
-    ctx.lineTo(w - 120, 175);
+    ctx.moveTo(100, 120);
+    ctx.lineTo(w - 100, 120);
     ctx.stroke();
 
-    // Info card background
-    let y = 195;
+    // Info card
+    let y = 132;
     const cardTop = y;
-    const fieldCount = 5 + (pedido.frete > 0 ? 1 : 0) + (pedido.local_estoque?.nome ? 1 : 0);
-    const cardHeight = fieldCount * 28 + 20;
-    
-    // Rounded rect for info card
-    const rx = 12, cardX = 40, cardW = w - 80;
+    const rx = 10, cardX = 30, cardW = w - 60;
     ctx.fillStyle = "#EFEBE9";
     ctx.beginPath();
     ctx.moveTo(cardX + rx, cardTop);
@@ -1511,17 +1510,17 @@ const Pedidos = () => {
     ctx.quadraticCurveTo(cardX, cardTop, cardX + rx, cardTop);
     ctx.fill();
 
-    y = cardTop + 25;
-    const gap = 28;
+    y = cardTop + 18;
+    const gap = 22;
 
     const drawField = (label: string, value: string) => {
-      ctx.font = "bold 13px sans-serif";
+      ctx.font = "bold 11px sans-serif";
       ctx.fillStyle = "#5D4037";
       ctx.textAlign = "left";
-      ctx.fillText(label, 65, y);
-      ctx.font = "14px sans-serif";
+      ctx.fillText(label, 50, y);
+      ctx.font = "12px sans-serif";
       ctx.fillStyle = "#6D4C41";
-      ctx.fillText(value, 200, y);
+      ctx.fillText(value, 160, y);
       y += gap;
     };
 
@@ -1534,45 +1533,44 @@ const Pedidos = () => {
     if (pedido.local_estoque?.nome) drawField("Local:", pedido.local_estoque.nome);
 
     // Items section
-    y = cardTop + cardHeight + 20;
-    ctx.font = "bold 15px sans-serif";
+    y = cardTop + cardHeight + 14;
+    ctx.font = "bold 12px sans-serif";
     ctx.fillStyle = "#5D4037";
     ctx.textAlign = "left";
-    ctx.fillText("Itens do Pedido", 60, y);
-    y += 8;
+    ctx.fillText("Itens do Pedido", 45, y);
+    y += 6;
 
-    // Items divider
     ctx.strokeStyle = "#D7CCC8";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(60, y);
-    ctx.lineTo(w - 60, y);
+    ctx.moveTo(45, y);
+    ctx.lineTo(w - 45, y);
     ctx.stroke();
-    y += 18;
+    y += 14;
 
-    ctx.font = "13px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "#6D4C41";
     for (const item of displayItems) {
       const name = item.produto?.nome || "—";
-      const truncName = name.length > 32 ? name.slice(0, 30) + "…" : name;
+      const truncName = name.length > 35 ? name.slice(0, 33) + "…" : name;
       const qty = `${item.quantidade}x R$ ${Number(item.preco_unitario).toFixed(2)}`;
-      ctx.fillText(`• ${truncName}`, 70, y);
-      ctx.textAlign = "right";
-      ctx.fillText(qty, w - 60, y);
       ctx.textAlign = "left";
-      y += 24;
+      ctx.fillText(`• ${truncName}`, 50, y);
+      ctx.textAlign = "right";
+      ctx.fillText(qty, w - 45, y);
+      y += 18;
     }
-    if (items.length > 10) {
+    if (allItems.length > maxVisibleItems) {
       ctx.fillStyle = "#8D6E63";
-      ctx.font = "italic 12px sans-serif";
-      ctx.fillText(`... e mais ${items.length - 10} itens`, 70, y);
-      y += 24;
+      ctx.font = "italic 10px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`... e mais ${allItems.length - maxVisibleItems} itens`, 50, y);
+      y += 18;
     }
 
-    // Footer section
-    y += 10;
-    // Footer divider
-    const footGrad = ctx.createLinearGradient(60, 0, w - 60, 0);
+    // Footer
+    y += 8;
+    const footGrad = ctx.createLinearGradient(45, 0, w - 45, 0);
     footGrad.addColorStop(0, "transparent");
     footGrad.addColorStop(0.2, "#D7CCC8");
     footGrad.addColorStop(0.8, "#D7CCC8");
@@ -1580,23 +1578,20 @@ const Pedidos = () => {
     ctx.strokeStyle = footGrad;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(60, y);
-    ctx.lineTo(w - 60, y);
+    ctx.moveTo(45, y);
+    ctx.lineTo(w - 45, y);
     ctx.stroke();
-    y += 25;
+    y += 18;
 
-    // Website
     ctx.textAlign = "center";
-    ctx.font = "bold 16px sans-serif";
+    ctx.font = "bold 13px sans-serif";
     ctx.fillStyle = "#5D4037";
     ctx.fillText("www.cozinhadodola.com.br", w / 2, y);
-    y += 28;
+    y += 20;
 
-    // Instagram
-    ctx.font = "bold 15px sans-serif";
+    ctx.font = "bold 12px sans-serif";
     ctx.fillStyle = "#8D6E63";
     ctx.fillText("Instagram: @cozinhadodola", w / 2, y);
-    y += 30;
 
     // Bottom accent bar
     const botGrad = ctx.createLinearGradient(0, 0, w, 0);
@@ -1604,7 +1599,7 @@ const Pedidos = () => {
     botGrad.addColorStop(0.5, "#8D6E63");
     botGrad.addColorStop(1, "#5D4037");
     ctx.fillStyle = botGrad;
-    ctx.fillRect(0, h - 8, w, 8);
+    ctx.fillRect(0, h - 6, w, 6);
 
     // Convert to blob and share
     canvas.toBlob(async (blob) => {
