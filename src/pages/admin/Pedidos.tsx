@@ -461,10 +461,23 @@ const Pedidos = () => {
   const [compraStatusLoading, setCompraStatusLoading] = useState(false);
 
   const changeCompraStatus = async (compra: ContaPagarCompra, newStatus: string) => {
+    if (compraStatusLoading) return;
     const current = compra.status_compra || "pendente";
     if (current === newStatus) return;
     setCompraStatusLoading(true);
     try {
+      // Re-check current status from DB to prevent duplicate operations
+      const { data: freshCompra } = await supabase.from("contas_pagar").select("status_compra").eq("contas_pagar_id", compra.contas_pagar_id).maybeSingle();
+      if (!freshCompra || freshCompra.status_compra === newStatus) {
+        toast({ title: "Status já atualizado" });
+        loadCompras();
+        return;
+      }
+      if (freshCompra.status_compra !== current) {
+        toast({ title: "Status foi alterado por outra ação. Recarregando..." });
+        loadCompras();
+        return;
+      }
       // pendente → recebido: create stock entries and update prices
       if (current === "pendente" && newStatus === "recebido") {
         const itens = compra.compra_itens || [];
