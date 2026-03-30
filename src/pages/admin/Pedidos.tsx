@@ -2787,7 +2787,13 @@ const Pedidos = () => {
                         disabled={compraStatusLoading}
                         className={s === currentSt ? statusCompraColors[s] : ""}
                         onClick={() => {
-                          if (s !== currentSt) changeCompraStatus(currentCompra, s);
+                          if (s !== currentSt) {
+                            if (s === "recebido") {
+                              setCompraConfirmRecebido(currentCompra);
+                            } else {
+                              changeCompraStatus(currentCompra, s);
+                            }
+                          }
                         }}>
                         {statusCompraLabels[s] || s}
                       </Button>
