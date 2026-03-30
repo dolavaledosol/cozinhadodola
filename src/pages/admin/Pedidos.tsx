@@ -2880,9 +2880,7 @@ const Pedidos = () => {
                         <Input type="number" step="0.01" className="h-8 text-xs" value={compraEdit.frete} onChange={(e) => setCompraEdit({ ...compraEdit, frete: e.target.value })} />
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Itens: R$ {totalItens.toFixed(2)}</p>
-                        {frete > 0 && <p className="text-xs text-muted-foreground">Frete: R$ {frete.toFixed(2)}</p>}
-                        <p className="text-sm font-semibold">Total: R$ {(totalItens + frete).toFixed(2)}</p>
+                        <p className="text-sm font-semibold">Total: R$ {totalItens.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
