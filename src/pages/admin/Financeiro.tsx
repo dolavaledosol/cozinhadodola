@@ -339,9 +339,9 @@ const Financeiro = () => {
           const chosen = overrideId
             ? plist.find(p => p.cliente_telefone_id === overrideId) || plist[0]
             : prefId
-              ? plist.find(p => p.cliente_telefone_id === prefId) || plist.find(p => p.lid) || plist[0]
-              : plist.find(p => p.lid) || plist[0];
-          phoneMap[cid] = { from: chosen.telefone || "", pn: chosen.pn || "", lid: chosen.lid || "" };
+              ? plist.find(p => p.cliente_telefone_id === prefId) || plist.find(p => p.lid || p.pn) || plist[0]
+              : plist.find(p => p.lid || p.pn) || plist[0];
+          phoneMap[cid] = { from: chosen.telefone || "", pn: chosen.pn || "", lid: chosen.lid || chosen.pn || "" };
         }
       }
     }
@@ -415,7 +415,7 @@ const Financeiro = () => {
     const clientsWithMultiplePhones: { cliente_id: string; clienteNome: string; phones: PhoneOption[] }[] = [];
     for (const c of autorizadas) {
       if (!c.cliente_id || !allPhones[c.cliente_id]) continue;
-      const eligible = allPhones[c.cliente_id].filter(p => p.lid);
+      const eligible = allPhones[c.cliente_id].filter(p => p.lid || p.pn);
       const prefId = prefMap[c.cliente_id];
       if (prefId && eligible.find(p => p.cliente_telefone_id === prefId)) continue;
       if (eligible.length > 1 && !clientsWithMultiplePhones.find(x => x.cliente_id === c.cliente_id)) {
@@ -483,7 +483,7 @@ const Financeiro = () => {
         cliente_id: c.cliente_id || "",
         whatsapp_from: phone?.from || "",
         pn: phone?.pn || "",
-        lid: phone?.lid || "",
+        lid: phone?.lid || phone?.pn || "",
         pedido_id: c.pedido_id || "",
         pedido_codigo: c.pedido_id ? c.pedido_id.slice(0, 8).toUpperCase() : "",
         data_pedido: pedido?.data || "",

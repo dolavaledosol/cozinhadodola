@@ -98,9 +98,13 @@ Deno.serve(async (req) => {
       .eq("ativo", true);
 
     const cwIds = (clientes || []).map(c => c.clientewhats_id).filter(Boolean) as number[];
+    const clienteIds = (clientes || []).map(c => c.cliente_id);
     const cwPromise = cwIds.length > 0
-      ? supabase.from("clientewhats").select("clientewhats_id, lid").in("clientewhats_id", cwIds)
-      : Promise.resolve({ data: [] as { clientewhats_id: number; lid: string | null }[] });
+      ? supabase.from("clientewhats").select("clientewhats_id, lid, pn").in("clientewhats_id", cwIds)
+      : Promise.resolve({ data: [] as { clientewhats_id: number; lid: string | null; pn: string | null }[] });
+    const telPromise = clienteIds.length > 0
+      ? supabase.from("cliente_telefone").select("cliente_id, lid, pn").in("cliente_id", clienteIds)
+      : Promise.resolve({ data: [] as { cliente_id: string; lid: string | null; pn: string | null }[] });
 
     // --- Step 3: Fetch pedidos for these clients, then items ---
     const { data: clientePedidos } = await supabase
@@ -126,10 +130,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const [cwResult, ...itemResults] = await Promise.all([cwPromise, ...itemBatches]);
+    const [cwResult, telResult, ...itemResults] = await Promise.all([cwPromise, telPromise, ...itemBatches]);
 
     const cwMap = new Map<number, string | null>();
-    for (const cw of (cwResult.data || []) as any[]) cwMap.set(cw.clientewhats_id, cw.lid);
+    for (const cw of (cwResult.data || []) as any[]) cwMap.set(cw.clientewhats_id, cw.lid || cw.pn || null);
+
+    // Build telefone lid/pn fallback map per cliente_id
+    const telLidMap = new Map<string, string>();
+    for (const t of (telResult.data || []) as any[]) {
+      const effectiveLid = t.lid || t.pn || null;
+      if (effectiveLid && !telLidMap.has(t.cliente_id)) telLidMap.set(t.cliente_id, effectiveLid);
+    }
 
     for (const res of itemResults) {
       if (res.data) allItems.push(...res.data);
@@ -188,7 +199,8 @@ Deno.serve(async (req) => {
         const cliente = (clientes || []).find(c => c.cliente_id === cid);
         if (!cliente) return null;
 
-        const lid = cliente.clientewhats_id ? cwMap.get(cliente.clientewhats_id) || null : null;
+        const cwLid = cliente.clientewhats_id ? cwMap.get(cliente.clientewhats_id) || null : null;
+        const lid = cwLid || telLidMap.get(cid) || null;
 
         const produtos: any[] = [];
         for (const [key, agg] of aggMap) {

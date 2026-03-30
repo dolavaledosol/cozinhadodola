@@ -72,13 +72,13 @@ async function fetchLids(clienteIds: string[]): Promise<Map<string, string>> {
 
   const { data: telefones } = await supabase
     .from("cliente_telefone")
-    .select("cliente_id, lid")
-    .in("cliente_id", clienteIds)
-    .not("lid", "is", null);
+    .select("cliente_id, lid, pn")
+    .in("cliente_id", clienteIds);
 
   if (telefones) {
     for (const t of telefones as any[]) {
-      if (t.lid) lidMap.set(t.cliente_id, t.lid);
+      const effectiveLid = t.lid || t.pn || null;
+      if (effectiveLid && !lidMap.has(t.cliente_id)) lidMap.set(t.cliente_id, effectiveLid);
     }
   }
   return lidMap;
