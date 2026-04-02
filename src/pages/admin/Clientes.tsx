@@ -363,7 +363,7 @@ const Clientes = () => {
                     </button>
                   </TableCell>
                   <TableCell className="font-medium">{c.nome}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.pn || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.lid || "—"}</TableCell>
