@@ -73,22 +73,28 @@ const Clientes = () => {
   const isMobile = useIsMobile();
 
   const load = async () => {
-    const { data, error } = await supabase.from("cliente").select("*, cliente_telefone(cliente_telefone_id, telefone, is_whatsapp, verificado, lid, pn)").order("nome");
-    if (error) {
-      console.error("Erro ao carregar clientes:", error);
-      // Fallback without telefone join
-      const { data: fallback } = await supabase.from("cliente").select("*").order("nome");
-      if (fallback) setClientes(fallback.map((c: any) => ({ ...c, telefone_pref: null })) as any);
-      return;
-    }
-    if (data) {
-      const mapped = data.map((c: any) => {
-        const tels: ClienteTelefone[] = c.cliente_telefone || [];
-        const pref = c.telefone_preferencial_id ? tels.find(t => t.cliente_telefone_id === c.telefone_preferencial_id) : tels[0] || null;
-        return { ...c, telefone_pref: pref || null };
-      });
-      setClientes(mapped as any);
-    }
+    const [clientesRes, telefonesRes] = await Promise.all([
+      supabase.from("cliente").select("*").order("nome"),
+      supabase.from("cliente_telefone").select("cliente_telefone_id, cliente_id, telefone, is_whatsapp, verificado, lid, pn"),
+    ]);
+    const clientesData = clientesRes.data || [];
+    const telefonesData = telefonesRes.data || [];
+    
+    const telsByCliente = new Map<string, ClienteTelefone[]>();
+    telefonesData.forEach((t: any) => {
+      const list = telsByCliente.get(t.cliente_id) || [];
+      list.push(t);
+      telsByCliente.set(t.cliente_id, list);
+    });
+
+    const mapped = clientesData.map((c: any) => {
+      const tels = telsByCliente.get(c.cliente_id) || [];
+      const pref = c.telefone_preferencial_id 
+        ? tels.find(t => t.cliente_telefone_id === c.telefone_preferencial_id) || tels[0] || null
+        : tels[0] || null;
+      return { ...c, telefone_pref: pref };
+    });
+    setClientes(mapped as any);
   };
 
   useEffect(() => { load(); }, []);
