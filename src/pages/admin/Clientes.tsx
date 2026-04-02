@@ -89,7 +89,8 @@ const Clientes = () => {
   const filtered = useMemo(() => {
     let result = clientes.filter((c) => {
       const term = search.toLowerCase();
-      const matchText = c.nome.toLowerCase().includes(term) || c.cpf_cnpj?.includes(term) || c.email?.toLowerCase().includes(term);
+      const telPref = c.telefone_pref?.telefone || "";
+      const matchText = c.nome.toLowerCase().includes(term) || c.cpf_cnpj?.includes(term) || telPref.includes(term);
       const matchStatus = statusFilter === "todos" ? true : statusFilter === "ativo" ? c.ativo : !c.ativo;
       return matchText && matchStatus;
     });
@@ -99,7 +100,6 @@ const Clientes = () => {
         case "cliente_id": cmp = a.cliente_id.localeCompare(b.cliente_id); break;
         case "nome": cmp = a.nome.localeCompare(b.nome, "pt-BR"); break;
         case "cpf_cnpj": cmp = (a.cpf_cnpj || "").localeCompare(b.cpf_cnpj || ""); break;
-        case "email": cmp = (a.email || "").localeCompare(b.email || "", "pt-BR"); break;
         case "tipo_cliente": cmp = a.tipo_cliente.localeCompare(b.tipo_cliente); break;
         case "ativo": cmp = (a.ativo === b.ativo ? 0 : a.ativo ? -1 : 1); break;
       }
