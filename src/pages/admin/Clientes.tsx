@@ -344,7 +344,6 @@ const Clientes = () => {
                 <TableHead className="w-20 cursor-pointer select-none" onClick={() => handleSort("cliente_id")}>Cód <SortIcon col="cliente_id" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
                 <TableHead>Tel. Preferencial</TableHead>
-                <TableHead>Tel. Preferencial</TableHead>
                 <TableHead>PN</TableHead>
                 <TableHead>LID</TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("tipo_cliente")}>Tipo <SortIcon col="tipo_cliente" /></TableHead>
