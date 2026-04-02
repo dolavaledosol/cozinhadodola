@@ -296,7 +296,7 @@ const Dashboard = () => {
           {([
             { key: "Hoje" as const, dataKey: "totalHoje", color: "hsl(var(--primary))" },
             { key: "Mês" as const, dataKey: "totalMes", color: "hsl(var(--accent-foreground))" },
-            { key: "Acumulado" as const, dataKey: "totalAcumulado", color: "hsl(var(--muted-foreground))" },
+            { key: "Mês anterior" as const, dataKey: "totalMesAnt", color: "hsl(var(--muted-foreground))" },
           ]).map(({ key, dataKey, color }) => (
             <div key={key} className="rounded-xl bg-card border border-border overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
