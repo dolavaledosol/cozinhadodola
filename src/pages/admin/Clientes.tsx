@@ -329,9 +329,7 @@ const Clientes = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                {c.cpf_cnpj && <span>{formatCpfCnpj(c.cpf_cnpj)}</span>}
-                {c.telefone_pref && <span>{digitsToPhone(c.telefone_pref.telefone)}</span>}
-                {!c.cpf_cnpj && !c.telefone_pref && <span>—</span>}
+                {c.telefone_pref ? <span>{digitsToPhone(c.telefone_pref.telefone)}</span> : <span>—</span>}
               </div>
             </button>
           ))}
