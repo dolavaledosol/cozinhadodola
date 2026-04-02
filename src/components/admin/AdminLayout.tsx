@@ -57,28 +57,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               <span className="text-sm font-semibold text-muted-foreground hidden sm:inline">Painel Admin</span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              {can("estoque", "ver") && (
-                <Button
-                  variant={location.pathname === "/admin/divulgacao" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="gap-1.5 text-xs shrink-0"
-                  onClick={() => navigate("/admin/divulgacao")}
-                >
-                  <Megaphone className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">Divulgação</span>
-                </Button>
-              )}
-              {can("configuracoes", "ver") && (
-                <Button
-                  variant={location.pathname === "/admin/configuracoes" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="gap-1.5 text-xs shrink-0"
-                  onClick={() => navigate("/admin/configuracoes")}
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">Configurações</span>
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 size="sm"
