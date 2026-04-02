@@ -93,7 +93,7 @@ const Dashboard = () => {
     const pedidosHojeData = filterValid(pedidosHoje.data);
     const pedidosMesData = filterValid(pedidosMes.data);
     const pedidosMesAntData = filterValid(pedidosMesAnt.data);
-    const pedidosAcumuladoData = filterValid(pedidosAcumulado.data);
+    
 
     const sumTotal = (data: any[]) => filterActive(data).reduce((s: number, p: any) => s + Number(p.total), 0);
     const countActive = (data: any[]) => filterActive(data).length;
