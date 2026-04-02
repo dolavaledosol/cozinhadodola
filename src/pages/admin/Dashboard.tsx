@@ -100,18 +100,18 @@ const Dashboard = () => {
 
     // Origem breakdown: hoje, mês, acumulado
     const origemMap: Record<string, OrigemFat> = {};
-    const addOrigem = (data: any[], key: "Hoje" | "Mes" | "Acumulado") => {
+    const addOrigem = (data: any[], key: "Hoje" | "Mes" | "MesAnt") => {
       filterActive(data).forEach((p: any) => {
         const o = p.origem || "web";
-        if (!origemMap[o]) origemMap[o] = { origem: o, totalHoje: 0, qtdHoje: 0, totalMes: 0, qtdMes: 0, totalAcumulado: 0, qtdAcumulado: 0 };
+        if (!origemMap[o]) origemMap[o] = { origem: o, totalHoje: 0, qtdHoje: 0, totalMes: 0, qtdMes: 0, totalMesAnt: 0, qtdMesAnt: 0 };
         if (key === "Hoje") { origemMap[o].totalHoje += Number(p.total); origemMap[o].qtdHoje += 1; }
         if (key === "Mes") { origemMap[o].totalMes += Number(p.total); origemMap[o].qtdMes += 1; }
-        if (key === "Acumulado") { origemMap[o].totalAcumulado += Number(p.total); origemMap[o].qtdAcumulado += 1; }
+        if (key === "MesAnt") { origemMap[o].totalMesAnt += Number(p.total); origemMap[o].qtdMesAnt += 1; }
       });
     };
     addOrigem(pedidosHojeData, "Hoje");
     addOrigem(pedidosMesData, "Mes");
-    addOrigem(pedidosAcumuladoData, "Acumulado");
+    addOrigem(pedidosMesAntData, "MesAnt");
     setOrigemFat(Object.values(origemMap).sort((a, b) => b.totalMes - a.totalMes));
 
     // Status resumo
