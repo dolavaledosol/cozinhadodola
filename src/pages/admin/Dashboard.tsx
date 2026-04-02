@@ -79,11 +79,10 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pedidosAcumulado, pagar, receber] = await Promise.all([
+    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber] = await Promise.all([
       supabase.from("pedido").select("total, status, origem").gte("data", today),
       supabase.from("pedido").select("total, status, origem").gte("data", monthStartISO),
-      supabase.from("pedido").select("total, status").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
-      supabase.from("pedido").select("total, status, origem"),
+      supabase.from("pedido").select("total, status, origem").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
       supabase.from("contas_pagar").select("valor").eq("pago", false),
       supabase.from("contas_receber").select("valor").eq("recebido", false),
     ]);
