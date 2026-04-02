@@ -14,6 +14,15 @@ import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+interface ClienteTelefone {
+  cliente_telefone_id: string;
+  telefone: string;
+  is_whatsapp: boolean;
+  verificado: boolean;
+  lid: string | null;
+  pn: string | null;
+}
+
 interface Cliente {
   cliente_id: string;
   clientewhats_id: number | null;
@@ -23,6 +32,7 @@ interface Cliente {
   tipo_cliente: string;
   ativo: boolean;
   telefone_preferencial_id: string | null;
+  telefone_pref?: ClienteTelefone | null;
 }
 
 interface TelefoneItem {
