@@ -45,7 +45,7 @@ interface TelefoneItem {
 
 const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true };
 
-type ClienteSortKey = "cliente_id" | "nome" | "cpf_cnpj" | "tipo_cliente" | "ativo";
+type ClienteSortKey = "cliente_id" | "nome" | "tipo_cliente" | "ativo";
 
 const tipoLabel = (t: string) => {
   switch (t) {
@@ -112,7 +112,6 @@ const Clientes = () => {
       switch (sortKey) {
         case "cliente_id": cmp = a.cliente_id.localeCompare(b.cliente_id); break;
         case "nome": cmp = a.nome.localeCompare(b.nome, "pt-BR"); break;
-        case "cpf_cnpj": cmp = (a.cpf_cnpj || "").localeCompare(b.cpf_cnpj || ""); break;
         case "tipo_cliente": cmp = a.tipo_cliente.localeCompare(b.tipo_cliente); break;
         case "ativo": cmp = (a.ativo === b.ativo ? 0 : a.ativo ? -1 : 1); break;
       }
@@ -344,7 +343,6 @@ const Clientes = () => {
               <TableRow>
                 <TableHead className="w-20 cursor-pointer select-none" onClick={() => handleSort("cliente_id")}>Cód <SortIcon col="cliente_id" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("cpf_cnpj")}>CPF/CNPJ <SortIcon col="cpf_cnpj" /></TableHead>
                 <TableHead>Tel. Preferencial</TableHead>
                 <TableHead>PN</TableHead>
                 <TableHead>LID</TableHead>
@@ -354,7 +352,7 @@ const Clientes = () => {
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
               ) : filtered.map((c) => (
                 <TableRow key={c.cliente_id}>
                   <TableCell>
@@ -363,7 +361,6 @@ const Clientes = () => {
                     </button>
                   </TableCell>
                   <TableCell className="font-medium">{c.nome}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.pn || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.lid || "—"}</TableCell>
