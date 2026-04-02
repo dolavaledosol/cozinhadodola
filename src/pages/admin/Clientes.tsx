@@ -8,11 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, AlertCircle, Star, MessageCircle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Trash2, AlertCircle, Star, MessageCircle, ArrowUp, ArrowDown, ArrowUpDown, Download } from "lucide-react";
 import { PhoneInput, phoneToDigits, digitsToPhone } from "@/components/ui/phone-input";
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+interface ClienteTelefone {
+  cliente_telefone_id: string;
+  telefone: string;
+  is_whatsapp: boolean;
+  verificado: boolean;
+  lid: string | null;
+  pn: string | null;
+}
 
 interface Cliente {
   cliente_id: string;
@@ -23,6 +32,7 @@ interface Cliente {
   tipo_cliente: string;
   ativo: boolean;
   telefone_preferencial_id: string | null;
+  telefone_pref?: ClienteTelefone | null;
 }
 
 interface TelefoneItem {
@@ -35,7 +45,7 @@ interface TelefoneItem {
 
 const emptyForm = { nome: "", cpf_cnpj: "", email: "", tipo_cliente: "cliente", ativo: true };
 
-type ClienteSortKey = "cliente_id" | "nome" | "cpf_cnpj" | "email" | "tipo_cliente" | "ativo";
+type ClienteSortKey = "cliente_id" | "nome" | "cpf_cnpj" | "tipo_cliente" | "ativo";
 
 const tipoLabel = (t: string) => {
   switch (t) {
@@ -63,8 +73,15 @@ const Clientes = () => {
   const isMobile = useIsMobile();
 
   const load = async () => {
-    const { data } = await supabase.from("cliente").select("*").order("nome");
-    if (data) setClientes(data as any);
+    const { data } = await supabase.from("cliente").select("*, cliente_telefone(cliente_telefone_id, telefone, is_whatsapp, verificado, lid, pn)").order("nome");
+    if (data) {
+      const mapped = data.map((c: any) => {
+        const tels: ClienteTelefone[] = c.cliente_telefone || [];
+        const pref = c.telefone_preferencial_id ? tels.find(t => t.cliente_telefone_id === c.telefone_preferencial_id) : tels[0] || null;
+        return { ...c, telefone_pref: pref || null };
+      });
+      setClientes(mapped as any);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -72,7 +89,8 @@ const Clientes = () => {
   const filtered = useMemo(() => {
     let result = clientes.filter((c) => {
       const term = search.toLowerCase();
-      const matchText = c.nome.toLowerCase().includes(term) || c.cpf_cnpj?.includes(term) || c.email?.toLowerCase().includes(term);
+      const telPref = c.telefone_pref?.telefone || "";
+      const matchText = c.nome.toLowerCase().includes(term) || c.cpf_cnpj?.includes(term) || telPref.includes(term);
       const matchStatus = statusFilter === "todos" ? true : statusFilter === "ativo" ? c.ativo : !c.ativo;
       return matchText && matchStatus;
     });
@@ -82,7 +100,6 @@ const Clientes = () => {
         case "cliente_id": cmp = a.cliente_id.localeCompare(b.cliente_id); break;
         case "nome": cmp = a.nome.localeCompare(b.nome, "pt-BR"); break;
         case "cpf_cnpj": cmp = (a.cpf_cnpj || "").localeCompare(b.cpf_cnpj || ""); break;
-        case "email": cmp = (a.email || "").localeCompare(b.email || "", "pt-BR"); break;
         case "tipo_cliente": cmp = a.tipo_cliente.localeCompare(b.tipo_cliente); break;
         case "ativo": cmp = (a.ativo === b.ativo ? 0 : a.ativo ? -1 : 1); break;
       }
@@ -223,12 +240,39 @@ const Clientes = () => {
     }
   };
 
+  const exportCSV = () => {
+    const BOM = "\uFEFF";
+    const header = ["Código", "Nome", "CPF/CNPJ", "Telefone Preferencial", "PN", "LID", "Tipo", "Status"];
+    const rows = filtered.map(c => [
+      c.cliente_id.slice(0, 8),
+      c.nome,
+      c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "",
+      c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "",
+      c.telefone_pref?.pn || "",
+      c.telefone_pref?.lid || "",
+      tipoLabel(c.tipo_cliente),
+      c.ativo ? "Ativo" : "Inativo",
+    ]);
+    const csv = BOM + [header, ...rows].map(r => r.map(v => `"${(v || "").replace(/"/g, '""')}"`).join(";")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clientes_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">Clientes</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={exportCSV} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
+            <Download className="h-4 w-4" />
+            {!isMobile && "Exportar"}
+          </Button>
           <Button onClick={openNew} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
             <Plus className="h-4 w-4" />
             {!isMobile && "Novo Cliente"}
@@ -274,8 +318,8 @@ const Clientes = () => {
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 {c.cpf_cnpj && <span>{formatCpfCnpj(c.cpf_cnpj)}</span>}
-                {c.email && <span className="truncate">{c.email}</span>}
-                {!c.cpf_cnpj && !c.email && <span>—</span>}
+                {c.telefone_pref && <span>{digitsToPhone(c.telefone_pref.telefone)}</span>}
+                {!c.cpf_cnpj && !c.telefone_pref && <span>—</span>}
               </div>
             </button>
           ))}
@@ -288,14 +332,16 @@ const Clientes = () => {
                 <TableHead className="w-20 cursor-pointer select-none" onClick={() => handleSort("cliente_id")}>Cód <SortIcon col="cliente_id" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("cpf_cnpj")}>CPF/CNPJ <SortIcon col="cpf_cnpj" /></TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("email")}>Email <SortIcon col="email" /></TableHead>
+                <TableHead>Tel. Preferencial</TableHead>
+                <TableHead>PN</TableHead>
+                <TableHead>LID</TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("tipo_cliente")}>Tipo <SortIcon col="tipo_cliente" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("ativo")}>Status <SortIcon col="ativo" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
               ) : filtered.map((c) => (
                 <TableRow key={c.cliente_id}>
                   <TableCell>
@@ -305,7 +351,9 @@ const Clientes = () => {
                   </TableCell>
                   <TableCell className="font-medium">{c.nome}</TableCell>
                   <TableCell className="text-muted-foreground">{c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.email || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.pn || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.lid || "—"}</TableCell>
                   <TableCell>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-muted">{tipoLabel(c.tipo_cliente)}</span>
                   </TableCell>
