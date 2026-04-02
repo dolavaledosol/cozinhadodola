@@ -21,8 +21,8 @@ type OrigemFat = {
   qtdHoje: number;
   totalMes: number;
   qtdMes: number;
-  totalAcumulado: number;
-  qtdAcumulado: number;
+  totalMesAnt: number;
+  qtdMesAnt: number;
 };
 type StatusResumo = { status: string; qtd: number; total: number };
 
