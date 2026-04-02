@@ -112,7 +112,7 @@ const Clientes = () => {
       switch (sortKey) {
         case "cliente_id": cmp = a.cliente_id.localeCompare(b.cliente_id); break;
         case "nome": cmp = a.nome.localeCompare(b.nome, "pt-BR"); break;
-        case "cpf_cnpj": cmp = (a.cpf_cnpj || "").localeCompare(b.cpf_cnpj || ""); break;
+        case "tipo_cliente": cmp = a.tipo_cliente.localeCompare(b.tipo_cliente); break;
         case "tipo_cliente": cmp = a.tipo_cliente.localeCompare(b.tipo_cliente); break;
         case "ativo": cmp = (a.ativo === b.ativo ? 0 : a.ativo ? -1 : 1); break;
       }
