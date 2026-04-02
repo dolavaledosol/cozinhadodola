@@ -73,8 +73,15 @@ const Clientes = () => {
   const isMobile = useIsMobile();
 
   const load = async () => {
-    const { data } = await supabase.from("cliente").select("*").order("nome");
-    if (data) setClientes(data as any);
+    const { data } = await supabase.from("cliente").select("*, cliente_telefone(cliente_telefone_id, telefone, is_whatsapp, verificado, lid, pn)").order("nome");
+    if (data) {
+      const mapped = data.map((c: any) => {
+        const tels: ClienteTelefone[] = c.cliente_telefone || [];
+        const pref = c.telefone_preferencial_id ? tels.find(t => t.cliente_telefone_id === c.telefone_preferencial_id) : tels[0] || null;
+        return { ...c, telefone_pref: pref || null };
+      });
+      setClientes(mapped as any);
+    }
   };
 
   useEffect(() => { load(); }, []);
