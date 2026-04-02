@@ -73,7 +73,14 @@ const Clientes = () => {
   const isMobile = useIsMobile();
 
   const load = async () => {
-    const { data } = await supabase.from("cliente").select("*, cliente_telefone(cliente_telefone_id, telefone, is_whatsapp, verificado, lid, pn)").order("nome");
+    const { data, error } = await supabase.from("cliente").select("*, cliente_telefone(cliente_telefone_id, telefone, is_whatsapp, verificado, lid, pn)").order("nome");
+    if (error) {
+      console.error("Erro ao carregar clientes:", error);
+      // Fallback without telefone join
+      const { data: fallback } = await supabase.from("cliente").select("*").order("nome");
+      if (fallback) setClientes(fallback.map((c: any) => ({ ...c, telefone_pref: null })) as any);
+      return;
+    }
     if (data) {
       const mapped = data.map((c: any) => {
         const tels: ClienteTelefone[] = c.cliente_telefone || [];
