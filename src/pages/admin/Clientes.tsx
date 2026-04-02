@@ -240,12 +240,39 @@ const Clientes = () => {
     }
   };
 
+  const exportCSV = () => {
+    const BOM = "\uFEFF";
+    const header = ["Código", "Nome", "CPF/CNPJ", "Telefone Preferencial", "PN", "LID", "Tipo", "Status"];
+    const rows = filtered.map(c => [
+      c.cliente_id.slice(0, 8),
+      c.nome,
+      c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "",
+      c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "",
+      c.telefone_pref?.pn || "",
+      c.telefone_pref?.lid || "",
+      tipoLabel(c.tipo_cliente),
+      c.ativo ? "Ativo" : "Inativo",
+    ]);
+    const csv = BOM + [header, ...rows].map(r => r.map(v => `"${(v || "").replace(/"/g, '""')}"`).join(";")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clientes_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">Clientes</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={exportCSV} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
+            <Download className="h-4 w-4" />
+            {!isMobile && "Exportar"}
+          </Button>
           <Button onClick={openNew} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
             <Plus className="h-4 w-4" />
             {!isMobile && "Novo Cliente"}
@@ -291,8 +318,8 @@ const Clientes = () => {
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 {c.cpf_cnpj && <span>{formatCpfCnpj(c.cpf_cnpj)}</span>}
-                {c.email && <span className="truncate">{c.email}</span>}
-                {!c.cpf_cnpj && !c.email && <span>—</span>}
+                {c.telefone_pref && <span>{digitsToPhone(c.telefone_pref.telefone)}</span>}
+                {!c.cpf_cnpj && !c.telefone_pref && <span>—</span>}
               </div>
             </button>
           ))}
@@ -305,14 +332,16 @@ const Clientes = () => {
                 <TableHead className="w-20 cursor-pointer select-none" onClick={() => handleSort("cliente_id")}>Cód <SortIcon col="cliente_id" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("cpf_cnpj")}>CPF/CNPJ <SortIcon col="cpf_cnpj" /></TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("email")}>Email <SortIcon col="email" /></TableHead>
+                <TableHead>Tel. Preferencial</TableHead>
+                <TableHead>PN</TableHead>
+                <TableHead>LID</TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("tipo_cliente")}>Tipo <SortIcon col="tipo_cliente" /></TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort("ativo")}>Status <SortIcon col="ativo" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
               ) : filtered.map((c) => (
                 <TableRow key={c.cliente_id}>
                   <TableCell>
@@ -322,7 +351,9 @@ const Clientes = () => {
                   </TableCell>
                   <TableCell className="font-medium">{c.nome}</TableCell>
                   <TableCell className="text-muted-foreground">{c.cpf_cnpj ? formatCpfCnpj(c.cpf_cnpj) : "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.email || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.telefone_pref ? digitsToPhone(c.telefone_pref.telefone) : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.pn || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{c.telefone_pref?.lid || "—"}</TableCell>
                   <TableCell>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-muted">{tipoLabel(c.tipo_cliente)}</span>
                   </TableCell>
