@@ -21,8 +21,8 @@ type OrigemFat = {
   qtdHoje: number;
   totalMes: number;
   qtdMes: number;
-  totalAcumulado: number;
-  qtdAcumulado: number;
+  totalMesAnt: number;
+  qtdMesAnt: number;
 };
 type StatusResumo = { status: string; qtd: number; total: number };
 
@@ -79,11 +79,10 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pedidosAcumulado, pagar, receber] = await Promise.all([
+    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber] = await Promise.all([
       supabase.from("pedido").select("total, status, origem").gte("data", today),
       supabase.from("pedido").select("total, status, origem").gte("data", monthStartISO),
-      supabase.from("pedido").select("total, status").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
-      supabase.from("pedido").select("total, status, origem"),
+      supabase.from("pedido").select("total, status, origem").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
       supabase.from("contas_pagar").select("valor").eq("pago", false),
       supabase.from("contas_receber").select("valor").eq("recebido", false),
     ]);
@@ -94,25 +93,25 @@ const Dashboard = () => {
     const pedidosHojeData = filterValid(pedidosHoje.data);
     const pedidosMesData = filterValid(pedidosMes.data);
     const pedidosMesAntData = filterValid(pedidosMesAnt.data);
-    const pedidosAcumuladoData = filterValid(pedidosAcumulado.data);
+    
 
     const sumTotal = (data: any[]) => filterActive(data).reduce((s: number, p: any) => s + Number(p.total), 0);
     const countActive = (data: any[]) => filterActive(data).length;
 
     // Origem breakdown: hoje, mês, acumulado
     const origemMap: Record<string, OrigemFat> = {};
-    const addOrigem = (data: any[], key: "Hoje" | "Mes" | "Acumulado") => {
+    const addOrigem = (data: any[], key: "Hoje" | "Mes" | "MesAnt") => {
       filterActive(data).forEach((p: any) => {
         const o = p.origem || "web";
-        if (!origemMap[o]) origemMap[o] = { origem: o, totalHoje: 0, qtdHoje: 0, totalMes: 0, qtdMes: 0, totalAcumulado: 0, qtdAcumulado: 0 };
+        if (!origemMap[o]) origemMap[o] = { origem: o, totalHoje: 0, qtdHoje: 0, totalMes: 0, qtdMes: 0, totalMesAnt: 0, qtdMesAnt: 0 };
         if (key === "Hoje") { origemMap[o].totalHoje += Number(p.total); origemMap[o].qtdHoje += 1; }
         if (key === "Mes") { origemMap[o].totalMes += Number(p.total); origemMap[o].qtdMes += 1; }
-        if (key === "Acumulado") { origemMap[o].totalAcumulado += Number(p.total); origemMap[o].qtdAcumulado += 1; }
+        if (key === "MesAnt") { origemMap[o].totalMesAnt += Number(p.total); origemMap[o].qtdMesAnt += 1; }
       });
     };
     addOrigem(pedidosHojeData, "Hoje");
     addOrigem(pedidosMesData, "Mes");
-    addOrigem(pedidosAcumuladoData, "Acumulado");
+    addOrigem(pedidosMesAntData, "MesAnt");
     setOrigemFat(Object.values(origemMap).sort((a, b) => b.totalMes - a.totalMes));
 
     // Status resumo
@@ -297,7 +296,7 @@ const Dashboard = () => {
           {([
             { key: "Hoje" as const, dataKey: "totalHoje", color: "hsl(var(--primary))" },
             { key: "Mês" as const, dataKey: "totalMes", color: "hsl(var(--accent-foreground))" },
-            { key: "Acumulado" as const, dataKey: "totalAcumulado", color: "hsl(var(--muted-foreground))" },
+            { key: "Mês anterior" as const, dataKey: "totalMesAnt", color: "hsl(var(--muted-foreground))" },
           ]).map(({ key, dataKey, color }) => (
             <div key={key} className="rounded-xl bg-card border border-border overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
