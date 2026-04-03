@@ -419,7 +419,7 @@ const EstoqueRelatorio = () => {
         .map((c) => ({
           cliente_id: c.cliente_id,
           nome: c.nome,
-          ...(c.lid ? { lid: c.lid } : {}),
+          ...(c.lid ? { from: c.lid } : {}),
           produtos: c.produtos.map((pr) => {
             const isFrac = pr.aceita_fracionado;
             const qtdDefault = pr.quantidade_default;

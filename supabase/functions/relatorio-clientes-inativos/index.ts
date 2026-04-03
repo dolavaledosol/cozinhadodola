@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
         return {
           cliente_id: cid,
           nome: cliente.nome,
-          lid,
+          ...(lid ? { from: lid } : {}),
           ultima_compra: ultimaCompraMap.get(cid),
           produtos,
         };
