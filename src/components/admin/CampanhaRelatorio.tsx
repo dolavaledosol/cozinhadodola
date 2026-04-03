@@ -323,7 +323,7 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
       const validImagens = imagens.filter((u) => u.trim().length > 0);
       const payload = {
         tipo: "campanha",
-        clientes: clientesComLid.map((c) => ({ nome: c.nome, lid: c.lid })),
+        clientes: clientesComLid.map((c) => ({ nome: c.nome, from: c.lid })),
         produtos: checkedProducts.map((p) => ({
           produto_id: p.produto_id, nome: p.nome,
           peso: p.aceita_fracionado && p.peso ? Math.round(p.quantidade_default * 10) / 10 : p.peso,
