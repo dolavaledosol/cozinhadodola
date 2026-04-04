@@ -83,45 +83,40 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
   const loadData = useCallback(async () => {
     setLoadingData(true);
 
-    const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: telefones }, { data: prods }] = await Promise.all([
+    const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: prods }] = await Promise.all([
       supabase.from("cliente").select("cliente_id, nome").eq("ativo", true).order("nome"),
       supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, cliente_id"),
-      supabase.from("cliente_telefone").select("cliente_id, lid, pn"),
       supabase.from("produto").select("produto_id, nome, produto_imagem(url_imagem, ordem)").eq("ativo", true).order("nome"),
     ]);
 
-    // Build clients with from field - deduplicate by cliente_id
-    const clienteMap = new Map<string, ClienteFoto>();
-
-    // First pass: get from values from cliente_telefone
-    const telFromMap = new Map<string, string>();
-    if (telefones) {
-      for (const t of telefones as any[]) {
-        const effectiveFrom = t.lid || t.pn || null;
-        if (effectiveFrom && !telFromMap.has(t.cliente_id)) telFromMap.set(t.cliente_id, effectiveFrom);
-      }
-    }
-
-    // Second pass: add clients from cliente table (preferred source)
-    if (clientesDb) {
-      for (const c of clientesDb as any[]) {
-        const from = telFromMap.get(c.cliente_id) || null;
-        if (from && !clienteMap.has(c.cliente_id)) {
-          clienteMap.set(c.cliente_id, { cliente_id: c.cliente_id, nome: c.nome, from, checked: false });
-        }
-      }
-    }
-
-    // Third pass: add clientewhats entries that have a linked cliente_id not yet added
+    // Build from map from clientewhats (unique lid/pn per client)
+    const cwFromMap = new Map<string, string>();
+    const cwStandalone: ClienteFoto[] = [];
     if (clienteWhatsDb) {
       for (const cw of clienteWhatsDb as any[]) {
         const effectiveFrom = cw.lid || cw.pn || null;
         if (!effectiveFrom) continue;
-        const id = cw.cliente_id || `cw_${cw.clientewhats_id}`;
-        if (!clienteMap.has(id)) {
-          clienteMap.set(id, { cliente_id: id, nome: cw.nome || "—", from: effectiveFrom, checked: false });
+        if (cw.cliente_id) {
+          if (!cwFromMap.has(cw.cliente_id)) cwFromMap.set(cw.cliente_id, effectiveFrom);
+        } else {
+          cwStandalone.push({ cliente_id: `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", from: effectiveFrom, checked: false });
         }
       }
+    }
+
+    // Build client list using clientewhats from values
+    const clienteMap = new Map<string, ClienteFoto>();
+    if (clientesDb) {
+      for (const c of clientesDb as any[]) {
+        const from = cwFromMap.get(c.cliente_id) || null;
+        if (from) {
+          clienteMap.set(c.cliente_id, { cliente_id: c.cliente_id, nome: c.nome, from, checked: false });
+        }
+      }
+    }
+    // Add standalone clientewhats entries
+    for (const cw of cwStandalone) {
+      if (!clienteMap.has(cw.cliente_id)) clienteMap.set(cw.cliente_id, cw);
     }
 
     const result = Array.from(clienteMap.values());
