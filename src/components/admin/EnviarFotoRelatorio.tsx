@@ -83,13 +83,14 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
   const loadData = useCallback(async () => {
     setLoadingData(true);
 
-    const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: prods }] = await Promise.all([
+    const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: telefones }, { data: prods }] = await Promise.all([
       supabase.from("cliente").select("cliente_id, nome").eq("ativo", true).order("nome"),
       supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, cliente_id"),
+      supabase.from("cliente_telefone").select("cliente_id, lid, pn"),
       supabase.from("produto").select("produto_id, nome, produto_imagem(url_imagem, ordem)").eq("ativo", true).order("nome"),
     ]);
 
-    // Build from map from clientewhats (unique lid/pn per client)
+    // Build from map: prioritize clientewhats, fallback to cliente_telefone
     const cwFromMap = new Map<string, string>();
     const cwStandalone: ClienteFoto[] = [];
     if (clienteWhatsDb) {
@@ -104,7 +105,17 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
       }
     }
 
-    // Build client list using clientewhats from values
+    // Fallback: cliente_telefone (only for clients not already in cwFromMap)
+    if (telefones) {
+      for (const t of telefones as any[]) {
+        const effectiveFrom = t.lid || t.pn || null;
+        if (effectiveFrom && !cwFromMap.has(t.cliente_id)) {
+          cwFromMap.set(t.cliente_id, effectiveFrom);
+        }
+      }
+    }
+
+    // Build final client list
     const clienteMap = new Map<string, ClienteFoto>();
     if (clientesDb) {
       for (const c of clientesDb as any[]) {
@@ -114,7 +125,6 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
         }
       }
     }
-    // Add standalone clientewhats entries
     for (const cw of cwStandalone) {
       if (!clienteMap.has(cw.cliente_id)) clienteMap.set(cw.cliente_id, cw);
     }
