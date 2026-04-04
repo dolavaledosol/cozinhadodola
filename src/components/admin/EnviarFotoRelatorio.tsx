@@ -90,20 +90,10 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
       supabase.from("produto").select("produto_id, nome, produto_imagem(url_imagem, ordem)").eq("ativo", true).order("nome"),
     ]);
 
-    // Build clients with from field
-    const fromSet = new Set<string>();
-    const result: ClienteFoto[] = [];
+    // Build clients with from field - deduplicate by cliente_id
+    const clienteMap = new Map<string, ClienteFoto>();
 
-    if (clienteWhatsDb) {
-      for (const cw of clienteWhatsDb as any[]) {
-        const effectiveFrom = cw.lid || cw.pn || null;
-        if (effectiveFrom && !fromSet.has(effectiveFrom)) {
-          fromSet.add(effectiveFrom);
-          result.push({ cliente_id: cw.cliente_id || `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", from: effectiveFrom, checked: false });
-        }
-      }
-    }
-
+    // First pass: get from values from cliente_telefone
     const telFromMap = new Map<string, string>();
     if (telefones) {
       for (const t of telefones as any[]) {
@@ -112,15 +102,29 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
       }
     }
 
+    // Second pass: add clients from cliente table (preferred source)
     if (clientesDb) {
       for (const c of clientesDb as any[]) {
         const from = telFromMap.get(c.cliente_id) || null;
-        if (from && !fromSet.has(from)) {
-          fromSet.add(from);
-          result.push({ cliente_id: c.cliente_id, nome: c.nome, from, checked: false });
+        if (from && !clienteMap.has(c.cliente_id)) {
+          clienteMap.set(c.cliente_id, { cliente_id: c.cliente_id, nome: c.nome, from, checked: false });
         }
       }
     }
+
+    // Third pass: add clientewhats entries that have a linked cliente_id not yet added
+    if (clienteWhatsDb) {
+      for (const cw of clienteWhatsDb as any[]) {
+        const effectiveFrom = cw.lid || cw.pn || null;
+        if (!effectiveFrom) continue;
+        const id = cw.cliente_id || `cw_${cw.clientewhats_id}`;
+        if (!clienteMap.has(id)) {
+          clienteMap.set(id, { cliente_id: id, nome: cw.nome || "—", from: effectiveFrom, checked: false });
+        }
+      }
+    }
+
+    const result = Array.from(clienteMap.values());
 
     setClientes(result);
 
