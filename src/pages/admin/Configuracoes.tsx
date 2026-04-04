@@ -46,6 +46,14 @@ const WEBHOOK_SECTIONS = [
       { chave: "webhook_campanha_apikey", label: "API Key do Webhook de Campanha", placeholder: "Bearer token ou chave de autenticação" },
     ],
   },
+  {
+    title: "Webhook Enviar Foto",
+    description: "Configure a URL e a chave de autenticação para envio de fotos de produtos para clientes via webhook.",
+    keys: [
+      { chave: "webhook_envia_foto_url", label: "URL do Webhook Enviar Foto", placeholder: "https://exemplo.com/webhook-envia-foto" },
+      { chave: "webhook_envia_foto_apikey", label: "API Key do Webhook Enviar Foto", placeholder: "Bearer token ou chave de autenticação" },
+    ],
+  },
 ];
 
 const ALL_WEBHOOK_KEYS = WEBHOOK_SECTIONS.flatMap((s) => s.keys.map((k) => k.chave));

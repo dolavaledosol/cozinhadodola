@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EstoqueRelatorio from "@/components/admin/EstoqueRelatorio";
 import ClientesInativosRelatorio from "@/components/admin/ClientesInativosRelatorio";
 import CampanhaRelatorio from "@/components/admin/CampanhaRelatorio";
+import EnviarFotoRelatorio from "@/components/admin/EnviarFotoRelatorio";
 
 const Divulgacao = () => {
   return (
@@ -12,6 +13,7 @@ const Divulgacao = () => {
           <TabsTrigger value="estoque">Estoque</TabsTrigger>
           <TabsTrigger value="clientes">Clientes Inativos</TabsTrigger>
           <TabsTrigger value="campanha">Campanha</TabsTrigger>
+          <TabsTrigger value="enviar-foto">Enviar Foto</TabsTrigger>
         </TabsList>
         <TabsContent value="estoque">
           <EstoqueRelatorio />
@@ -21,6 +23,9 @@ const Divulgacao = () => {
         </TabsContent>
         <TabsContent value="campanha">
           <CampanhaRelatorio inline />
+        </TabsContent>
+        <TabsContent value="enviar-foto">
+          <EnviarFotoRelatorio inline />
         </TabsContent>
       </Tabs>
     </div>
