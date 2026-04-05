@@ -154,7 +154,7 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
 
     const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: telefones }] = await Promise.all([
       supabase.from("cliente").select("cliente_id, nome").eq("ativo", true).order("nome"),
-      supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, cliente_id"),
+      supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, from, cliente_id"),
       supabase.from("cliente_telefone").select("cliente_id, lid, pn"),
     ]);
 
@@ -163,7 +163,7 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
 
     if (clienteWhatsDb) {
       for (const cw of clienteWhatsDb as any[]) {
-        const effectiveLid = cw.lid || cw.pn || null;
+        const effectiveLid = cw.lid || cw.pn || cw.from || null;
         if (effectiveLid && !lidSet.has(effectiveLid)) {
           lidSet.add(effectiveLid);
           result.push({ cliente_id: cw.cliente_id || `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", lid: effectiveLid });
