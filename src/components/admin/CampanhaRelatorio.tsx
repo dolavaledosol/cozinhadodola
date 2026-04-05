@@ -154,7 +154,7 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
 
     const [{ data: clientesDb }, { data: clienteWhatsDb }, { data: telefones }] = await Promise.all([
       supabase.from("cliente").select("cliente_id, nome").eq("ativo", true).order("nome"),
-      supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, cliente_id"),
+      supabase.from("clientewhats").select("clientewhats_id, nome, lid, pn, from, cliente_id"),
       supabase.from("cliente_telefone").select("cliente_id, lid, pn"),
     ]);
 
