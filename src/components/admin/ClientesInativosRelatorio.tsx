@@ -11,7 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface ClienteInativo {
   cliente_id: string;
   nome: string;
-  lid: string | null;
+  from?: string | null;
   ultima_compra: string;
   produtos: {
     produto_id: string;
