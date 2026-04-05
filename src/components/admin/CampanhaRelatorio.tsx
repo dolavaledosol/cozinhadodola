@@ -163,7 +163,7 @@ const CampanhaRelatorio = ({ inline = false }: { inline?: boolean }) => {
 
     if (clienteWhatsDb) {
       for (const cw of clienteWhatsDb as any[]) {
-        const effectiveLid = cw.lid || cw.pn || null;
+        const effectiveLid = cw.lid || cw.pn || cw.from || null;
         if (effectiveLid && !lidSet.has(effectiveLid)) {
           lidSet.add(effectiveLid);
           result.push({ cliente_id: cw.cliente_id || `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", lid: effectiveLid });
