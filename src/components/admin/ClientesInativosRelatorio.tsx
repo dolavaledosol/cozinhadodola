@@ -11,7 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface ClienteInativo {
   cliente_id: string;
   nome: string;
-  lid: string | null;
+  from?: string | null;
   ultima_compra: string;
   produtos: {
     produto_id: string;
@@ -141,7 +141,7 @@ const ClientesInativosRelatorio = ({ inline = false }: { inline?: boolean }) => 
         clientes: clientes.map((c) => ({
           cliente_id: c.cliente_id,
           nome: c.nome,
-          ...(c.lid ? { from: c.lid } : {}),
+          ...(c.from ? { from: c.from } : {}),
           ultima_compra: c.ultima_compra,
           produtos: c.produtos.map((pr) => ({
             produto_id: pr.produto_id,
@@ -231,7 +231,7 @@ const ClientesInativosRelatorio = ({ inline = false }: { inline?: boolean }) => 
                     <p className="font-medium text-sm truncate">{c.nome}</p>
                     <p className="text-xs text-muted-foreground">
                       Última compra: {new Date(c.ultima_compra).toLocaleDateString("pt-BR")}
-                      {c.lid && <span className="ml-2">• LID: {c.lid}</span>}
+                      {c.from && <span className="ml-2">• {c.from}</span>}
                     </p>
                   </div>
                   <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full shrink-0">
