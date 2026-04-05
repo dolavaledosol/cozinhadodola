@@ -473,26 +473,32 @@ const Financeiro = () => {
       return;
     }
 
-    const payload = items.map((c) => {
-      const phone = c.cliente_id ? phoneMap[c.cliente_id] : null;
-      const pedido = (c as any).pedido;
-      return {
-        codigo: c.contas_receber_id.slice(0, 8).toUpperCase(),
-        contas_receber_id: c.contas_receber_id,
-        cliente: c.cliente?.nome || "",
-        cliente_id: c.cliente_id || "",
-        ...(phone?.lid || phone?.pn ? { from: phone.lid || phone.pn } : {}),
-        pedido_id: c.pedido_id || "",
-        pedido_codigo: c.pedido_id ? c.pedido_id.slice(0, 8).toUpperCase() : "",
-        data_pedido: pedido?.data || "",
-        created_at: c.created_at,
-        data_vencimento: c.data_vencimento,
-        forma: c._forma,
-        banco: c._banco_pag,
-        valor: Number(c.valor),
-        status: c.recebido ? "Recebido" : "Pendente",
-      };
-    });
+    const payload = items
+      .filter((c) => {
+        if (!c.cliente_id) return false;
+        const phone = phoneMap[c.cliente_id];
+        return !!(phone?.lid || phone?.pn);
+      })
+      .map((c) => {
+        const phone = phoneMap[c.cliente_id!];
+        const pedido = (c as any).pedido;
+        return {
+          codigo: c.contas_receber_id.slice(0, 8).toUpperCase(),
+          contas_receber_id: c.contas_receber_id,
+          cliente: c.cliente?.nome || "",
+          cliente_id: c.cliente_id || "",
+          from: phone.lid || phone.pn,
+          pedido_id: c.pedido_id || "",
+          pedido_codigo: c.pedido_id ? c.pedido_id.slice(0, 8).toUpperCase() : "",
+          data_pedido: pedido?.data || "",
+          created_at: c.created_at,
+          data_vencimento: c.data_vencimento,
+          forma: c._forma,
+          banco: c._banco_pag,
+          valor: Number(c.valor),
+          status: c.recebido ? "Recebido" : "Pendente",
+        };
+      });
 
     setSendingWebhook(true);
     try {
