@@ -500,6 +500,11 @@ const Financeiro = () => {
         };
       });
 
+    if (payload.length === 0) {
+      toast({ title: "Nenhuma cobrança com contato identificado", description: "As cobranças selecionadas não possuem identificador de contato (from).", variant: "destructive" });
+      return;
+    }
+
     setSendingWebhook(true);
     try {
       const apikey = cfgMap["webhook_cobranca_apikey"];
