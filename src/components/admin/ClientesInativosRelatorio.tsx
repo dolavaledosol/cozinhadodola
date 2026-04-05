@@ -141,7 +141,7 @@ const ClientesInativosRelatorio = ({ inline = false }: { inline?: boolean }) => 
         clientes: clientes.map((c) => ({
           cliente_id: c.cliente_id,
           nome: c.nome,
-          ...(c.lid ? { from: c.lid } : {}),
+          ...(c.from ? { from: c.from } : {}),
           ultima_compra: c.ultima_compra,
           produtos: c.produtos.map((pr) => ({
             produto_id: pr.produto_id,
