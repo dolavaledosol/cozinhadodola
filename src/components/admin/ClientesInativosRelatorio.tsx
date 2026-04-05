@@ -231,7 +231,7 @@ const ClientesInativosRelatorio = ({ inline = false }: { inline?: boolean }) => 
                     <p className="font-medium text-sm truncate">{c.nome}</p>
                     <p className="text-xs text-muted-foreground">
                       Última compra: {new Date(c.ultima_compra).toLocaleDateString("pt-BR")}
-                      {c.lid && <span className="ml-2">• LID: {c.lid}</span>}
+                      {c.from && <span className="ml-2">• {c.from}</span>}
                     </p>
                   </div>
                   <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full shrink-0">
