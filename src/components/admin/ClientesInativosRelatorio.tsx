@@ -138,22 +138,24 @@ const ClientesInativosRelatorio = ({ inline = false }: { inline?: boolean }) => 
       const payload = {
         tipo: "relatorio_clientes_inativos",
         meses,
-        clientes: clientes.map((c) => ({
-          cliente_id: c.cliente_id,
-          nome: c.nome,
-          ...(c.from ? { from: c.from } : {}),
-          ultima_compra: c.ultima_compra,
-          produtos: c.produtos.map((pr) => ({
-            produto_id: pr.produto_id,
-            nome: pr.nome,
-            fabricante: pr.fabricante,
-            peso: pr.peso,
-            unidade_medida: pr.unidade_medida,
-            preco: pr.preco,
-            url_imagem: pr.url_imagem,
-            quantidade_total: pr.quantidade_total,
+        clientes: clientes
+          .filter((c) => !!c.from)
+          .map((c) => ({
+            cliente_id: c.cliente_id,
+            nome: c.nome,
+            from: c.from,
+            ultima_compra: c.ultima_compra,
+            produtos: c.produtos.map((pr) => ({
+              produto_id: pr.produto_id,
+              nome: pr.nome,
+              fabricante: pr.fabricante,
+              peso: pr.peso,
+              unidade_medida: pr.unidade_medida,
+              preco: pr.preco,
+              url_imagem: pr.url_imagem,
+              quantidade_total: pr.quantidade_total,
+            })),
           })),
-        })),
       };
 
       const response = await invokeWebhookProxy({
