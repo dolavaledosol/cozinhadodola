@@ -42,16 +42,29 @@ const Receitas = () => {
   const [form, setForm] = useState<ReceitaForm>(emptyForm);
 
   const { data: produtos = [] } = useQuery({
-    queryKey: ["produtos-ativos"],
+    queryKey: ["produtos-ativos-receita"],
     queryFn: async () => {
       const { data } = await supabase
         .from("produto")
-        .select("produto_id, nome, unidade_medida")
+        .select("produto_id, nome, unidade_medida, peso_liquido, fabricante_id")
         .eq("ativo", true)
         .order("nome");
       return data || [];
     },
   });
+
+  const { data: fabricantes = [] } = useQuery({
+    queryKey: ["fabricantes-ativos"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("fabricante")
+        .select("fabricante_id, nome")
+        .eq("ativo", true);
+      return data || [];
+    },
+  });
+
+  const fabricanteMap = Object.fromEntries(fabricantes.map((f) => [f.fabricante_id, f.nome]));
 
   const { data: receitas = [], isLoading } = useQuery({
     queryKey: ["receitas"],
