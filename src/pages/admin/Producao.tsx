@@ -129,7 +129,12 @@ const Producao = () => {
     setQtdProduzir(newQtd);
     if (receitaId && oldQtd > 0) {
       const ratio = newQtd / oldQtd;
-      setItens((prev) => prev.map((i) => ({ ...i, quantidade: Math.round(i.quantidade * ratio * 100) / 100 })));
+      setItens((prev) => prev.map((i) => {
+        const prod = produtoMap[i.produto_id];
+        const fracionado = prod?.aceita_fracionado ?? false;
+        const raw = i.quantidade * ratio;
+        return { ...i, quantidade: fracionado ? Math.round(raw * 1000) / 1000 : Math.round(raw) };
+      }));
     }
   };
 
