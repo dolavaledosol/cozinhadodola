@@ -348,8 +348,6 @@ const Producao = () => {
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
-      </Tabs>
 
       {/* Production Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
