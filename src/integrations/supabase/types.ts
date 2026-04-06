@@ -1446,6 +1446,7 @@ export type Database = {
           nome: string
           produto_id: string
           receita_id: string
+          rendimento: number
           updated_at: string
         }
         Insert: {
@@ -1454,6 +1455,7 @@ export type Database = {
           nome: string
           produto_id: string
           receita_id?: string
+          rendimento?: number
           updated_at?: string
         }
         Update: {
@@ -1462,6 +1464,7 @@ export type Database = {
           nome?: string
           produto_id?: string
           receita_id?: string
+          rendimento?: number
           updated_at?: string
         }
         Relationships: [

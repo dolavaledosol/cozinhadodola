@@ -1,0 +1,1 @@
+ALTER TABLE public.receita ADD COLUMN rendimento integer NOT NULL DEFAULT 1;

@@ -84,7 +84,7 @@ const Receitas = () => {
     mutationFn: async (f: ReceitaForm) => {
       if (f.receita_id) {
         await supabase.from("receita").update({
-          produto_id: f.produto_id, nome: f.nome, ativo: f.ativo,
+          produto_id: f.produto_id, nome: f.nome, ativo: f.ativo, rendimento: f.rendimento,
         }).eq("receita_id", f.receita_id).throwOnError();
 
         await supabase.from("receita_item").delete().eq("receita_id", f.receita_id).throwOnError();
@@ -96,7 +96,7 @@ const Receitas = () => {
         }
       } else {
         const { data } = await supabase.from("receita").insert({
-          produto_id: f.produto_id, nome: f.nome, ativo: f.ativo,
+          produto_id: f.produto_id, nome: f.nome, ativo: f.ativo, rendimento: f.rendimento,
         }).select("receita_id").single().throwOnError();
 
         if (f.itens.length > 0) {
@@ -131,7 +131,7 @@ const Receitas = () => {
       produto_id: r.produto_id,
       nome: r.nome,
       ativo: r.ativo,
-      rendimento: 1,
+      rendimento: r.rendimento || 1,
       itens: (r.receita_item || []).map((i: any) => ({
         receita_item_id: i.receita_item_id,
         produto_id: i.produto_id,
