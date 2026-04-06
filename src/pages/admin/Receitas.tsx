@@ -131,6 +131,7 @@ const Receitas = () => {
       produto_id: r.produto_id,
       nome: r.nome,
       ativo: r.ativo,
+      rendimento: 1,
       itens: (r.receita_item || []).map((i: any) => ({
         receita_item_id: i.receita_item_id,
         produto_id: i.produto_id,
@@ -152,6 +153,25 @@ const Receitas = () => {
       ...f,
       itens: f.itens.map((item, i) => (i === idx ? { ...item, [field]: value } : item)),
     }));
+
+  const onRendimentoChange = (newRendimento: number) => {
+    const oldRendimento = form.rendimento;
+    if (oldRendimento > 0 && newRendimento > 0) {
+      const ratio = newRendimento / oldRendimento;
+      setForm((f) => ({
+        ...f,
+        rendimento: newRendimento,
+        itens: f.itens.map((item) => {
+          const prod = produtoMap[item.produto_id];
+          const fracionado = prod?.aceita_fracionado ?? false;
+          const raw = item.quantidade * ratio;
+          return { ...item, quantidade: fracionado ? Math.round(raw * 1000) / 1000 : Math.max(1, Math.round(raw)) };
+        }),
+      }));
+    } else {
+      setForm((f) => ({ ...f, rendimento: newRendimento }));
+    }
+  };
 
   const valid = form.produto_id && form.nome.trim() && form.itens.length > 0 && form.itens.every((i) => i.produto_id && i.quantidade > 0);
 
