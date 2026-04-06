@@ -264,13 +264,31 @@ const Receitas = () => {
               {form.itens.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <Select value={item.produto_id} onValueChange={(v) => updateItem(idx, "produto_id", v)}>
-                    <SelectTrigger className="flex-1"><SelectValue placeholder="Produto" /></SelectTrigger>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Produto">
+                        {item.produto_id && produtoMap[item.produto_id] ? (() => {
+                          const p = produtoMap[item.produto_id];
+                          const fab = p.fabricante_id ? fabricanteMap[p.fabricante_id] : null;
+                          const parts = [p.nome];
+                          if (fab) parts.push(fab);
+                          if (p.peso_liquido) parts.push(`${p.peso_liquido}${p.unidade_medida === 'kg' || p.unidade_medida === 'g' ? p.unidade_medida : 'g'}`);
+                          return parts.join(" · ");
+                        })() : null}
+                      </SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
                       {produtos
                         .filter((p) => p.produto_id !== form.produto_id)
-                        .map((p) => (
-                          <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}</SelectItem>
-                        ))}
+                        .map((p) => {
+                          const fab = p.fabricante_id ? fabricanteMap[p.fabricante_id] : null;
+                          const peso = p.peso_liquido ? `${p.peso_liquido}${p.unidade_medida === 'kg' || p.unidade_medida === 'g' ? p.unidade_medida : 'g'}` : null;
+                          const details = [fab, peso].filter(Boolean).join(" · ");
+                          return (
+                            <SelectItem key={p.produto_id} value={p.produto_id}>
+                              {p.nome}{details ? ` — ${details}` : ""}
+                            </SelectItem>
+                          );
+                        })}
                     </SelectContent>
                   </Select>
                   <Input type="number" min={0.1} step={0.1} className="w-24"
