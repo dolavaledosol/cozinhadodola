@@ -29,10 +29,11 @@ interface ReceitaForm {
   produto_id: string;
   nome: string;
   ativo: boolean;
+  rendimento: number;
   itens: ReceitaItem[];
 }
 
-const emptyForm: ReceitaForm = { produto_id: "", nome: "", ativo: true, itens: [] };
+const emptyForm: ReceitaForm = { produto_id: "", nome: "", ativo: true, rendimento: 1, itens: [] };
 
 const Receitas = () => {
   const qc = useQueryClient();
@@ -46,7 +47,7 @@ const Receitas = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("produto")
-        .select("produto_id, nome, unidade_medida, peso_liquido, fabricante_id")
+        .select("produto_id, nome, unidade_medida, peso_liquido, fabricante_id, aceita_fracionado")
         .eq("ativo", true)
         .order("nome");
       return data || [];
