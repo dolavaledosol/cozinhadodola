@@ -154,25 +154,6 @@ const Receitas = () => {
       itens: f.itens.map((item, i) => (i === idx ? { ...item, [field]: value } : item)),
     }));
 
-  const onRendimentoChange = (newRendimento: number) => {
-    const oldRendimento = form.rendimento;
-    if (oldRendimento > 0 && newRendimento > 0) {
-      const ratio = newRendimento / oldRendimento;
-      setForm((f) => ({
-        ...f,
-        rendimento: newRendimento,
-        itens: f.itens.map((item) => {
-          const prod = produtoMap[item.produto_id];
-          const fracionado = prod?.aceita_fracionado ?? false;
-          const raw = item.quantidade * ratio;
-          return { ...item, quantidade: fracionado ? Math.round(raw * 1000) / 1000 : Math.max(1, Math.round(raw)) };
-        }),
-      }));
-    } else {
-      setForm((f) => ({ ...f, rendimento: newRendimento }));
-    }
-  };
-
   const valid = form.produto_id && form.nome.trim() && form.itens.length > 0 && form.itens.every((i) => i.produto_id && i.quantidade > 0);
 
   return (
@@ -270,9 +251,9 @@ const Receitas = () => {
 
             <div className="space-y-2">
               <Label>Rendimento (para X unidades)</Label>
-              <p className="text-xs text-muted-foreground">Defina para quantas unidades esta receita rende. Ao alterar, as quantidades dos ingredientes serão recalculadas proporcionalmente.</p>
+              <p className="text-xs text-muted-foreground">Informe para quantas unidades do produto final esta receita rende.</p>
               <Input type="number" min={1} step={1} value={form.rendimento} className="w-32"
-                onChange={(e) => onRendimentoChange(Math.max(1, Number(e.target.value)))} />
+                onChange={(e) => setForm((f) => ({ ...f, rendimento: Math.max(1, Number(e.target.value)) }))} />
             </div>
 
             <div className="space-y-2">
