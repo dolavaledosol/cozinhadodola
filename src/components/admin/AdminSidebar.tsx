@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Package, Layers, Factory, Users, ShoppingCart,
   DollarSign, Settings, LogOut, Truck, Warehouse, Boxes, Landmark, CreditCard,
-  ChevronDown, FolderOpen, UserCog, ChefHat, FlaskConical, Megaphone,
+  ChevronDown, FolderOpen, UserCog, FlaskConical, Megaphone,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -34,7 +34,7 @@ const cadastroItems: MenuItem[] = [
   { title: "Formas Pgto", url: "/admin/formas-pagamento", icon: CreditCard, resource: "formas_pagamento" },
   { title: "Usuários", url: "/admin/usuarios", icon: UserCog, resource: "usuarios" },
   { title: "Receitas", url: "/admin/receitas", icon: FlaskConical, resource: "receitas" as any },
-  { title: "Produção", url: "/admin/producao", icon: ChefHat, resource: "producao" as any },
+  
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings, resource: "configuracoes" as any },
 ];
 
