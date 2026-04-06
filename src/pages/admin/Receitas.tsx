@@ -251,9 +251,9 @@ const Receitas = () => {
 
             <div className="space-y-2">
               <Label>Rendimento (para X unidades)</Label>
-              <p className="text-xs text-muted-foreground">Defina para quantas unidades esta receita rende. Ao alterar, as quantidades dos ingredientes serão recalculadas proporcionalmente.</p>
+              <p className="text-xs text-muted-foreground">Informe para quantas unidades do produto final esta receita rende.</p>
               <Input type="number" min={1} step={1} value={form.rendimento} className="w-32"
-                onChange={(e) => onRendimentoChange(Math.max(1, Number(e.target.value)))} />
+                onChange={(e) => setForm((f) => ({ ...f, rendimento: Math.max(1, Number(e.target.value)) }))} />
             </div>
 
             <div className="space-y-2">
