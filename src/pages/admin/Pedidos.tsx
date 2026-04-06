@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import ProducaoTab from "@/pages/admin/Producao";
 
 
 const statusOptions = [
@@ -1670,6 +1671,7 @@ const Pedidos = () => {
         <TabsList>
           <TabsTrigger value="vendas">Vendas</TabsTrigger>
           <TabsTrigger value="compras">Compras</TabsTrigger>
+          <TabsTrigger value="producao">Produção</TabsTrigger>
         </TabsList>
 
         <TabsContent value="vendas" className="space-y-4">
@@ -2826,6 +2828,10 @@ const Pedidos = () => {
             </Table>
           </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="producao" className="space-y-4">
+          <ProducaoTab />
         </TabsContent>
       </Tabs>
 
