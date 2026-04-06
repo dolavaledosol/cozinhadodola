@@ -269,6 +269,13 @@ const Receitas = () => {
             </div>
 
             <div className="space-y-2">
+              <Label>Rendimento (para X unidades)</Label>
+              <p className="text-xs text-muted-foreground">Defina para quantas unidades esta receita rende. Ao alterar, as quantidades dos ingredientes serão recalculadas proporcionalmente.</p>
+              <Input type="number" min={1} step={1} value={form.rendimento} className="w-32"
+                onChange={(e) => onRendimentoChange(Math.max(1, Number(e.target.value)))} />
+            </div>
+
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Ingredientes *</Label>
                 <Button type="button" size="sm" variant="outline" onClick={addItem}>
