@@ -274,23 +274,14 @@ const Producao = () => {
   const valid = produtoId && localEstoqueId && qtdProduzir > 0 && itens.length > 0 && itens.every((i) => i.produto_id && i.quantidade > 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Produção</h1>
-          <p className="text-muted-foreground text-sm">Registre fabricações e acompanhe o histórico</p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-end">
         {canEdit && (
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />Nova Produção</Button>
         )}
       </div>
 
-      <Tabs defaultValue="historico">
-        <TabsList>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
-        </TabsList>
-        <TabsContent value="historico">
-          <div className="border rounded-lg">
+      <div className="border rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
