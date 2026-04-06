@@ -29,10 +29,11 @@ interface ReceitaForm {
   produto_id: string;
   nome: string;
   ativo: boolean;
+  rendimento: number;
   itens: ReceitaItem[];
 }
 
-const emptyForm: ReceitaForm = { produto_id: "", nome: "", ativo: true, itens: [] };
+const emptyForm: ReceitaForm = { produto_id: "", nome: "", ativo: true, rendimento: 1, itens: [] };
 
 const Receitas = () => {
   const qc = useQueryClient();
@@ -46,7 +47,7 @@ const Receitas = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("produto")
-        .select("produto_id, nome, unidade_medida, peso_liquido, fabricante_id")
+        .select("produto_id, nome, unidade_medida, peso_liquido, fabricante_id, aceita_fracionado")
         .eq("ativo", true)
         .order("nome");
       return data || [];
@@ -130,6 +131,7 @@ const Receitas = () => {
       produto_id: r.produto_id,
       nome: r.nome,
       ativo: r.ativo,
+      rendimento: 1,
       itens: (r.receita_item || []).map((i: any) => ({
         receita_item_id: i.receita_item_id,
         produto_id: i.produto_id,
@@ -151,6 +153,25 @@ const Receitas = () => {
       ...f,
       itens: f.itens.map((item, i) => (i === idx ? { ...item, [field]: value } : item)),
     }));
+
+  const onRendimentoChange = (newRendimento: number) => {
+    const oldRendimento = form.rendimento;
+    if (oldRendimento > 0 && newRendimento > 0) {
+      const ratio = newRendimento / oldRendimento;
+      setForm((f) => ({
+        ...f,
+        rendimento: newRendimento,
+        itens: f.itens.map((item) => {
+          const prod = produtoMap[item.produto_id];
+          const fracionado = prod?.aceita_fracionado ?? false;
+          const raw = item.quantidade * ratio;
+          return { ...item, quantidade: fracionado ? Math.round(raw * 1000) / 1000 : Math.max(1, Math.round(raw)) };
+        }),
+      }));
+    } else {
+      setForm((f) => ({ ...f, rendimento: newRendimento }));
+    }
+  };
 
   const valid = form.produto_id && form.nome.trim() && form.itens.length > 0 && form.itens.every((i) => i.produto_id && i.quantidade > 0);
 
@@ -248,6 +269,13 @@ const Receitas = () => {
             </div>
 
             <div className="space-y-2">
+              <Label>Rendimento (para X unidades)</Label>
+              <p className="text-xs text-muted-foreground">Defina para quantas unidades esta receita rende. Ao alterar, as quantidades dos ingredientes serão recalculadas proporcionalmente.</p>
+              <Input type="number" min={1} step={1} value={form.rendimento} className="w-32"
+                onChange={(e) => onRendimentoChange(Math.max(1, Number(e.target.value)))} />
+            </div>
+
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Ingredientes *</Label>
                 <Button type="button" size="sm" variant="outline" onClick={addItem}>
@@ -291,8 +319,22 @@ const Receitas = () => {
                         })}
                     </SelectContent>
                   </Select>
-                  <Input type="number" min={0.1} step={0.1} className="w-24"
-                    value={item.quantidade} onChange={(e) => updateItem(idx, "quantidade", Number(e.target.value))} />
+                  {(() => {
+                    const prod = produtoMap[item.produto_id];
+                    const fracionado = prod?.aceita_fracionado ?? false;
+                    return (
+                      <Input type="number"
+                        min={fracionado ? 0.001 : 1}
+                        step={fracionado ? 0.001 : 1}
+                        className="w-24"
+                        value={item.quantidade}
+                        onChange={(e) => {
+                          const raw = Number(e.target.value);
+                          const val = fracionado ? raw : Math.max(1, Math.round(raw));
+                          updateItem(idx, "quantidade", val);
+                        }} />
+                    );
+                  })()}
                   <span className="text-xs text-muted-foreground w-8">
                     {produtoMap[item.produto_id]?.unidade_medida || ""}
                   </span>
