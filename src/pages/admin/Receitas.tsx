@@ -319,8 +319,22 @@ const Receitas = () => {
                         })}
                     </SelectContent>
                   </Select>
-                  <Input type="number" min={0.1} step={0.1} className="w-24"
-                    value={item.quantidade} onChange={(e) => updateItem(idx, "quantidade", Number(e.target.value))} />
+                  {(() => {
+                    const prod = produtoMap[item.produto_id];
+                    const fracionado = prod?.aceita_fracionado ?? false;
+                    return (
+                      <Input type="number"
+                        min={fracionado ? 0.001 : 1}
+                        step={fracionado ? 0.001 : 1}
+                        className="w-24"
+                        value={item.quantidade}
+                        onChange={(e) => {
+                          const raw = Number(e.target.value);
+                          const val = fracionado ? raw : Math.max(1, Math.round(raw));
+                          updateItem(idx, "quantidade", val);
+                        }} />
+                    );
+                  })()}
                   <span className="text-xs text-muted-foreground w-8">
                     {produtoMap[item.produto_id]?.unidade_medida || ""}
                   </span>
