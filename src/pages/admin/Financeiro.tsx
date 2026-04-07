@@ -313,10 +313,26 @@ const Financeiro = () => {
       // Fetch preferred phone ids from cliente table
       const { data: clientePrefs } = await supabase
         .from("cliente")
-        .select("cliente_id, telefone_preferencial_id")
+        .select("cliente_id, telefone_preferencial_id, clientewhats_id")
         .in("cliente_id", clienteIds);
       if (clientePrefs) for (const c of clientePrefs) prefMap[c.cliente_id] = (c as any).telefone_preferencial_id;
 
+      // 1) Resolve from via clientewhats (priority source)
+      const cwIds = clientePrefs?.map((c: any) => c.clientewhats_id).filter(Boolean) || [];
+      let cwMap: Record<string, { lid: string; pn: string }> = {};
+      if (cwIds.length > 0) {
+        const { data: cwRows } = await supabase
+          .from("clientewhats")
+          .select("clientewhats_id, cliente_id, lid, pn")
+          .in("clientewhats_id", cwIds);
+        if (cwRows) {
+          for (const cw of cwRows) {
+            if (cw.cliente_id) cwMap[cw.cliente_id] = { lid: cw.lid || "", pn: cw.pn || "" };
+          }
+        }
+      }
+
+      // 2) Also fetch cliente_telefone for phone selection dialog & fallback
       const { data: phones } = await supabase
         .from("cliente_telefone")
         .select("cliente_telefone_id, cliente_id, telefone, pn, lid, is_whatsapp, verificado")
@@ -332,8 +348,18 @@ const Financeiro = () => {
             lid: p.lid,
           });
         }
-        for (const [cid, plist] of Object.entries(allPhones)) {
-          // Priority: override > preferred > first with lid > first
+      }
+
+      // 3) Build phoneMap: prefer clientewhats, fallback to cliente_telefone
+      for (const cid of clienteIds) {
+        const cw = cwMap[cid];
+        if (cw && (cw.lid || cw.pn)) {
+          // Use clientewhats data — lid priority, pn fallback
+          const resolvedFrom = cw.lid || cw.pn;
+          phoneMap[cid] = { from: resolvedFrom, pn: cw.pn, lid: cw.lid };
+        } else if (allPhones[cid]) {
+          // Fallback to cliente_telefone
+          const plist = allPhones[cid];
           const overrideId = phoneOverrides?.[cid];
           const prefId = prefMap[cid];
           const chosen = overrideId
@@ -341,7 +367,10 @@ const Financeiro = () => {
             : prefId
               ? plist.find(p => p.cliente_telefone_id === prefId) || plist.find(p => p.lid || p.pn) || plist[0]
               : plist.find(p => p.lid || p.pn) || plist[0];
-          phoneMap[cid] = { from: chosen.telefone || "", pn: chosen.pn || "", lid: chosen.lid || chosen.pn || "" };
+          const ctLid = chosen.lid || "";
+          const ctPn = chosen.pn || "";
+          const resolvedFrom = ctLid || ctPn;
+          phoneMap[cid] = { from: resolvedFrom, pn: ctPn, lid: ctLid };
         }
       }
     }
