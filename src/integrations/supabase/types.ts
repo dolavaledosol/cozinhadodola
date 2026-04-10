@@ -527,6 +527,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dola_fila_envio: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          sent_at: string | null
+          status: string
+          workflow: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload: Json
+          sent_at?: string | null
+          status?: string
+          workflow: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+          workflow?: string
+        }
+        Relationships: []
+      }
       endereco: {
         Row: {
           ativo: boolean
