@@ -2978,6 +2978,12 @@ const Pedidos = () => {
                             setCompraEditItens(updated);
                           }} />
                         </div>
+                        <div className="w-24 space-y-1">
+                          <Label className="text-xs">Subtotal</Label>
+                          <div className="h-8 flex items-center text-xs font-medium text-muted-foreground">
+                            R$ {(item.quantidade * item.preco_custo).toFixed(2)}
+                          </div>
+                        </div>
                         <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCompraEditItens(compraEditItens.filter((_, i) => i !== idx))}>
                           <Trash2 className="h-3 w-3 text-destructive" />
                         </Button>
@@ -2988,8 +2994,10 @@ const Pedidos = () => {
                         <Label className="text-xs">Frete (R$)</Label>
                         <Input type="number" step="0.01" className="h-8 text-xs" value={compraEdit.frete} onChange={(e) => setCompraEdit({ ...compraEdit, frete: e.target.value })} />
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold">Total: R$ {totalItens.toFixed(2)}</p>
+                      <div className="text-right space-y-1">
+                        <p className="text-xs text-muted-foreground">Itens: R$ {totalItens.toFixed(2)}</p>
+                        {frete > 0 && <p className="text-xs text-muted-foreground">Frete: R$ {frete.toFixed(2)}</p>}
+                        <p className="text-sm font-semibold">Total Geral: R$ {(totalItens + frete).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
