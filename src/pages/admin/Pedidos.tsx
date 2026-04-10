@@ -3014,13 +3014,14 @@ const Pedidos = () => {
                   <Label>Itens da Compra</Label>
                   <div className="border rounded-lg overflow-hidden max-h-40 overflow-y-auto">
                     <Table>
-                      <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead className="w-16">Qtd</TableHead><TableHead className="w-24 text-right">Custo</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead className="w-16">Qtd</TableHead><TableHead className="w-24 text-right">Custo Un.</TableHead><TableHead className="w-24 text-right">Subtotal</TableHead></TableRow></TableHeader>
                       <TableBody>
-                        {itens.map((item: any, idx: number) => (
+                        {itens.filter((i: any) => i.produto_id !== "__frete__").map((item: any, idx: number) => (
                           <TableRow key={idx}>
                             <TableCell className="text-sm">{item.nome}</TableCell>
                             <TableCell className="text-sm">{item.quantidade}</TableCell>
                             <TableCell className="text-sm text-right">R$ {Number(item.preco_custo).toFixed(2)}</TableCell>
+                            <TableCell className="text-sm text-right font-medium">R$ {(Number(item.quantidade) * Number(item.preco_custo)).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
