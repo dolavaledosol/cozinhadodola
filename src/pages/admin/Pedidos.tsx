@@ -390,7 +390,21 @@ const Pedidos = () => {
     loadCompras();
   };
 
+  // Build frete map: parent_id -> frete value
+  const freteMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    compras.forEach((c) => {
+      if (c.observacao?.startsWith("frete_ref:")) {
+        const parentId = c.observacao.replace("frete_ref:", "");
+        map[parentId] = Number(c.valor) || 0;
+      }
+    });
+    return map;
+  }, [compras]);
+
   const filteredCompras = compras.filter((c) => {
+    // Hide frete records from the list
+    if (c.observacao?.startsWith("frete_ref:")) return false;
     const t = searchCompras.toLowerCase();
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
     const matchStatus = statusCompraFilter === "todos" || (c.status_compra || "pendente") === statusCompraFilter;
