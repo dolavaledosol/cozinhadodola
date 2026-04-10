@@ -347,9 +347,7 @@ const Pedidos = () => {
     const valorFinal = compraEditItens.length > 0 ? totalItens : Number(compraEdit.valor);
     const freteVal = Number(compraEdit.frete) || 0;
     const itensToSave = [...compraEditItens.map(i => ({ ...i }))];
-    if (freteVal > 0) {
-      itensToSave.push({ produto_id: "__frete__", nome: "Frete", quantidade: 1, preco_custo: freteVal, aceita_fracionado: false } as any);
-    }
+    // Save main record (items only, without frete)
     const { error } = await supabase.from("contas_pagar").update({
       descricao: compraEdit.descricao, valor: valorFinal,
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
@@ -358,8 +356,35 @@ const Pedidos = () => {
       data_pagamento: compraEdit.pago ? (new Date().toISOString().slice(0, 10)) : null,
       compra_itens: itensToSave.length > 0 ? JSON.parse(JSON.stringify(itensToSave)) : null,
     }).eq("contas_pagar_id", compraEdit.contas_pagar_id);
+    if (error) { setCompraEditLoading(false); toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    // Handle frete as separate contas_pagar record
+    const freteDesc = `Frete ${compraEdit.descricao}`;
+    // Check if a frete record already exists for this compra
+    const { data: existingFrete } = await supabase.from("contas_pagar")
+      .select("contas_pagar_id")
+      .eq("observacao", `frete_ref:${compraEdit.contas_pagar_id}`)
+      .maybeSingle();
+    if (freteVal > 0) {
+      if (existingFrete) {
+        await supabase.from("contas_pagar").update({
+          descricao: freteDesc, valor: freteVal,
+          data_vencimento: compraEdit.data_vencimento,
+          fornecedor_id: compraEdit.fornecedor_id || null,
+        }).eq("contas_pagar_id", existingFrete.contas_pagar_id);
+      } else {
+        await supabase.from("contas_pagar").insert({
+          descricao: freteDesc, valor: freteVal,
+          data_vencimento: compraEdit.data_vencimento,
+          fornecedor_id: compraEdit.fornecedor_id || null,
+          status_compra: compraEdit.status_compra || "pendente",
+          observacao: `frete_ref:${compraEdit.contas_pagar_id}`,
+        });
+      }
+    } else if (existingFrete) {
+      // Remove frete record if value is 0
+      await supabase.from("contas_pagar").delete().eq("contas_pagar_id", existingFrete.contas_pagar_id);
+    }
     setCompraEditLoading(false);
-    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Registro atualizado" });
     setCompraEditOpen(false);
     loadCompras();
