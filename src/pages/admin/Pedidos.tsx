@@ -390,7 +390,21 @@ const Pedidos = () => {
     loadCompras();
   };
 
+  // Build frete map: parent_id -> frete value
+  const freteMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    compras.forEach((c) => {
+      if (c.observacao?.startsWith("frete_ref:")) {
+        const parentId = c.observacao.replace("frete_ref:", "");
+        map[parentId] = Number(c.valor) || 0;
+      }
+    });
+    return map;
+  }, [compras]);
+
   const filteredCompras = compras.filter((c) => {
+    // Hide frete records from the list
+    if (c.observacao?.startsWith("frete_ref:")) return false;
     const t = searchCompras.toLowerCase();
     const matchSearch = !t || c.descricao.toLowerCase().includes(t) || c.fornecedor?.nome?.toLowerCase().includes(t);
     const matchStatus = statusCompraFilter === "todos" || (c.status_compra || "pendente") === statusCompraFilter;
@@ -2798,7 +2812,16 @@ const Pedidos = () => {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground truncate mr-2">{c.fornecedor?.nome || "—"}</span>
-                      <span className="font-semibold shrink-0">{fmtMoney(c.valor)}</span>
+                      <div className="text-right shrink-0">
+                        {freteMap[c.contas_pagar_id] > 0 ? (
+                          <>
+                            <span className="text-xs text-muted-foreground">Forn: {fmtMoney(c.valor)} + Frete: {fmtMoney(freteMap[c.contas_pagar_id])}</span>
+                            <span className="font-semibold ml-2">{fmtMoney(c.valor + freteMap[c.contas_pagar_id])}</span>
+                          </>
+                        ) : (
+                          <span className="font-semibold">{fmtMoney(c.valor)}</span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>NF {nfNum}{c.data_nf ? ` — ${fmtDate(c.data_nf)}` : ""}</span>
@@ -2818,17 +2841,21 @@ const Pedidos = () => {
                   <TableHead>NF</TableHead>
                   <TableHead>Data NF</TableHead>
                   <TableHead className="hidden sm:table-cell">Fornecedor</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="text-right">Fornecedor</TableHead>
+                  <TableHead className="text-right">Frete</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCompras.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum pedido de compra encontrado</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum pedido de compra encontrado</TableCell></TableRow>
                 ) : filteredCompras.map((c) => {
                   const nfMatch = c.descricao.match(/NF\s+([^\s-]+)/i);
                   const nfNum = nfMatch ? nfMatch[1] : "—";
                   const st = c.status_compra || "pendente";
+                  const freteVal = freteMap[c.contas_pagar_id] || 0;
+                  const totalGeral = c.valor + freteVal;
                   return (
                   <TableRow key={c.contas_pagar_id}>
                     <TableCell>
@@ -2841,6 +2868,8 @@ const Pedidos = () => {
                     <TableCell>{c.data_nf ? fmtDate(c.data_nf) : "—"}</TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground">{c.fornecedor?.nome || "—"}</TableCell>
                     <TableCell className="text-right">{fmtMoney(c.valor)}</TableCell>
+                    <TableCell className="text-right">{freteVal > 0 ? fmtMoney(freteVal) : "—"}</TableCell>
+                    <TableCell className="text-right font-semibold">{fmtMoney(totalGeral)}</TableCell>
                     <TableCell>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${statusCompraColors[st] || "bg-muted text-muted-foreground"}`}>
                         {statusCompraLabels[st] || st}
