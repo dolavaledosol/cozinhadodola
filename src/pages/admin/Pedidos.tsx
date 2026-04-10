@@ -347,9 +347,7 @@ const Pedidos = () => {
     const valorFinal = compraEditItens.length > 0 ? totalItens : Number(compraEdit.valor);
     const freteVal = Number(compraEdit.frete) || 0;
     const itensToSave = [...compraEditItens.map(i => ({ ...i }))];
-    if (freteVal > 0) {
-      itensToSave.push({ produto_id: "__frete__", nome: "Frete", quantidade: 1, preco_custo: freteVal, aceita_fracionado: false } as any);
-    }
+    // Save main record (items only, without frete)
     const { error } = await supabase.from("contas_pagar").update({
       descricao: compraEdit.descricao, valor: valorFinal,
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
@@ -358,8 +356,35 @@ const Pedidos = () => {
       data_pagamento: compraEdit.pago ? (new Date().toISOString().slice(0, 10)) : null,
       compra_itens: itensToSave.length > 0 ? JSON.parse(JSON.stringify(itensToSave)) : null,
     }).eq("contas_pagar_id", compraEdit.contas_pagar_id);
+    if (error) { setCompraEditLoading(false); toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    // Handle frete as separate contas_pagar record
+    const freteDesc = `Frete ${compraEdit.descricao}`;
+    // Check if a frete record already exists for this compra
+    const { data: existingFrete } = await supabase.from("contas_pagar")
+      .select("contas_pagar_id")
+      .eq("observacao", `frete_ref:${compraEdit.contas_pagar_id}`)
+      .maybeSingle();
+    if (freteVal > 0) {
+      if (existingFrete) {
+        await supabase.from("contas_pagar").update({
+          descricao: freteDesc, valor: freteVal,
+          data_vencimento: compraEdit.data_vencimento,
+          fornecedor_id: compraEdit.fornecedor_id || null,
+        }).eq("contas_pagar_id", existingFrete.contas_pagar_id);
+      } else {
+        await supabase.from("contas_pagar").insert({
+          descricao: freteDesc, valor: freteVal,
+          data_vencimento: compraEdit.data_vencimento,
+          fornecedor_id: compraEdit.fornecedor_id || null,
+          status_compra: compraEdit.status_compra || "pendente",
+          observacao: `frete_ref:${compraEdit.contas_pagar_id}`,
+        });
+      }
+    } else if (existingFrete) {
+      // Remove frete record if value is 0
+      await supabase.from("contas_pagar").delete().eq("contas_pagar_id", existingFrete.contas_pagar_id);
+    }
     setCompraEditLoading(false);
-    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Registro atualizado" });
     setCompraEditOpen(false);
     loadCompras();
@@ -2953,6 +2978,12 @@ const Pedidos = () => {
                             setCompraEditItens(updated);
                           }} />
                         </div>
+                        <div className="w-24 space-y-1">
+                          <Label className="text-xs">Subtotal</Label>
+                          <div className="h-8 flex items-center text-xs font-medium text-muted-foreground">
+                            R$ {(item.quantidade * item.preco_custo).toFixed(2)}
+                          </div>
+                        </div>
                         <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCompraEditItens(compraEditItens.filter((_, i) => i !== idx))}>
                           <Trash2 className="h-3 w-3 text-destructive" />
                         </Button>
@@ -2963,8 +2994,10 @@ const Pedidos = () => {
                         <Label className="text-xs">Frete (R$)</Label>
                         <Input type="number" step="0.01" className="h-8 text-xs" value={compraEdit.frete} onChange={(e) => setCompraEdit({ ...compraEdit, frete: e.target.value })} />
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold">Total: R$ {totalItens.toFixed(2)}</p>
+                      <div className="text-right space-y-1">
+                        <p className="text-xs text-muted-foreground">Itens: R$ {totalItens.toFixed(2)}</p>
+                        {frete > 0 && <p className="text-xs text-muted-foreground">Frete: R$ {frete.toFixed(2)}</p>}
+                        <p className="text-sm font-semibold">Total Geral: R$ {(totalItens + frete).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
@@ -2981,13 +3014,14 @@ const Pedidos = () => {
                   <Label>Itens da Compra</Label>
                   <div className="border rounded-lg overflow-hidden max-h-40 overflow-y-auto">
                     <Table>
-                      <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead className="w-16">Qtd</TableHead><TableHead className="w-24 text-right">Custo</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead className="w-16">Qtd</TableHead><TableHead className="w-24 text-right">Custo Un.</TableHead><TableHead className="w-24 text-right">Subtotal</TableHead></TableRow></TableHeader>
                       <TableBody>
-                        {itens.map((item: any, idx: number) => (
+                        {itens.filter((i: any) => i.produto_id !== "__frete__").map((item: any, idx: number) => (
                           <TableRow key={idx}>
                             <TableCell className="text-sm">{item.nome}</TableCell>
                             <TableCell className="text-sm">{item.quantidade}</TableCell>
                             <TableCell className="text-sm text-right">R$ {Number(item.preco_custo).toFixed(2)}</TableCell>
+                            <TableCell className="text-sm text-right font-medium">R$ {(Number(item.quantidade) * Number(item.preco_custo)).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
