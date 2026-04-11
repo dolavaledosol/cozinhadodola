@@ -222,8 +222,10 @@ const Produtos = () => {
            <TableHeader>
              <TableRow>
                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("produto_id")}>Cód <SortIcon col="produto_id" /></TableHead>
-               <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
-               <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => handleSort("familia")}>Família <SortIcon col="familia" /></TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
+                <TableHead className="hidden md:table-cell">Peso</TableHead>
+                <TableHead className="hidden md:table-cell">Un.</TableHead>
+                <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => handleSort("familia")}>Família <SortIcon col="familia" /></TableHead>
                <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => handleSort("fabricante")}>Fabricante <SortIcon col="fabricante" /></TableHead>
                <TableHead className="hidden sm:table-cell cursor-pointer select-none" onClick={() => handleSort("preco")}>Preço <SortIcon col="preco" /></TableHead>
                <TableHead className="hidden sm:table-cell cursor-pointer select-none" onClick={() => handleSort("ativo")}>Status <SortIcon col="ativo" /></TableHead>
@@ -232,7 +234,7 @@ const Produtos = () => {
            </TableHeader>
            <TableBody>
              {filtered.length === 0 ? (
-               <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum produto encontrado</TableCell></TableRow>
+               <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum produto encontrado</TableCell></TableRow>
              ) : filtered.map((p) => (
                <TableRow key={p.produto_id}>
                  <TableCell>
@@ -243,10 +245,14 @@ const Produtos = () => {
                      {p.produto_id.substring(0, 8)}
                    </button>
                  </TableCell>
-                 <TableCell className="font-medium">{p.nome}</TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
-                    {p.familia ? (p.familia.pai ? `${p.familia.pai.nome} > ${p.familia.nome}` : p.familia.nome) : "—"}
+                  <TableCell className="font-medium">{p.nome}</TableCell>
+                  <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
+                    {p.peso_liquido != null ? `${p.peso_liquido}` : "—"}
                   </TableCell>
+                  <TableCell className="hidden md:table-cell text-muted-foreground text-xs">{p.unidade_medida}</TableCell>
+                   <TableCell className="hidden md:table-cell text-muted-foreground">
+                     {p.familia ? (p.familia.pai ? `${p.familia.pai.nome} > ${p.familia.nome}` : p.familia.nome) : "—"}
+                   </TableCell>
                  <TableCell className="hidden md:table-cell text-muted-foreground">{p.fabricante?.nome || "—"}</TableCell>
                  <TableCell className="hidden sm:table-cell font-medium">R$ {p.preco?.toFixed(2) || "0.00"}</TableCell>
                  <TableCell className="hidden sm:table-cell">

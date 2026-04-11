@@ -167,7 +167,7 @@ const Estoque = () => {
   const exportExcel = async () => {
     const { data: allProdutos } = await supabase
       .from("produto")
-      .select("produto_id, nome, fabricante(nome), familia(nome)")
+      .select("produto_id, nome, peso_liquido, unidade_medida, fabricante(nome), familia(nome)")
       .eq("ativo", true)
       .order("nome");
     if (!allProdutos) return;
@@ -177,6 +177,8 @@ const Estoque = () => {
       const row: any = {
         produto_id: p.produto_id,
         produto: p.nome,
+        peso_liquido: p.peso_liquido ?? "",
+        unidade_medida: p.unidade_medida || "",
         fabricante: p.fabricante?.nome || "",
         familia: p.familia?.nome || "",
       };
