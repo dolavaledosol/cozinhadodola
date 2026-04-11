@@ -1602,6 +1602,7 @@ export type Database = {
           estoques: Json | null
           fabricante: string | null
           familia: string | null
+          familia_id: string | null
           imagem_principal: string | null
           nome: string | null
           peso_liquido: number | null
@@ -1609,7 +1610,15 @@ export type Database = {
           produto_id: string | null
           unidade_medida: Database["public"]["Enums"]["unidade_medida"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produto_familia_id_fkey"
+            columns: ["familia_id"]
+            isOneToOne: false
+            referencedRelation: "familia"
+            referencedColumns: ["familia_id"]
+          },
+        ]
       }
     }
     Functions: {
