@@ -1598,6 +1598,7 @@ export type Database = {
       vw_produtos_catalogo: {
         Row: {
           descricao: string | null
+          destacar: boolean | null
           estoques: Json | null
           fabricante: string | null
           familia: string | null
