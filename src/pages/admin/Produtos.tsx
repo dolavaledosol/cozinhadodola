@@ -92,7 +92,7 @@ const Produtos = () => {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return result;
-  }, [produtos, search, filterAtivo, filterFamilia, filterFabricante, sortKey, sortDir]);
+  }, [produtos, search, filterAtivo, filterFamilia, filterFabricante, filterDestacado, sortKey, sortDir]);
 
   const familiasComLabel = useMemo(() => {
     return familias.map((f) => {
