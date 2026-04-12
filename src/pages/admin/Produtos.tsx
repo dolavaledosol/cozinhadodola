@@ -47,6 +47,7 @@ const Produtos = () => {
   const [filterAtivo, setFilterAtivo] = useState<string>("true");
   const [filterFamilia, setFilterFamilia] = useState<string>("all");
   const [filterFabricante, setFilterFabricante] = useState<string>("all");
+  const [filterDestacado, setFilterDestacado] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
