@@ -217,6 +217,14 @@ const Produtos = () => {
             {fabricantes.map((f) => <SelectItem key={f.fabricante_id} value={f.fabricante_id}>{f.nome}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={filterDestacado} onValueChange={setFilterDestacado}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos dest.</SelectItem>
+            <SelectItem value="true">Destacados</SelectItem>
+            <SelectItem value="false">Não destacados</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="border rounded-lg overflow-hidden">
