@@ -47,6 +47,7 @@ const Produtos = () => {
   const [filterAtivo, setFilterAtivo] = useState<string>("true");
   const [filterFamilia, setFilterFamilia] = useState<string>("all");
   const [filterFabricante, setFilterFabricante] = useState<string>("all");
+  const [filterDestacado, setFilterDestacado] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -74,7 +75,8 @@ const Produtos = () => {
       const matchAtivo = filterAtivo === "all" || (filterAtivo === "true" ? p.ativo : !p.ativo);
       const matchFamilia = filterFamilia === "all" || p.familia_id === filterFamilia;
       const matchFabricante = filterFabricante === "all" || p.fabricante_id === filterFabricante;
-      return matchSearch && matchAtivo && matchFamilia && matchFabricante;
+      const matchDestacado = filterDestacado === "all" || (filterDestacado === "true" ? p.destacar : !p.destacar);
+      return matchSearch && matchAtivo && matchFamilia && matchFabricante && matchDestacado;
     });
     result.sort((a, b) => {
       let cmp = 0;
@@ -90,7 +92,7 @@ const Produtos = () => {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return result;
-  }, [produtos, search, filterAtivo, filterFamilia, filterFabricante, sortKey, sortDir]);
+  }, [produtos, search, filterAtivo, filterFamilia, filterFabricante, filterDestacado, sortKey, sortDir]);
 
   const familiasComLabel = useMemo(() => {
     return familias.map((f) => {
@@ -213,6 +215,14 @@ const Produtos = () => {
           <SelectContent>
             <SelectItem value="all">Todos fabricantes</SelectItem>
             {fabricantes.map((f) => <SelectItem key={f.fabricante_id} value={f.fabricante_id}>{f.nome}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterDestacado} onValueChange={setFilterDestacado}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos dest.</SelectItem>
+            <SelectItem value="true">Destacados</SelectItem>
+            <SelectItem value="false">Não destacados</SelectItem>
           </SelectContent>
         </Select>
       </div>
