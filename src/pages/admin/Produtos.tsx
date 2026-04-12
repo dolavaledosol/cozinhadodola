@@ -75,7 +75,8 @@ const Produtos = () => {
       const matchAtivo = filterAtivo === "all" || (filterAtivo === "true" ? p.ativo : !p.ativo);
       const matchFamilia = filterFamilia === "all" || p.familia_id === filterFamilia;
       const matchFabricante = filterFabricante === "all" || p.fabricante_id === filterFabricante;
-      return matchSearch && matchAtivo && matchFamilia && matchFabricante;
+      const matchDestacado = filterDestacado === "all" || (filterDestacado === "true" ? p.destacar : !p.destacar);
+      return matchSearch && matchAtivo && matchFamilia && matchFabricante && matchDestacado;
     });
     result.sort((a, b) => {
       let cmp = 0;
