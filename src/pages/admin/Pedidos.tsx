@@ -72,6 +72,7 @@ interface Pedido {
   origem: string;
   observacao: string | null;
   local_estoque_id: string | null;
+  endereco_id: string | null;
   vendedor_id: string | null;
   cliente: { nome: string } | null;
   local_estoque: { nome: string } | null;
@@ -264,7 +265,7 @@ const Pedidos = () => {
   const load = async () => {
     const { data } = await supabase
       .from("pedido")
-      .select("pedido_id, cliente_id, data, total, frete, status, origem, observacao, local_estoque_id, vendedor_id, cliente!pedido_cliente_id_fkey(nome), local_estoque(nome), vendedor:cliente!pedido_vendedor_id_fkey(nome)")
+      .select("pedido_id, cliente_id, data, total, frete, status, origem, observacao, local_estoque_id, endereco_id, vendedor_id, cliente!pedido_cliente_id_fkey(nome), local_estoque(nome), vendedor:cliente!pedido_vendedor_id_fkey(nome)")
       .order("data", { ascending: false });
     if (data) setPedidos(data as any);
   };
@@ -736,6 +737,7 @@ const Pedidos = () => {
     setEditFrete(Number(p.frete).toFixed(2));
     setEditLocalEstoqueId(p.local_estoque_id);
     setEditTipoEntrega(p.local_estoque_id ? "retirada" : "entrega");
+    setEditEnderecoId(p.endereco_id || "");
     setPagFormaId("");
     setPagBancoId("");
     setPagData(new Date());
@@ -768,7 +770,6 @@ const Pedidos = () => {
     setItems((itemsRes.data as any) || []);
     setHistorico((histRes.data as any) || []);
     setEditEnderecos([]);
-    setEditEnderecoId("");
     setEditShowNewEndereco(false);
     setEditNewEndereco({ cep: "", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", complemento: "" });
     // Load client addresses for entrega option
@@ -995,6 +996,8 @@ const Pedidos = () => {
 
     setLoading(true);
 
+    let resolvedEnderecoId = editEnderecoId;
+
     // Create new address if needed during separação + entrega
     if (selectedPedido.status === "separacao" && editTipoEntrega === "entrega" && editShowNewEndereco && editNewEndereco.logradouro) {
       const { data: endData, error: endError } = await supabase
@@ -1020,6 +1023,7 @@ const Pedidos = () => {
         cliente_id: selectedPedido.cliente_id,
         endereco_id: endData.endereco_id,
       });
+      resolvedEnderecoId = endData.endereco_id;
       setEditEnderecoId(endData.endereco_id);
       setEditEnderecos(prev => [...prev, { endereco_id: endData.endereco_id, logradouro: editNewEndereco.logradouro, numero: editNewEndereco.numero || null, bairro: editNewEndereco.bairro || null, cidade: editNewEndereco.cidade, estado: editNewEndereco.estado, cep: editNewEndereco.cep || null }]);
       setEditShowNewEndereco(false);
@@ -1032,12 +1036,16 @@ const Pedidos = () => {
     if (editStatus !== selectedPedido.status) {
       updateData.status = editStatus;
     }
-    // Update local_estoque_id if changed during separacao
+    // Update local_estoque_id and endereco_id if changed during separacao
     if (selectedPedido.status === "separacao") {
       if (editTipoEntrega === "entrega") {
         updateData.local_estoque_id = null;
-      } else if (editLocalEstoqueId !== selectedPedido.local_estoque_id) {
-        updateData.local_estoque_id = editLocalEstoqueId || null;
+        updateData.endereco_id = resolvedEnderecoId || null;
+      } else {
+        if (editLocalEstoqueId !== selectedPedido.local_estoque_id) {
+          updateData.local_estoque_id = editLocalEstoqueId || null;
+        }
+        updateData.endereco_id = null;
       }
     }
 
@@ -1400,6 +1408,7 @@ const Pedidos = () => {
         origem: "admin" as any,
         vendedor_id: vendedorId,
         local_estoque_id: newOrderTipoEntrega === "retirada" ? newOrderLocalEstoqueId : null,
+        endereco_id: newOrderTipoEntrega === "entrega" ? (newOrderEnderecoId || null) : null,
         observacao: newOrderObs || null,
       })
       .select("pedido_id")
