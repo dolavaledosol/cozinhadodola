@@ -770,7 +770,6 @@ const Pedidos = () => {
     setItems((itemsRes.data as any) || []);
     setHistorico((histRes.data as any) || []);
     setEditEnderecos([]);
-    setEditEnderecoId("");
     setEditShowNewEndereco(false);
     setEditNewEndereco({ cep: "", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", complemento: "" });
     // Load client addresses for entrega option
