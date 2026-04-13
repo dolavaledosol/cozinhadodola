@@ -1016,6 +1016,7 @@ export type Database = {
           cliente_id: string
           created_at: string
           data: string
+          endereco_id: string | null
           frete: number
           local_estoque_id: string | null
           observacao: string | null
@@ -1030,6 +1031,7 @@ export type Database = {
           cliente_id: string
           created_at?: string
           data: string
+          endereco_id?: string | null
           frete?: number
           local_estoque_id?: string | null
           observacao?: string | null
@@ -1044,6 +1046,7 @@ export type Database = {
           cliente_id?: string
           created_at?: string
           data?: string
+          endereco_id?: string | null
           frete?: number
           local_estoque_id?: string | null
           observacao?: string | null
@@ -1061,6 +1064,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cliente"
             referencedColumns: ["cliente_id"]
+          },
+          {
+            foreignKeyName: "pedido_endereco_id_fkey"
+            columns: ["endereco_id"]
+            isOneToOne: false
+            referencedRelation: "endereco"
+            referencedColumns: ["endereco_id"]
           },
           {
             foreignKeyName: "pedido_local_estoque_id_fkey"

@@ -1,0 +1,1 @@
+ALTER TABLE public.pedido ADD COLUMN endereco_id uuid REFERENCES public.endereco(endereco_id) ON DELETE SET NULL;
