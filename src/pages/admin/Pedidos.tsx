@@ -77,6 +77,7 @@ interface Pedido {
   cliente: { nome: string } | null;
   local_estoque: { nome: string } | null;
   vendedor: { nome: string } | null;
+  endereco: { logradouro: string; numero: string | null; bairro: string | null; cidade: string; estado: string; cep: string | null } | null;
 }
 
 interface PedidoItem {
@@ -265,7 +266,7 @@ const Pedidos = () => {
   const load = async () => {
     const { data } = await supabase
       .from("pedido")
-      .select("pedido_id, cliente_id, data, total, frete, status, origem, observacao, local_estoque_id, endereco_id, vendedor_id, cliente!pedido_cliente_id_fkey(nome), local_estoque(nome), vendedor:cliente!pedido_vendedor_id_fkey(nome)")
+      .select("pedido_id, cliente_id, data, total, frete, status, origem, observacao, local_estoque_id, endereco_id, vendedor_id, cliente!pedido_cliente_id_fkey(nome), local_estoque(nome), vendedor:cliente!pedido_vendedor_id_fkey(nome), endereco(logradouro, numero, bairro, cidade, estado, cep)")
       .order("data", { ascending: false });
     if (data) setPedidos(data as any);
   };
@@ -1938,6 +1939,17 @@ const Pedidos = () => {
                     })()
                   )}
                 </div>
+                {/* Endereço de entrega */}
+                {!selectedPedido.local_estoque_id && selectedPedido.endereco && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Endereço:</span>{" "}
+                    {selectedPedido.endereco.logradouro}
+                    {selectedPedido.endereco.numero && `, ${selectedPedido.endereco.numero}`}
+                    {selectedPedido.endereco.bairro && ` — ${selectedPedido.endereco.bairro}`}
+                    {`, ${selectedPedido.endereco.cidade}/${selectedPedido.endereco.estado}`}
+                    {selectedPedido.endereco.cep && ` (${selectedPedido.endereco.cep})`}
+                  </div>
+                )}
               </div>
               {selectedPedido.observacao && <p className="text-sm text-muted-foreground">Obs: {selectedPedido.observacao}</p>}
 
