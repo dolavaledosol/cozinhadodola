@@ -1950,7 +1950,6 @@ const Pedidos = () => {
                     {selectedPedido.endereco.cep && ` (${selectedPedido.endereco.cep})`}
                   </div>
                 )}
-                </div>
               </div>
               {selectedPedido.observacao && <p className="text-sm text-muted-foreground">Obs: {selectedPedido.observacao}</p>}
 
