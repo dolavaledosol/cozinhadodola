@@ -777,6 +777,18 @@ const Pedidos = () => {
     setEditEnderecos([]);
     setEditShowNewEndereco(false);
     setEditNewEndereco({ cep: "", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", complemento: "" });
+    setEditItemSearch("");
+    setDeletedItemIds([]);
+    setAddedItems([]);
+    // Load products for adding items during separação
+    if (p.status === "separacao") {
+      const { data: prodsData } = await supabase
+        .from("produto")
+        .select("produto_id, nome, preco, peso_liquido, unidade_medida, aceita_fracionado, quantidade_default")
+        .eq("ativo", true)
+        .order("nome");
+      if (prodsData) setEditItemProdutos(prodsData as any);
+    }
     // Load client addresses for entrega option
     if (p.cliente_id) {
       const { data: ceData } = await supabase
