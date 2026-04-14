@@ -2243,7 +2243,7 @@ const Pedidos = () => {
               {selectedPedido.status === "separacao" && (
                 <div className="flex items-center justify-between text-sm font-medium border-t pt-2">
                   <span>Total dos itens:</span>
-                  <span>R$ {items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0).toFixed(2)}</span>
+                  <span>R$ {(items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0) + addedItems.reduce((s, a) => s + a.preco_unitario * a.quantidade, 0)).toFixed(2)}</span>
                 </div>
               )}
 
