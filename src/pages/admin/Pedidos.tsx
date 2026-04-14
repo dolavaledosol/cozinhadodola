@@ -1974,6 +1974,7 @@ const Pedidos = () => {
                   <TableHeader><TableRow>
                     {splitMode && <TableHead className="w-8"></TableHead>}
                     <TableHead>Produto</TableHead><TableHead>Qtd</TableHead><TableHead>Preço</TableHead><TableHead>Subtotal</TableHead>
+                    {selectedPedido.status === "separacao" && !splitMode && <TableHead className="w-8"></TableHead>}
                   </TableRow></TableHeader>
                   <TableBody>
                     {items.map((i) => {
