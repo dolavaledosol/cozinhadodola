@@ -2039,12 +2039,119 @@ const Pedidos = () => {
                           </TableCell>
                           <TableCell>R$ {Number(i.preco_unitario).toFixed(2)}</TableCell>
                           <TableCell className="text-sm font-medium">R$ {(Number(i.preco_unitario) * Number(i.quantidade)).toFixed(2)}</TableCell>
+                          {selectedPedido.status === "separacao" && !splitMode && (
+                            <TableCell>
+                              <Button
+                                type="button" size="icon" variant="ghost"
+                                className="h-6 w-6 text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  if (items.length + addedItems.length <= 1) {
+                                    toast({ title: "O pedido deve ter ao menos 1 item", variant: "destructive" });
+                                    return;
+                                  }
+                                  setDeletedItemIds(prev => [...prev, i.pedido_item_id]);
+                                  setItems(prev => prev.filter(it => it.pedido_item_id !== i.pedido_item_id));
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                    {/* Added items (not yet saved) */}
+                    {selectedPedido.status === "separacao" && !splitMode && addedItems.map((ai, idx) => {
+                      const step = ai.aceita_fracionado ? 0.1 : 1;
+                      return (
+                        <TableRow key={`new-${idx}`} className="bg-green-50/50">
+                          <TableCell className="text-sm">
+                            {ai.nome}
+                            {(() => {
+                              const prod = editItemProdutos.find(p => p.produto_id === ai.produto_id);
+                              if (!prod) return null;
+                              return <span className="text-xs text-muted-foreground ml-1">({prod.peso_liquido ? `${prod.peso_liquido}${prod.unidade_medida}` : prod.unidade_medida})</span>;
+                            })()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button type="button" size="icon" variant="outline" className="h-6 w-6"
+                                onClick={() => {
+                                  const newQty = Math.round((ai.quantidade - step) * 10) / 10;
+                                  if (newQty > 0) setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: newQty } : a));
+                                }}
+                              ><Minus className="h-3 w-3" /></Button>
+                              <Input type="number" step={step} min={step} value={ai.quantidade}
+                                onChange={e => { const v = parseFloat(e.target.value); if (v > 0) setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: v } : a)); }}
+                                className="h-6 w-16 text-center text-xs px-1"
+                              />
+                              <Button type="button" size="icon" variant="outline" className="h-6 w-6"
+                                onClick={() => { const newQty = Math.round((ai.quantidade + step) * 10) / 10; setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: newQty } : a)); }}
+                              ><Plus className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
+                          <TableCell>R$ {Number(ai.preco_unitario).toFixed(2)}</TableCell>
+                          <TableCell className="text-sm font-medium">R$ {(ai.preco_unitario * ai.quantidade).toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Button type="button" size="icon" variant="ghost" className="h-6 w-6 text-destructive hover:text-destructive"
+                              onClick={() => setAddedItems(prev => prev.filter((_, i2) => i2 !== idx))}
+                            ><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Add item to order - separação only */}
+              {selectedPedido.status === "separacao" && !splitMode && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5"><PackagePlus className="h-3.5 w-3.5" /> Adicionar Item</Label>
+                  <Input
+                    placeholder="Buscar produto por nome..."
+                    value={editItemSearch}
+                    onChange={e => setEditItemSearch(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  {editItemSearch.length >= 2 && (
+                    <div className="border rounded-md max-h-40 overflow-y-auto">
+                      {editItemProdutos
+                        .filter(p => {
+                          const alreadyIn = items.some(i => i.produto_id === p.produto_id) || addedItems.some(a => a.produto_id === p.produto_id);
+                          return !alreadyIn && p.nome.toLowerCase().includes(editItemSearch.toLowerCase());
+                        })
+                        .slice(0, 10)
+                        .map(p => (
+                          <button
+                            key={p.produto_id}
+                            type="button"
+                            className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted/50 flex justify-between items-center"
+                            onClick={() => {
+                              setAddedItems(prev => [...prev, {
+                                produto_id: p.produto_id,
+                                nome: p.nome,
+                                preco_unitario: p.preco,
+                                quantidade: p.quantidade_default,
+                                aceita_fracionado: p.aceita_fracionado,
+                              }]);
+                              setEditItemSearch("");
+                            }}
+                          >
+                            <span>
+                              {p.nome}
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({p.peso_liquido ? `${p.peso_liquido}${p.unidade_medida}` : p.unidade_medida})
+                              </span>
+                            </span>
+                            <span className="text-xs text-muted-foreground">R$ {p.preco.toFixed(2)}</span>
+                          </button>
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Split order controls for separação */}
               {selectedPedido.status === "separacao" && items.length > 1 && (
