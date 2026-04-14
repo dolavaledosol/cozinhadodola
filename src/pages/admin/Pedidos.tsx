@@ -1046,7 +1046,8 @@ const Pedidos = () => {
       setEditShowNewEndereco(false);
     }
 
-    const itemsTotal = items.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0);
+    const itemsTotal = items.reduce((sum, i) => sum + Number(i.preco_unitario) * Number(i.quantidade), 0)
+      + addedItems.reduce((sum, a) => sum + a.preco_unitario * a.quantidade, 0);
     let newTotal = itemsTotal + freteNum;
 
     const updateData: any = isAfterPago ? {} : { frete: freteNum, total: newTotal };
