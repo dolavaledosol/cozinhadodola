@@ -1071,8 +1071,24 @@ const Pedidos = () => {
     if (!error) {
       // Persist quantity changes during separação
       if (selectedPedido.status === "separacao") {
+        // Update existing item quantities
         for (const item of items) {
           await supabase.from("pedido_item").update({ quantidade: Number(item.quantidade) }).eq("pedido_item_id", item.pedido_item_id);
+        }
+        // Delete removed items
+        for (const delId of deletedItemIds) {
+          await supabase.from("pedido_item").delete().eq("pedido_item_id", delId);
+        }
+        // Insert newly added items
+        if (addedItems.length > 0) {
+          await supabase.from("pedido_item").insert(
+            addedItems.map(a => ({
+              pedido_id: selectedPedido.pedido_id,
+              produto_id: a.produto_id,
+              quantidade: a.quantidade,
+              preco_unitario: a.preco_unitario,
+            }))
+          );
         }
       }
 
