@@ -2257,7 +2257,7 @@ const Pedidos = () => {
                       <Input type="number" step="0.01" min="0" value={editFrete} onChange={(e) => setEditFrete(e.target.value)} placeholder="0.00" />
                       {freteNum > 0 && (
                         <p className="text-xs text-muted-foreground">
-                          Novo total: R$ {(items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0) + freteNum).toFixed(2)}
+                          Novo total: R$ {(items.reduce((s, i) => s + Number(i.preco_unitario) * Number(i.quantidade), 0) + addedItems.reduce((s, a) => s + a.preco_unitario * a.quantidade, 0) + freteNum).toFixed(2)}
                         </p>
                       )}
                     </>
