@@ -18,8 +18,9 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+    workbox: {
+      maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
           {
             // Cache Supabase Storage images (product images)
