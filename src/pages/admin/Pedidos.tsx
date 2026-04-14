@@ -228,6 +228,10 @@ const Pedidos = () => {
   const [editEnderecoId, setEditEnderecoId] = useState("");
   const [editShowNewEndereco, setEditShowNewEndereco] = useState(false);
   const [editNewEndereco, setEditNewEndereco] = useState({ cep: "", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", complemento: "" });
+  const [editItemSearch, setEditItemSearch] = useState("");
+  const [editItemProdutos, setEditItemProdutos] = useState<{ produto_id: string; nome: string; preco: number; peso_liquido: number | null; unidade_medida: string; aceita_fracionado: boolean; quantidade_default: number }[]>([]);
+  const [deletedItemIds, setDeletedItemIds] = useState<string[]>([]);
+  const [addedItems, setAddedItems] = useState<{ produto_id: string; nome: string; preco_unitario: number; quantidade: number; aceita_fracionado: boolean }[]>([]);
 
   // New order dialog
   const [newOrderOpen, setNewOrderOpen] = useState(false);
