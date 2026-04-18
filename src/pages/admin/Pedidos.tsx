@@ -146,6 +146,7 @@ interface EntradaLinha {
   produto_id: string; nome: string; checked: boolean;
   quantidade: string; preco_venda: string; preco_custo: string;
   aceita_fracionado: boolean;
+  peso_liquido: number | null; unidade_medida: string;
 }
 
 function validateCpfCnpj(value: string): boolean {
@@ -443,7 +444,7 @@ const Pedidos = () => {
     const { data: links } = await supabase.from("fornecedor_produto").select("produto_id").eq("fornecedor_id", fornecedorId);
     if (!links || links.length === 0) { setEntradaLinhas([]); return; }
     const prodIds = links.map((l) => l.produto_id);
-    const { data: prods } = await supabase.from("produto").select("produto_id, nome, preco, aceita_fracionado").in("produto_id", prodIds).eq("ativo", true).order("nome");
+    const { data: prods } = await supabase.from("produto").select("produto_id, nome, preco, aceita_fracionado, peso_liquido, unidade_medida").in("produto_id", prodIds).eq("ativo", true).order("nome");
     const { data: existingEstoque } = await supabase.from("estoque_local").select("produto_id, preco_custo").in("produto_id", prodIds);
     const custoMap: Record<string, number> = {};
     if (existingEstoque) { for (const e of existingEstoque as any[]) { if (e.preco_custo && !custoMap[e.produto_id]) custoMap[e.produto_id] = e.preco_custo; } }
@@ -452,6 +453,7 @@ const Pedidos = () => {
         produto_id: p.produto_id, nome: p.nome, checked: false, quantidade: "1",
         preco_venda: String(p.preco || 0), preco_custo: String(custoMap[p.produto_id] || 0),
         aceita_fracionado: p.aceita_fracionado ?? false,
+        peso_liquido: p.peso_liquido ?? null, unidade_medida: p.unidade_medida || "",
       })));
     }
   };
@@ -3334,7 +3336,7 @@ const Pedidos = () => {
                       {filteredEntradaLinhas.map((l) => (
                         <TableRow key={l.produto_id} className={l.checked ? "bg-primary/5" : ""}>
                           <TableCell><Checkbox checked={l.checked} onCheckedChange={(c) => updateLinha(l.produto_id, "checked", !!c)} /></TableCell>
-                          <TableCell className="text-sm">{l.nome}</TableCell>
+                          <TableCell className="text-sm">{l.nome}{l.peso_liquido ? ` - ${l.peso_liquido}${l.unidade_medida || ""}` : l.unidade_medida ? ` - ${l.unidade_medida}` : ""}</TableCell>
                           <TableCell><Input type="number" min={l.aceita_fracionado ? "0.001" : "1"} step={l.aceita_fracionado ? "0.001" : "1"} className="h-8 text-sm" value={l.quantidade} onChange={(e) => updateLinha(l.produto_id, "quantidade", e.target.value)} /></TableCell>
                           <TableCell><Input type="number" step="0.01" className="h-8 text-sm" value={l.preco_custo} onChange={(e) => updateLinha(l.produto_id, "preco_custo", e.target.value)} /></TableCell>
                           <TableCell><Input type="number" step="0.01" className="h-8 text-sm" value={l.preco_venda} onChange={(e) => updateLinha(l.produto_id, "preco_venda", e.target.value)} /></TableCell>
