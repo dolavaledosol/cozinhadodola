@@ -529,26 +529,38 @@ export type Database = {
       }
       dola_fila_envio: {
         Row: {
+          chat_id: string | null
           created_at: string
           id: string
+          message: string | null
           payload: Json
+          scheduled_for: string
           sent_at: string | null
+          session: string
           status: string
           workflow: string
         }
         Insert: {
+          chat_id?: string | null
           created_at?: string
           id?: string
+          message?: string | null
           payload: Json
+          scheduled_for?: string
           sent_at?: string | null
+          session?: string
           status?: string
           workflow: string
         }
         Update: {
+          chat_id?: string | null
           created_at?: string
           id?: string
+          message?: string | null
           payload?: Json
+          scheduled_for?: string
           sent_at?: string | null
+          session?: string
           status?: string
           workflow?: string
         }
@@ -1641,6 +1653,16 @@ export type Database = {
           _produto_id: string
         }
         Returns: undefined
+      }
+      clientes_inativos: {
+        Args: { meses: number }
+        Returns: {
+          cliente_id: string
+          lid: string
+          nome: string
+          pn: string
+          ultimo_pedido: string
+        }[]
       }
       find_or_link_cliente_by_cpf: {
         Args: {

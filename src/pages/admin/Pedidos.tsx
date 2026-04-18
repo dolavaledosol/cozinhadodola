@@ -313,7 +313,7 @@ const Pedidos = () => {
   const [compraEditLoading, setCompraEditLoading] = useState(false);
   const [compraEditFornecedores, setCompraEditFornecedores] = useState<{ fornecedor_id: string; nome: string }[]>([]);
   const [compraEditItens, setCompraEditItens] = useState<{ produto_id: string; nome: string; quantidade: number; preco_custo: number; aceita_fracionado: boolean }[]>([]);
-  const [compraEditProdutos, setCompraEditProdutos] = useState<{ produto_id: string; nome: string; aceita_fracionado: boolean }[]>([]);
+  const [compraEditProdutos, setCompraEditProdutos] = useState<{ produto_id: string; nome: string; aceita_fracionado: boolean; peso_liquido: number | null; unidade_medida: string }[]>([]);
 
   const loadCompras = async () => {
     const { data } = await supabase
@@ -328,7 +328,7 @@ const Pedidos = () => {
   const openCompraEdit = async (c: ContaPagarCompra) => {
     const [fornsRes, prodsRes] = await Promise.all([
       supabase.from("fornecedor").select("fornecedor_id, nome").eq("ativo", true).order("nome"),
-      supabase.from("produto").select("produto_id, nome, aceita_fracionado").eq("ativo", true).order("nome"),
+      supabase.from("produto").select("produto_id, nome, aceita_fracionado, peso_liquido, unidade_medida").eq("ativo", true).order("nome"),
     ]);
     if (fornsRes.data) setCompraEditFornecedores(fornsRes.data);
     if (prodsRes.data) setCompraEditProdutos(prodsRes.data);
@@ -3150,7 +3150,7 @@ const Pedidos = () => {
                             setCompraEditItens(updated);
                           }}>
                             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                            <SelectContent>{compraEditProdutos.map(p => <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}</SelectItem>)}</SelectContent>
+                            <SelectContent>{compraEditProdutos.map(p => <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}{p.peso_liquido ? ` - ${p.peso_liquido}${p.unidade_medida || ""}` : p.unidade_medida ? ` - ${p.unidade_medida}` : ""}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="w-20 space-y-1">
