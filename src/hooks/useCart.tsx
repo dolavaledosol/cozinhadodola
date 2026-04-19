@@ -7,6 +7,9 @@ interface CartItem {
   quantidade: number;
   url_imagem?: string;
   aceita_fracionado?: boolean;
+  peso_liquido?: number | null;
+  unidade_medida?: string | null;
+  fabricante_nome?: string | null;
 }
 
 interface CartContextType {

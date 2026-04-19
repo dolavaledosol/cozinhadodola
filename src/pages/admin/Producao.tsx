@@ -22,6 +22,7 @@ import { Plus, X, AlertTriangle, Undo2 } from "lucide-react";
 
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface ProdItem {
   produto_id: string;
@@ -47,7 +48,7 @@ const Producao = () => {
   const { data: produtos = [] } = useQuery({
     queryKey: ["produtos-ativos"],
     queryFn: async () => {
-      const { data } = await supabase.from("produto").select("produto_id, nome, unidade_medida, aceita_fracionado").eq("ativo", true).order("nome");
+      const { data } = await supabase.from("produto").select("produto_id, nome, unidade_medida, peso_liquido, aceita_fracionado, fabricante:fabricante_id(nome)").eq("ativo", true).order("nome");
       return data || [];
     },
   });
@@ -364,7 +365,7 @@ const Producao = () => {
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     {produtos.map((p) => (
-                      <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}</SelectItem>
+                      <SelectItem key={p.produto_id} value={p.produto_id}>{formatProdutoLabel(p)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -434,7 +435,7 @@ const Producao = () => {
                           {produtos
                             .filter((p) => p.produto_id !== produtoId)
                             .map((p) => (
-                              <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}</SelectItem>
+                              <SelectItem key={p.produto_id} value={p.produto_id}>{formatProdutoLabel(p)}</SelectItem>
                             ))}
                         </SelectContent>
                       </Select>

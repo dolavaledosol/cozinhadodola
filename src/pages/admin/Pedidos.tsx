@@ -27,6 +27,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import ProducaoTab from "@/pages/admin/Producao";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 
 const statusOptions = [
@@ -766,7 +767,7 @@ const Pedidos = () => {
     const [itemsRes, histRes] = await Promise.all([
       supabase
         .from("pedido_item")
-        .select("pedido_item_id, produto_id, quantidade, preco_unitario, produto(nome, aceita_fracionado)")
+        .select("pedido_item_id, produto_id, quantidade, preco_unitario, produto(nome, peso_liquido, unidade_medida, aceita_fracionado, fabricante:fabricante_id(nome))")
         .eq("pedido_id", p.pedido_id),
       supabase
         .from("pedido_status_historico")
@@ -2012,7 +2013,7 @@ const Pedidos = () => {
                               />
                             </TableCell>
                           )}
-                          <TableCell className="text-sm">{i.produto?.nome || "—"}</TableCell>
+                          <TableCell className="text-sm">{i.produto ? formatProdutoLabel(i.produto) : "—"}</TableCell>
                           <TableCell>
                             {canEditQty ? (
                               <div className="flex items-center gap-1">
@@ -2085,11 +2086,9 @@ const Pedidos = () => {
                       return (
                         <TableRow key={`new-${idx}`} className="bg-green-50/50">
                           <TableCell className="text-sm">
-                            {ai.nome}
                             {(() => {
                               const prod = editItemProdutos.find(p => p.produto_id === ai.produto_id);
-                              if (!prod) return null;
-                              return <span className="text-xs text-muted-foreground ml-1">({prod.peso_liquido ? `${prod.peso_liquido}${prod.unidade_medida}` : prod.unidade_medida})</span>;
+                              return formatProdutoLabel(prod || { nome: ai.nome });
                             })()}
                           </TableCell>
                           <TableCell>
@@ -2158,10 +2157,7 @@ const Pedidos = () => {
                             }}
                           >
                             <span>
-                              {p.nome}
-                              <span className="text-xs text-muted-foreground ml-1">
-                                ({p.peso_liquido ? `${p.peso_liquido}${p.unidade_medida}` : p.unidade_medida})
-                              </span>
+                              {formatProdutoLabel(p)}
                             </span>
                             <span className="text-xs text-muted-foreground">R$ {p.preco.toFixed(2)}</span>
                           </button>
@@ -2495,7 +2491,7 @@ const Pedidos = () => {
                             }
                           />
                         </TableCell>
-                        <TableCell className="text-xs">{item.produto?.nome || "—"}</TableCell>
+                        <TableCell className="text-xs">{item.produto ? formatProdutoLabel(item.produto) : "—"}</TableCell>
                         <TableCell className="text-xs text-center">{item.quantidade}</TableCell>
                         <TableCell className="text-xs text-center">
                           {issue ? issue.quantidade_disponivel : "OK"}
@@ -2808,10 +2804,8 @@ const Pedidos = () => {
                       onClick={() => { addProduct(p); setNewOrderSearch(""); }}
                     >
                       <div className="flex flex-col items-start text-left min-w-0">
-                        <span className="font-medium truncate w-full">{p.nome}</span>
+                        <span className="font-medium truncate w-full">{formatProdutoLabel({ nome: p.nome, peso_liquido: p.peso_bruto, unidade_medida: p.unidade_medida, fabricante: p.fabricante_nome })}</span>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          {p.fabricante_nome || "—"}
-                          {p.peso_bruto != null && ` · ${p.peso_bruto}${p.unidade_medida}`}
                           {p.aceita_fracionado && (
                             <span className="text-[10px] uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded font-medium">
                               Fracionado
@@ -2845,7 +2839,10 @@ const Pedidos = () => {
                       <TableRow key={i.produto_id}>
                         <TableCell className="text-sm">
                           <div className="flex items-center gap-1.5">
-                            {i.nome}
+                            {(() => {
+                              const prod = produtos.find(p => p.produto_id === i.produto_id);
+                              return formatProdutoLabel(prod ? { ...prod, fabricante: (prod as any).fabricante_nome } : { nome: i.nome });
+                            })()}
                             {i.aceita_fracionado && (
                               <span className="text-[10px] uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded font-medium shrink-0">
                                 Fracionado
@@ -3152,7 +3149,7 @@ const Pedidos = () => {
                             setCompraEditItens(updated);
                           }}>
                             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                            <SelectContent>{compraEditProdutos.map(p => <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}{p.peso_liquido ? ` - ${p.peso_liquido}${p.unidade_medida || ""}` : p.unidade_medida ? ` - ${p.unidade_medida}` : ""}</SelectItem>)}</SelectContent>
+                            <SelectContent>{compraEditProdutos.map(p => <SelectItem key={p.produto_id} value={p.produto_id}>{formatProdutoLabel(p)}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="w-20 space-y-1">
@@ -3336,7 +3333,7 @@ const Pedidos = () => {
                       {filteredEntradaLinhas.map((l) => (
                         <TableRow key={l.produto_id} className={l.checked ? "bg-primary/5" : ""}>
                           <TableCell><Checkbox checked={l.checked} onCheckedChange={(c) => updateLinha(l.produto_id, "checked", !!c)} /></TableCell>
-                          <TableCell className="text-sm">{l.nome}{l.peso_liquido ? ` - ${l.peso_liquido}${l.unidade_medida || ""}` : l.unidade_medida ? ` - ${l.unidade_medida}` : ""}</TableCell>
+                          <TableCell className="text-sm">{formatProdutoLabel(l)}</TableCell>
                           <TableCell><Input type="number" min={l.aceita_fracionado ? "0.001" : "1"} step={l.aceita_fracionado ? "0.001" : "1"} className="h-8 text-sm" value={l.quantidade} onChange={(e) => updateLinha(l.produto_id, "quantidade", e.target.value)} /></TableCell>
                           <TableCell><Input type="number" step="0.01" className="h-8 text-sm" value={l.preco_custo} onChange={(e) => updateLinha(l.produto_id, "preco_custo", e.target.value)} /></TableCell>
                           <TableCell><Input type="number" step="0.01" className="h-8 text-sm" value={l.preco_venda} onChange={(e) => updateLinha(l.produto_id, "preco_venda", e.target.value)} /></TableCell>
