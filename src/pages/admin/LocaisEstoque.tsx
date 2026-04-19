@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface LocalEstoque { local_estoque_id: string; nome: string; ativo: boolean; }
 type SortKey = "local_estoque_id" | "nome" | "ativo";
