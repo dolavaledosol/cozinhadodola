@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PermissionsDialog from "@/components/admin/PermissionsDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 interface UserProfile {
   profile_id: string;
@@ -128,14 +129,11 @@ const Usuarios = () => {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        title="Usuários"
-        actions={
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nome ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-          </div>
-        }
+      <AdminPageHeader title="Usuários" />
+      <AdminFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por nome ou email..."
       />
 
       {loading ? (
