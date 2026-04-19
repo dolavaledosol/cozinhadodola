@@ -2,16 +2,16 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Package } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 import { Badge } from "@/components/ui/badge";
 
 
@@ -95,14 +95,9 @@ const Fornecedores = () => {
     return result;
   }, [items, search, filterAtivo, sortKey, sortDir]);
 
-  const handleSort = (key: FornecedorSortKey) => {
+  const handleSort = (key: string) => {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortKey(key); setSortDir("asc"); }
-  };
-
-  const SortIcon = ({ col }: { col: FornecedorSortKey }) => {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 ml-1 inline opacity-40" />;
-    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 ml-1 inline" /> : <ArrowDown className="h-3 w-3 ml-1 inline" />;
+    else { setSortKey(key as FornecedorSortKey); setSortDir("asc"); }
   };
 
   const filteredProdutos = useMemo(() => {
@@ -202,36 +197,39 @@ const Fornecedores = () => {
           </SelectContent>
         </Select>
       </AdminFilterBar>
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("fornecedor_id")}>Cód <SortIcon col="fornecedor_id" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("ativo")}>Status <SortIcon col="ativo" /></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">Nenhum fornecedor encontrado</TableCell></TableRow>
-            ) : filtered.map((f) => (
-              <TableRow key={f.fornecedor_id}>
-                <TableCell>
-                  <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(f)}>
-                    {f.fornecedor_id.substring(0, 8)}
-                  </button>
-                </TableCell>
-                <TableCell className="font-medium">{f.nome}</TableCell>
-                <TableCell>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                    {f.ativo ? "Ativo" : "Inativo"}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <AdminListView<Fornecedor>
+        data={filtered}
+        rowKey={(f) => f.fornecedor_id}
+        emptyMessage="Nenhum fornecedor encontrado"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={handleSort}
+        columns={[
+          {
+            key: "fornecedor_id",
+            header: "Cód",
+            sortable: true,
+            mobileSlot: "code",
+            render: (f) => (
+              <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(f)}>
+                {f.fornecedor_id.substring(0, 8)}
+              </button>
+            ),
+          },
+          { key: "nome", header: "Nome", sortable: true, mobileSlot: "title", className: "font-medium", render: (f) => f.nome },
+          {
+            key: "ativo",
+            header: "Status",
+            sortable: true,
+            mobileSlot: "badge",
+            render: (f) => (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                {f.ativo ? "Ativo" : "Inativo"}
+              </span>
+            ),
+          },
+        ] satisfies AdminListColumn<Fornecedor>[]}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
