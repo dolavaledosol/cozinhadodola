@@ -13,6 +13,7 @@ import { PhoneInput, phoneToDigits, digitsToPhone } from "@/components/ui/phone-
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface ClienteTelefone {
   cliente_telefone_id: string;
