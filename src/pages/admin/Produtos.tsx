@@ -189,13 +189,13 @@ const Produtos = () => {
         actions={<Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Produto</Button>}
       />
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-        </div>
+      <AdminFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por nome..."
+      >
         <Select value={filterAtivo} onValueChange={setFilterAtivo}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="true">Ativos</SelectItem>
@@ -203,7 +203,7 @@ const Produtos = () => {
           </SelectContent>
         </Select>
         <Select value={filterFamilia} onValueChange={setFilterFamilia}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Família" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Família" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas famílias</SelectItem>
             {familiasComLabel.map((f) => (
@@ -212,21 +212,21 @@ const Produtos = () => {
           </SelectContent>
         </Select>
         <Select value={filterFabricante} onValueChange={setFilterFabricante}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Fabricante" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Fabricante" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos fabricantes</SelectItem>
             {fabricantes.map((f) => <SelectItem key={f.fabricante_id} value={f.fabricante_id}>{f.nome}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterDestacado} onValueChange={setFilterDestacado}>
-          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos dest.</SelectItem>
             <SelectItem value="true">Destacados</SelectItem>
             <SelectItem value="false">Não destacados</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </AdminFilterBar>
 
       <div className="border rounded-lg overflow-hidden">
         <Table>

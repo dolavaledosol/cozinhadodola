@@ -1770,20 +1770,20 @@ const Pedidos = () => {
       </div>
 
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por cliente ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-          </div>
+        <AdminFilterBar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Buscar por cliente ou ID..."
+        >
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ativos">Ativos</SelectItem>
               <SelectItem value="todos">Todos os status</SelectItem>
               {statusOptions.map((s) => <SelectItem key={s} value={s}>{statusLabels[s]}</SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
+        </AdminFilterBar>
         <div className="flex flex-wrap gap-2">
           {/* Date From */}
           <Popover>
@@ -2861,25 +2861,24 @@ const Pedidos = () => {
 
         {/* ══════════ TAB COMPRAS ══════════ */}
         <TabsContent value="compras" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por descrição ou fornecedor..." value={searchCompras} onChange={(e) => setSearchCompras(e.target.value)} className="pl-10" />
-            </div>
-           <div className="flex flex-col gap-3">
-             <div className="flex items-center gap-2">
-               <Select value={statusCompraFilter} onValueChange={setStatusCompraFilter}>
-                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-                 <SelectContent>
-                   <SelectItem value="todos">Todos</SelectItem>
-                   <SelectItem value="pendente">Pendente</SelectItem>
-                   <SelectItem value="recebido">Recebido</SelectItem>
-                   <SelectItem value="pago">Pago</SelectItem>
-                   <SelectItem value="cancelado">Cancelado</SelectItem>
-                 </SelectContent>
-               </Select>
-               <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
-             </div>
+          <AdminFilterBar
+            search={searchCompras}
+            onSearchChange={setSearchCompras}
+            searchPlaceholder="Buscar por descrição ou fornecedor..."
+            actions={<Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>}
+          >
+            <Select value={statusCompraFilter} onValueChange={setStatusCompraFilter}>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="recebido">Recebido</SelectItem>
+                <SelectItem value="pago">Pago</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </AdminFilterBar>
+          <div className="flex flex-col gap-3">
              <div className="flex flex-wrap gap-2">
                {/* Date From */}
                <Popover>

@@ -674,13 +674,18 @@ const Estoque = () => {
 
         {/* ── Tab Estoque ── */}
         <TabsContent value="estoque" className="space-y-4">
-           <div className="flex flex-col sm:flex-row items-center gap-3 flex-wrap">
-             <div className="relative flex-1 max-w-md">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-               <Input placeholder="Buscar produto, fabricante, família..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-             </div>
+           <AdminFilterBar
+             search={search}
+             onSearchChange={setSearch}
+             searchPlaceholder="Buscar produto, fabricante, família..."
+             actions={<>
+               <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar</Button>
+               <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
+             </>}
+           >
              <Select value={estoqueLocalFilter} onValueChange={setEstoqueLocalFilter}>
-               <SelectTrigger className="w-[180px]"><SelectValue placeholder="Local" /></SelectTrigger>
+               <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Local" /></SelectTrigger>
                <SelectContent>
                  <SelectItem value="todos">Todos locais</SelectItem>
                  {locais.map((l) => (
@@ -689,19 +694,14 @@ const Estoque = () => {
                </SelectContent>
              </Select>
              <Select value={estoqueTipoFilter} onValueChange={(v) => setEstoqueTipoFilter(v as any)}>
-               <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+               <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                <SelectContent>
                  <SelectItem value="ambos">Est. e Ped.</SelectItem>
                  <SelectItem value="estoque">Só Estoque</SelectItem>
                  <SelectItem value="pedidos">Só Pedidos</SelectItem>
                </SelectContent>
              </Select>
-             <div className="flex gap-2">
-               <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
-               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar</Button>
-               <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
-             </div>
-           </div>
+           </AdminFilterBar>
 
           <div className="border rounded-lg overflow-auto">
              <Table>
@@ -796,27 +796,28 @@ const Estoque = () => {
 
         {/* ── Tab Movimentação ── */}
         <TabsContent value="movimentacao" className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por produto, documento..." value={movSearch} onChange={(e) => setMovSearch(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") loadMovimentacoes(); }} className="pl-10" />
-            </div>
+          <AdminFilterBar
+            search={movSearch}
+            onSearchChange={setMovSearch}
+            searchPlaceholder="Buscar por produto, documento..."
+            onSearchKeyDown={(e) => { if (e.key === "Enter") loadMovimentacoes(); }}
+          >
             <Select value={movFilterLocal} onValueChange={setMovFilterLocal}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Local" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Local" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos locais</SelectItem>
                 {movLocaisUnicos.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={movFilterFabricante} onValueChange={setMovFilterFabricante}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Fabricante" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Fabricante" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos fabricantes</SelectItem>
                 {movFabricantesUnicos.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={movFilterTipo} onValueChange={setMovFilterTipo}>
-              <SelectTrigger className="w-36"><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos tipos</SelectItem>
                 {movTiposUnicos.map(t => <SelectItem key={t} value={t}>{tipoLabel(t)}</SelectItem>)}
