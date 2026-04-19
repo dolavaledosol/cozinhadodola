@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCep } from "@/hooks/useCep";
 import { Switch } from "@/components/ui/switch";
 import AppHeader from "@/components/shared/AppHeader";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface Cliente {
   cliente_id: string;
