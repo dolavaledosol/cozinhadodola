@@ -1661,6 +1661,7 @@ export type Database = {
           lid: string
           nome: string
           pn: string
+          produtos: string
           ultimo_pedido: string
         }[]
       }
