@@ -57,7 +57,12 @@ const ProductCard = memo(function ProductCard({
   const handleAdd = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (quantidade <= 0) return;
-    addItem({ produto_id, nome, preco, url_imagem, aceita_fracionado }, quantidade);
+    addItem({
+      produto_id, nome, preco, url_imagem, aceita_fracionado,
+      peso_liquido: peso_liquido ?? null,
+      unidade_medida: unidade_medida ?? null,
+      fabricante_nome: fabricante_nome ?? null,
+    }, quantidade);
     toast({ title: "Adicionado ao carrinho", description: `${quantidade} × ${nome}` });
   };
 
