@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 /* ── Shared types ── */
 interface Fornecedor { fornecedor_id: string; nome: string; }
