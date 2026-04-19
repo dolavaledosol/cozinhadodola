@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PermissionsDialog from "@/components/admin/PermissionsDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
