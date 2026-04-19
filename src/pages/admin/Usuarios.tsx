@@ -128,14 +128,11 @@ const Usuarios = () => {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        title="Usuários"
-        actions={
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nome ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-          </div>
-        }
+      <AdminPageHeader title="Usuários" />
+      <AdminFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por nome ou email..."
       />
 
       {loading ? (

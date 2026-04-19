@@ -85,20 +85,16 @@ const LocaisEstoque = () => {
         title="Locais de Estoque"
         actions={<Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Local</Button>}
       />
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-        </div>
+      <AdminFilterBar search={search} onSearchChange={setSearch}>
         <Select value={filterAtivo} onValueChange={setFilterAtivo}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="true">Ativos</SelectItem>
             <SelectItem value="false">Inativos</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </AdminFilterBar>
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>

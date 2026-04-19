@@ -295,20 +295,16 @@ const Clientes = () => {
       />
 
       {/* Search & Filter */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-        </div>
+      <AdminFilterBar search={search} onSearchChange={setSearch}>
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-          <SelectTrigger className="w-28 sm:w-40 shrink-0"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ativo">Ativos</SelectItem>
             <SelectItem value="inativo">Inativos</SelectItem>
             <SelectItem value="todos">Todos</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </AdminFilterBar>
 
       {/* Mobile: cards / Desktop: table */}
       {isMobile ? (
