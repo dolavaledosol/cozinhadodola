@@ -98,10 +98,10 @@ const Familias = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Famílias</h1>
-        <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Família</Button>
-      </div>
+      <AdminPageHeader
+        title="Famílias"
+        actions={<Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Família</Button>}
+      />
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
