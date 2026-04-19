@@ -160,15 +160,13 @@ const Receitas = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Receitas de Produção</h1>
-          <p className="text-muted-foreground text-sm">Defina os ingredientes para fabricar produtos</p>
-        </div>
-        {canEdit && (
+      <AdminPageHeader
+        title="Receitas de Produção"
+        subtitle="Defina os ingredientes para fabricar produtos"
+        actions={canEdit ? (
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />Nova Receita</Button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <div className="border rounded-lg">
         <Table>
