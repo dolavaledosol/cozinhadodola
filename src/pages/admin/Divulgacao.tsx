@@ -3,6 +3,7 @@ import EstoqueRelatorio from "@/components/admin/EstoqueRelatorio";
 import ClientesInativosRelatorio from "@/components/admin/ClientesInativosRelatorio";
 import CampanhaRelatorio from "@/components/admin/CampanhaRelatorio";
 import EnviarFotoRelatorio from "@/components/admin/EnviarFotoRelatorio";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 const Divulgacao = () => {
   return (
