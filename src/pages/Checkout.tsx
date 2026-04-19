@@ -14,6 +14,7 @@ import { useCep } from "@/hooks/useCep";
 import AppHeader from "@/components/shared/AppHeader";
 import { PhoneInput, phoneToDigits, digitsToPhone } from "@/components/ui/phone-input";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 // interfaces
 interface Endereco { endereco_id: string; cep: string | null; logradouro: string; numero: string | null; complemento: string | null; bairro: string | null; cidade: string; estado: string; }
@@ -251,7 +252,7 @@ const Checkout = () => {
               {items.map((item) => (
                 <div key={item.produto_id} className="flex justify-between items-center px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm truncate">{item.nome}</p>
+                    <p className="font-medium text-sm truncate">{formatProdutoLabel(item)}</p>
                     <p className="text-xs text-muted-foreground">{item.quantidade}× R$ {item.preco.toFixed(2)}</p>
                   </div>
                   <span className="font-semibold text-sm ml-3">R$ {(item.preco * item.quantidade).toFixed(2)}</span>

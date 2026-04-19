@@ -2,6 +2,7 @@ import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface CartDrawerProps {
   onClose: () => void;
@@ -42,7 +43,7 @@ const CartDrawer = ({ onClose }: CartDrawerProps) => {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm line-clamp-2 leading-snug">{item.nome}</p>
+              <p className="font-medium text-sm line-clamp-2 leading-snug">{formatProdutoLabel(item)}</p>
               <p className="text-sm text-primary font-bold mt-0.5">
                 R$ {(item.preco * item.quantidade).toFixed(2)}
               </p>
