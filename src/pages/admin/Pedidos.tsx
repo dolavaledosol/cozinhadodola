@@ -1751,7 +1751,7 @@ const Pedidos = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Pedidos</h1>
+      <AdminPageHeader title="Pedidos" />
 
       <Tabs defaultValue="vendas">
         <TabsList>
