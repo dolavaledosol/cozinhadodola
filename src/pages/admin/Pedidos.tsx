@@ -29,6 +29,7 @@ import * as XLSX from "xlsx";
 import ProducaoTab from "@/pages/admin/Producao";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 
 const statusOptions = [
