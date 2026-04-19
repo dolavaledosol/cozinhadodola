@@ -2016,43 +2016,19 @@ const Pedidos = () => {
                           <TableCell className="text-sm">{i.produto ? formatProdutoLabel(i.produto) : "—"}</TableCell>
                           <TableCell>
                             {canEditQty ? (
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  type="button" size="icon" variant="outline"
-                                  className="h-6 w-6"
-                                  onClick={() => {
-                                    const newQty = Math.round((Number(i.quantidade) - step) * 10) / 10;
-                                    if (newQty > 0) {
-                                      setItems(prev => prev.map(it => it.pedido_item_id === i.pedido_item_id ? { ...it, quantidade: newQty } : it));
-                                    }
-                                  }}
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <Input
-                                  type="number"
-                                  step={step}
-                                  min={step}
-                                  value={i.quantidade}
-                                  onChange={(e) => {
-                                    const val = parseFloat(e.target.value);
-                                    if (val > 0) {
-                                      setItems(prev => prev.map(it => it.pedido_item_id === i.pedido_item_id ? { ...it, quantidade: val } : it));
-                                    }
-                                  }}
-                                  className="h-6 w-16 text-center text-xs px-1"
-                                />
-                                <Button
-                                  type="button" size="icon" variant="outline"
-                                  className="h-6 w-6"
-                                  onClick={() => {
-                                    const newQty = Math.round((Number(i.quantidade) + step) * 10) / 10;
-                                    setItems(prev => prev.map(it => it.pedido_item_id === i.pedido_item_id ? { ...it, quantidade: newQty } : it));
-                                  }}
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </div>
+                              <Input
+                                type="number"
+                                step={step}
+                                min={step}
+                                value={i.quantidade}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  if (val > 0) {
+                                    setItems(prev => prev.map(it => it.pedido_item_id === i.pedido_item_id ? { ...it, quantidade: val } : it));
+                                  }
+                                }}
+                                className="h-8 w-14 text-center text-sm px-1"
+                              />
                             ) : (
                               <span>{i.quantidade}</span>
                             )}
@@ -2092,21 +2068,10 @@ const Pedidos = () => {
                             })()}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button type="button" size="icon" variant="outline" className="h-6 w-6"
-                                onClick={() => {
-                                  const newQty = Math.round((ai.quantidade - step) * 10) / 10;
-                                  if (newQty > 0) setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: newQty } : a));
-                                }}
-                              ><Minus className="h-3 w-3" /></Button>
-                              <Input type="number" step={step} min={step} value={ai.quantidade}
-                                onChange={e => { const v = parseFloat(e.target.value); if (v > 0) setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: v } : a)); }}
-                                className="h-6 w-16 text-center text-xs px-1"
-                              />
-                              <Button type="button" size="icon" variant="outline" className="h-6 w-6"
-                                onClick={() => { const newQty = Math.round((ai.quantidade + step) * 10) / 10; setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: newQty } : a)); }}
-                              ><Plus className="h-3 w-3" /></Button>
-                            </div>
+                            <Input type="number" step={step} min={step} value={ai.quantidade}
+                              onChange={e => { const v = parseFloat(e.target.value); if (v > 0) setAddedItems(prev => prev.map((a, i2) => i2 === idx ? { ...a, quantidade: v } : a)); }}
+                              className="h-8 w-14 text-center text-sm px-1"
+                            />
                           </TableCell>
                           <TableCell>R$ {Number(ai.preco_unitario).toFixed(2)}</TableCell>
                           <TableCell className="text-sm font-medium">R$ {(ai.preco_unitario * ai.quantidade).toFixed(2)}</TableCell>
