@@ -112,10 +112,10 @@ const Configuracoes = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Configurações</h1>
-      <p className="text-sm text-muted-foreground">
-        URLs dos payloads ficam visíveis abaixo de cada campo para facilitar a conferência.
-      </p>
+      <AdminPageHeader
+        title="Configurações"
+        subtitle="URLs dos payloads ficam visíveis abaixo de cada campo para facilitar a conferência."
+      />
 
       {WEBHOOK_SECTIONS.map((section) => (
         <Card key={section.title}>
