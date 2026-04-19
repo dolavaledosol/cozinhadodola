@@ -8,7 +8,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 const Divulgacao = () => {
   return (
     <div className="space-y-4">
-      <h1 className="text-xl sm:text-2xl font-bold">Divulgação</h1>
+      <AdminPageHeader title="Divulgação" />
       <Tabs defaultValue="estoque">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="estoque">Estoque</TabsTrigger>
