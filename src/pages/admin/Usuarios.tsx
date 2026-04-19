@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PermissionsDialog from "@/components/admin/PermissionsDialog";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface UserProfile {
   profile_id: string;
