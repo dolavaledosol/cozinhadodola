@@ -14,6 +14,7 @@ import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 interface ClienteTelefone {
   cliente_telefone_id: string;

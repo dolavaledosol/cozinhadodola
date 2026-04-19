@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 import { Badge } from "@/components/ui/badge";
 
 

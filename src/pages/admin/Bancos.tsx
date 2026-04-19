@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 interface Banco { banco_id: string; nome: string; codigo: string | null; conta_corrente: string | null; ativo: boolean; }
 

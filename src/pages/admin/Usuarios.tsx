@@ -12,6 +12,7 @@ import { Search, Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowU
 import { Skeleton } from "@/components/ui/skeleton";
 import PermissionsDialog from "@/components/admin/PermissionsDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 interface UserProfile {
   profile_id: string;
