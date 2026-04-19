@@ -95,7 +95,62 @@ const Bancos = () => {
           </SelectContent>
         </Select>
       </AdminFilterBar>
-      <BancosList items={filtered} onEdit={openEdit} sortKey={sortKey} sortDir={sortDir} onSortChange={handleSort} />
+      <AdminListView<Banco>
+        data={filtered}
+        rowKey={(b) => b.banco_id}
+        emptyMessage="Nenhum banco encontrado"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={handleSort}
+        columns={[
+          {
+            key: "banco_id",
+            header: "Cód",
+            sortable: true,
+            mobileSlot: "code",
+            render: (b) => (
+              <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(b)}>
+                {b.banco_id.substring(0, 8)}
+              </button>
+            ),
+          },
+          {
+            key: "nome",
+            header: "Nome",
+            sortable: true,
+            mobileSlot: "title",
+            className: "font-medium",
+            render: (b) => b.nome,
+          },
+          {
+            key: "codigo",
+            header: "Código",
+            sortable: true,
+            mobileLabel: "Código",
+            className: "text-muted-foreground",
+            render: (b) => b.codigo || "—",
+          },
+          {
+            key: "conta_corrente",
+            header: "Conta Corrente",
+            sortable: true,
+            mobileLabel: "Conta",
+            className: "text-muted-foreground hidden sm:table-cell",
+            render: (b) => b.conta_corrente || "—",
+          },
+          {
+            key: "ativo",
+            header: "Status",
+            sortable: true,
+            mobileSlot: "badge",
+            render: (b) => (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${b.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                {b.ativo ? "Ativo" : "Inativo"}
+              </span>
+            ),
+          },
+        ] satisfies AdminListColumn<Banco>[]}
+      />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editId ? "Editar Banco" : "Novo Banco"}</DialogTitle></DialogHeader>
