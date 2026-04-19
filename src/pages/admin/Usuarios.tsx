@@ -3,16 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Shield, UserCog, Plus, Trash2, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PermissionsDialog from "@/components/admin/PermissionsDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 
 interface UserProfile {
   profile_id: string;
@@ -68,14 +67,9 @@ const Usuarios = () => {
     setLoading(false);
   };
 
-  const handleSort = useCallback((key: SortKey) => {
-    setSortKey((prev) => { if (prev === key) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); } else { setSortDir("asc"); } return key; });
+  const handleSort = useCallback((key: string) => {
+    setSortKey((prev) => { if (prev === key) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); } else { setSortDir("asc"); } return key as SortKey; });
   }, []);
-
-  const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ArrowUpDown className="inline ml-1 h-3 w-3 opacity-40" />;
-    return sortDir === "asc" ? <ArrowUp className="inline ml-1 h-3 w-3" /> : <ArrowDown className="inline ml-1 h-3 w-3" />;
-  };
 
   const filtered = useMemo(() => {
     let result = users.filter((u) => u.nome.toLowerCase().includes(search.toLowerCase()) || (u.email || "").toLowerCase().includes(search.toLowerCase()));
