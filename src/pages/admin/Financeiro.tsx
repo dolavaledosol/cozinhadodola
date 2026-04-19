@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 /* ── Shared types ── */
 interface Fornecedor { fornecedor_id: string; nome: string; }
