@@ -17,6 +17,7 @@ import * as XLSX from "xlsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 /* ── Types ── */
 interface EstoqueRow {
@@ -32,7 +33,7 @@ interface EstoqueRow {
   local_estoque: { nome: string } | null;
 }
 interface LocalEstoque { local_estoque_id: string; nome: string; }
-interface SelectOption { id: string; nome: string; }
+interface SelectOption { id: string; nome: string; peso_liquido?: number | null; unidade_medida?: string; fabricante?: { nome: string } | null; }
 interface ProdutoAgrupado {
   produto_id: string; nome: string; peso_liquido: number | null; unidade_medida: string; fabricante: string; familia: string;
   destacar: boolean;
@@ -127,11 +128,11 @@ const Estoque = () => {
   const load = async () => {
     const [{ data: est }, { data: prod }, { data: loc }] = await Promise.all([
       supabase.from("estoque_local").select("*, produto(nome, preco, peso_liquido, unidade_medida, destacar, fabricante(nome), familia(nome)), local_estoque(nome)").order("produto_id"),
-      supabase.from("produto").select("produto_id, nome").eq("ativo", true).order("nome"),
+      supabase.from("produto").select("produto_id, nome, peso_liquido, unidade_medida, fabricante:fabricante_id(nome)").eq("ativo", true).order("nome"),
       supabase.from("local_estoque").select("local_estoque_id, nome").eq("ativo", true).order("nome"),
     ]);
     if (est) setItems(est as any);
-    if (prod) setProdutos(prod.map((p) => ({ id: p.produto_id, nome: p.nome })));
+    if (prod) setProdutos(prod.map((p: any) => ({ id: p.produto_id, nome: p.nome, peso_liquido: p.peso_liquido, unidade_medida: p.unidade_medida, fabricante: p.fabricante })));
     if (loc) setLocais(loc as LocalEstoque[]);
   };
 
@@ -897,7 +898,7 @@ const Estoque = () => {
               <Label>Produto *</Label>
               <Select value={form.produto_id} onValueChange={(v) => setForm({ ...form, produto_id: v })} disabled={!!editId}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{produtos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                <SelectContent>{produtos.map((p) => <SelectItem key={p.id} value={p.id}>{formatProdutoLabel(p)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
