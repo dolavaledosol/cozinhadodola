@@ -230,8 +230,8 @@ const Perfil = () => {
 
   const openPedidoDetail = async (p: Pedido) => {
     setPedidoDetail(p); setPedidoItens([]); setPedidoDetailOpen(true); setLoadingDetail(true);
-    const { data } = await supabase.from("pedido_item").select("pedido_item_id, produto_id, quantidade, preco_unitario, produto:produto_id(nome)").eq("pedido_id", p.pedido_id);
-    if (data) { setPedidoItens(data.map((i: any) => ({ pedido_item_id: i.pedido_item_id, produto_id: i.produto_id, quantidade: i.quantidade, preco_unitario: i.preco_unitario, produto_nome: i.produto?.nome || "Produto removido" }))); }
+    const { data } = await supabase.from("pedido_item").select("pedido_item_id, produto_id, quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, unidade_medida, fabricante:fabricante_id(nome))").eq("pedido_id", p.pedido_id);
+    if (data) { setPedidoItens(data.map((i: any) => ({ pedido_item_id: i.pedido_item_id, produto_id: i.produto_id, quantidade: i.quantidade, preco_unitario: i.preco_unitario, produto_nome: i.produto ? formatProdutoLabel(i.produto) : "Produto removido" }))); }
     setLoadingDetail(false);
   };
 
