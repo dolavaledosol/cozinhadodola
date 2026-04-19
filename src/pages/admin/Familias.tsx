@@ -2,16 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 
 interface Familia {
   familia_id: string;
@@ -64,14 +64,9 @@ const Familias = () => {
     return result;
   }, [familias, search, filterAtivo, sortKey, sortDir]);
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = (key: string) => {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortKey(key); setSortDir("asc"); }
-  };
-
-  const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 ml-1 inline opacity-40" />;
-    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 ml-1 inline" /> : <ArrowDown className="h-3 w-3 ml-1 inline" />;
+    else { setSortKey(key as SortKey); setSortDir("asc"); }
   };
 
   const openNew = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
@@ -113,38 +108,47 @@ const Familias = () => {
           </SelectContent>
         </Select>
       </AdminFilterBar>
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("familia_id")}>Cód <SortIcon col="familia_id" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
-              <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => handleSort("pai")}>Família pai <SortIcon col="pai" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("ativo")}>Status <SortIcon col="ativo" /></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhuma família encontrada</TableCell></TableRow>
-            ) : filtered.map((f) => (
-              <TableRow key={f.familia_id}>
-                <TableCell>
-                  <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(f)}>
-                    {f.familia_id.substring(0, 8)}
-                  </button>
-                </TableCell>
-                <TableCell className="font-medium">{f.nome}</TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">{f.pai?.nome || "—"}</TableCell>
-                <TableCell>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                    {f.ativo ? "Ativo" : "Inativo"}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <AdminListView<Familia>
+        data={filtered}
+        rowKey={(f) => f.familia_id}
+        emptyMessage="Nenhuma família encontrada"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={handleSort}
+        columns={[
+          {
+            key: "familia_id",
+            header: "Cód",
+            sortable: true,
+            mobileSlot: "code",
+            render: (f) => (
+              <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(f)}>
+                {f.familia_id.substring(0, 8)}
+              </button>
+            ),
+          },
+          { key: "nome", header: "Nome", sortable: true, mobileSlot: "title", className: "font-medium", render: (f) => f.nome },
+          {
+            key: "pai",
+            header: "Família pai",
+            sortable: true,
+            mobileLabel: "Família pai",
+            className: "hidden md:table-cell text-muted-foreground",
+            render: (f) => f.pai?.nome || "—",
+          },
+          {
+            key: "ativo",
+            header: "Status",
+            sortable: true,
+            mobileSlot: "badge",
+            render: (f) => (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                {f.ativo ? "Ativo" : "Inativo"}
+              </span>
+            ),
+          },
+        ] satisfies AdminListColumn<Familia>[]}
+      />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editId ? "Editar Família" : "Nova Família"}</DialogTitle></DialogHeader>

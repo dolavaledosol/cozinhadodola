@@ -2,15 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 
 interface Banco { banco_id: string; nome: string; codigo: string | null; conta_corrente: string | null; ativo: boolean; }
 
@@ -55,14 +55,9 @@ const Bancos = () => {
     return result;
   }, [items, search, filterAtivo, sortKey, sortDir]);
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = (key: string) => {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortKey(key); setSortDir("asc"); }
-  };
-
-  const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 ml-1 inline opacity-40" />;
-    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 ml-1 inline" /> : <ArrowDown className="h-3 w-3 ml-1 inline" />;
+    else { setSortKey(key as SortKey); setSortDir("asc"); }
   };
 
   const openNew = () => { setEditId(null); setForm({ nome: "", codigo: "", conta_corrente: "", ativo: true }); setDialogOpen(true); };
@@ -100,40 +95,62 @@ const Bancos = () => {
           </SelectContent>
         </Select>
       </AdminFilterBar>
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("banco_id")}>Cód <SortIcon col="banco_id" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("codigo")}>Código <SortIcon col="codigo" /></TableHead>
-              <TableHead className="cursor-pointer select-none hidden sm:table-cell" onClick={() => handleSort("conta_corrente")}>Conta Corrente <SortIcon col="conta_corrente" /></TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("ativo")}>Status <SortIcon col="ativo" /></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum banco encontrado</TableCell></TableRow>
-            ) : filtered.map((b) => (
-              <TableRow key={b.banco_id}>
-                <TableCell>
-                  <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(b)}>
-                    {b.banco_id.substring(0, 8)}
-                  </button>
-                </TableCell>
-                <TableCell className="font-medium">{b.nome}</TableCell>
-                <TableCell className="text-muted-foreground">{b.codigo || "—"}</TableCell>
-                <TableCell className="text-muted-foreground hidden sm:table-cell">{b.conta_corrente || "—"}</TableCell>
-                <TableCell>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${b.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                    {b.ativo ? "Ativo" : "Inativo"}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <AdminListView<Banco>
+        data={filtered}
+        rowKey={(b) => b.banco_id}
+        emptyMessage="Nenhum banco encontrado"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={handleSort}
+        columns={[
+          {
+            key: "banco_id",
+            header: "Cód",
+            sortable: true,
+            mobileSlot: "code",
+            render: (b) => (
+              <button className="text-xs font-mono text-primary hover:underline cursor-pointer" onClick={() => openEdit(b)}>
+                {b.banco_id.substring(0, 8)}
+              </button>
+            ),
+          },
+          {
+            key: "nome",
+            header: "Nome",
+            sortable: true,
+            mobileSlot: "title",
+            className: "font-medium",
+            render: (b) => b.nome,
+          },
+          {
+            key: "codigo",
+            header: "Código",
+            sortable: true,
+            mobileLabel: "Código",
+            className: "text-muted-foreground",
+            render: (b) => b.codigo || "—",
+          },
+          {
+            key: "conta_corrente",
+            header: "Conta Corrente",
+            sortable: true,
+            mobileLabel: "Conta",
+            className: "text-muted-foreground hidden sm:table-cell",
+            render: (b) => b.conta_corrente || "—",
+          },
+          {
+            key: "ativo",
+            header: "Status",
+            sortable: true,
+            mobileSlot: "badge",
+            render: (b) => (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${b.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                {b.ativo ? "Ativo" : "Inativo"}
+              </span>
+            ),
+          },
+        ] satisfies AdminListColumn<Banco>[]}
+      />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editId ? "Editar Banco" : "Novo Banco"}</DialogTitle></DialogHeader>

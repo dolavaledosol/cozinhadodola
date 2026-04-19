@@ -3,16 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, UserCog, Plus, Trash2, Lock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Shield, UserCog, Plus, Trash2, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PermissionsDialog from "@/components/admin/PermissionsDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 
 interface UserProfile {
   profile_id: string;
@@ -68,14 +67,9 @@ const Usuarios = () => {
     setLoading(false);
   };
 
-  const handleSort = useCallback((key: SortKey) => {
-    setSortKey((prev) => { if (prev === key) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); } else { setSortDir("asc"); } return key; });
+  const handleSort = useCallback((key: string) => {
+    setSortKey((prev) => { if (prev === key) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); } else { setSortDir("asc"); } return key as SortKey; });
   }, []);
-
-  const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ArrowUpDown className="inline ml-1 h-3 w-3 opacity-40" />;
-    return sortDir === "asc" ? <ArrowUp className="inline ml-1 h-3 w-3" /> : <ArrowDown className="inline ml-1 h-3 w-3" />;
-  };
 
   const filtered = useMemo(() => {
     let result = users.filter((u) => u.nome.toLowerCase().includes(search.toLowerCase()) || (u.email || "").toLowerCase().includes(search.toLowerCase()));
@@ -140,71 +134,51 @@ const Usuarios = () => {
         <div className="space-y-3"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
       ) : (
         <>
-          {/* Mobile cards */}
-          <div className="md:hidden space-y-3">
-            {filtered.map((u) => (
-              <Card key={u.profile_id}>
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <button className="text-xs font-mono text-primary hover:underline" onClick={() => openEdit(u)}>{u.profile_id.substring(0, 8)}</button>
-                      <p className="font-medium">{u.nome || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">{u.email}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openRoles(u)}><Shield className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPermUser(u); setPermOpen(true); }}><Lock className="h-4 w-4" /></Button>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {u.roles.length === 0 && <span className="text-xs text-muted-foreground">Sem roles</span>}
+          <AdminListView<UserProfile>
+            data={filtered}
+            rowKey={(u) => u.profile_id}
+            emptyMessage="Nenhum usuário encontrado"
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortChange={handleSort}
+            columns={[
+              {
+                key: "profile_id",
+                header: "Cód",
+                sortable: true,
+                mobileSlot: "code",
+                render: (u) => (
+                  <button className="text-xs font-mono text-primary hover:underline" onClick={() => openEdit(u)}>
+                    {u.profile_id.substring(0, 8)}
+                  </button>
+                ),
+              },
+              { key: "nome", header: "Nome", sortable: true, mobileSlot: "title", className: "font-medium", render: (u) => u.nome || "Sem nome" },
+              { key: "email", header: "Email", sortable: true, mobileLabel: "Email", className: "text-sm text-muted-foreground", render: (u) => u.email || "—" },
+              {
+                key: "roles",
+                header: "Roles",
+                sortable: true,
+                mobileLabel: "Roles",
+                render: (u) => (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    {u.roles.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
                     {u.roles.map((r) => roleBadge(r))}
+                    <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={(e) => { e.stopPropagation(); openRoles(u); }} title="Gerenciar roles"><Shield className="h-3 w-3" /></Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Desktop table */}
-          <div className="hidden md:block">
-            <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="cursor-pointer select-none" onClick={() => handleSort("profile_id")}>Cód <SortIcon col="profile_id" /></TableHead>
-                      <TableHead className="cursor-pointer select-none" onClick={() => handleSort("nome")}>Nome <SortIcon col="nome" /></TableHead>
-                      <TableHead className="cursor-pointer select-none" onClick={() => handleSort("email")}>Email <SortIcon col="email" /></TableHead>
-                      <TableHead className="cursor-pointer select-none" onClick={() => handleSort("roles")}>Roles <SortIcon col="roles" /></TableHead>
-                      <TableHead className="w-20">Perm.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((u) => (
-                      <TableRow key={u.profile_id}>
-                        <TableCell>
-                          <button className="text-xs font-mono text-primary hover:underline" onClick={() => openEdit(u)}>{u.profile_id.substring(0, 8)}</button>
-                        </TableCell>
-                        <TableCell className="font-medium">{u.nome || "Sem nome"}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1 items-center">
-                            {u.roles.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
-                            {u.roles.map((r) => roleBadge(r))}
-                            <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => openRoles(u)} title="Gerenciar roles"><Shield className="h-3 w-3" /></Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPermUser(u); setPermOpen(true); }} title="Permissões"><Lock className="h-4 w-4" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-
+                ),
+              },
+              {
+                key: "perm",
+                header: "Perm.",
+                mobileSlot: "badge",
+                className: "w-20",
+                render: (u) => (
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setPermUser(u); setPermOpen(true); }} title="Permissões"><Lock className="h-4 w-4" /></Button>
+                ),
+              },
+            ] satisfies AdminListColumn<UserProfile>[]}
+          />
           <p className="text-sm text-muted-foreground">{filtered.length} usuário(s)</p>
         </>
       )}
