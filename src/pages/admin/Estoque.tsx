@@ -845,7 +845,7 @@ const Estoque = () => {
                 <Calendar mode="single" selected={movDateTo} onSelect={(d) => { if (d) { setMovDateTo(d); loadMovimentacoes(movDateFrom, d); } }} locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
               </PopoverContent>
             </Popover>
-          </div>
+          </AdminFilterBar>
 
           <div className="border rounded-lg overflow-auto">
             <Table>

@@ -2918,7 +2918,6 @@ const Pedidos = () => {
                </Select>
              </div>
            </div>
-          </div>
 
           {isMobile ? (
             <div className="space-y-2">
