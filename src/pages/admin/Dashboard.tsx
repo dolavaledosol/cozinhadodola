@@ -174,11 +174,7 @@ const Dashboard = () => {
 
   const content = (
     <div className="space-y-4 pb-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Resumo geral</p>
-      </div>
+      <AdminPageHeader title="Dashboard" subtitle="Resumo geral" />
 
       {/* KPI grid – 2x3 mobile, 3-col desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
