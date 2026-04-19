@@ -569,23 +569,20 @@ const Financeiro = () => {
         {/* ══════════ TAB PAGAR ══════════ */}
         <TabsContent value="pagar" className="space-y-4">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex flex-1 gap-2 items-center max-w-lg">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar..." value={searchPagar} onChange={(e) => setSearchPagar(e.target.value)} className="pl-10" />
-                </div>
-                <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="pago">Pago</SelectItem>
-                    <SelectItem value="todos">Todos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
-            </div>
+            <AdminFilterBar
+              search={searchPagar}
+              onSearchChange={setSearchPagar}
+              actions={<Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>}
+            >
+              <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
+                <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
+                </SelectContent>
+              </Select>
+            </AdminFilterBar>
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
@@ -702,30 +699,27 @@ const Financeiro = () => {
         {/* ══════════ TAB RECEBER ══════════ */}
         <TabsContent value="receber" className="space-y-4">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex flex-1 gap-2 items-center max-w-lg">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar..." value={searchReceber} onChange={(e) => setSearchReceber(e.target.value)} className="pl-10" />
-                </div>
-                <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="recebido">Recebido</SelectItem>
-                    <SelectItem value="todos">Todos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
+            <AdminFilterBar
+              search={searchReceber}
+              onSearchChange={setSearchReceber}
+              actions={<>
                 <Button variant="outline" onClick={exportReceber} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
                 <Button variant="outline" onClick={webhookExport} disabled={sendingWebhook} className="gap-2">
                   {sendingWebhook ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Cobrar
                 </Button>
                 <Button onClick={openNewReceber} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
-              </div>
-            </div>
+              </>}
+            >
+              <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
+                <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="recebido">Recebido</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
+                </SelectContent>
+              </Select>
+            </AdminFilterBar>
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
