@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import ProducaoTab from "@/pages/admin/Producao";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 
 const statusOptions = [
