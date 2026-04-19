@@ -18,6 +18,7 @@ import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface ReceitaItem {
   receita_item_id?: string;
