@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface ReceitaItem {
   receita_item_id?: string;
@@ -237,7 +238,7 @@ const Receitas = () => {
                   <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
                   <SelectContent>
                     {produtos.map((p) => (
-                      <SelectItem key={p.produto_id} value={p.produto_id}>{p.nome}</SelectItem>
+                      <SelectItem key={p.produto_id} value={p.produto_id}>{formatProdutoLabel({ ...p, fabricante: p.fabricante_id ? fabricanteMap[p.fabricante_id] : null })}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -275,29 +276,24 @@ const Receitas = () => {
                   <Select value={item.produto_id} onValueChange={(v) => updateItem(idx, "produto_id", v)}>
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Produto">
-                        {item.produto_id && produtoMap[item.produto_id] ? (() => {
-                          const p = produtoMap[item.produto_id];
-                          const fab = p.fabricante_id ? fabricanteMap[p.fabricante_id] : null;
-                          const parts = [p.nome];
-                          if (fab) parts.push(fab);
-                          if (p.peso_liquido) parts.push(`${p.peso_liquido}${p.unidade_medida === 'kg' || p.unidade_medida === 'g' ? p.unidade_medida : 'g'}`);
-                          return parts.join(" · ");
-                        })() : null}
+                        {item.produto_id && produtoMap[item.produto_id]
+                          ? formatProdutoLabel({
+                              ...produtoMap[item.produto_id],
+                              fabricante: produtoMap[item.produto_id].fabricante_id
+                                ? fabricanteMap[produtoMap[item.produto_id].fabricante_id]
+                                : null,
+                            })
+                          : null}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {produtos
                         .filter((p) => p.produto_id !== form.produto_id)
-                        .map((p) => {
-                          const fab = p.fabricante_id ? fabricanteMap[p.fabricante_id] : null;
-                          const peso = p.peso_liquido ? `${p.peso_liquido}${p.unidade_medida === 'kg' || p.unidade_medida === 'g' ? p.unidade_medida : 'g'}` : null;
-                          const details = [fab, peso].filter(Boolean).join(" · ");
-                          return (
-                            <SelectItem key={p.produto_id} value={p.produto_id}>
-                              {p.nome}{details ? ` — ${details}` : ""}
-                            </SelectItem>
-                          );
-                        })}
+                        .map((p) => (
+                          <SelectItem key={p.produto_id} value={p.produto_id}>
+                            {formatProdutoLabel({ ...p, fabricante: p.fabricante_id ? fabricanteMap[p.fabricante_id] : null })}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   {(() => {

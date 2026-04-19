@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 /* ── Shared types ── */
 interface Fornecedor { fornecedor_id: string; nome: string; }
