@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface Fabricante { fabricante_id: string; nome: string; ativo: boolean; }
 type SortKey = "fabricante_id" | "nome" | "ativo";
@@ -80,10 +81,10 @@ const Fabricantes = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Fabricantes</h1>
-        <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Fabricante</Button>
-      </div>
+      <AdminPageHeader
+        title="Fabricantes"
+        actions={<Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Fabricante</Button>}
+      />
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import ProducaoTab from "@/pages/admin/Producao";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 
 const statusOptions = [
@@ -1750,7 +1751,7 @@ const Pedidos = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Pedidos</h1>
+      <AdminPageHeader title="Pedidos" />
 
       <Tabs defaultValue="vendas">
         <TabsList>

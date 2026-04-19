@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 /* ── Shared types ── */
 interface Fornecedor { fornecedor_id: string; nome: string; }
@@ -556,7 +557,7 @@ const Financeiro = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Financeiro</h1>
+      <AdminPageHeader title="Financeiro" />
 
       <Tabs defaultValue="receber">
         <TabsList>

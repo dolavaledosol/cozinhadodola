@@ -13,6 +13,7 @@ import { PhoneInput, phoneToDigits, digitsToPhone } from "@/components/ui/phone-
 import { formatCpfCnpj, unformatCpfCnpj, validateCpfCnpj } from "@/lib/cpfCnpj";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface ClienteTelefone {
   cliente_telefone_id: string;
@@ -277,20 +278,21 @@ const Clientes = () => {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold">Clientes</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={exportCSV} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
-            <Download className="h-4 w-4" />
-            {!isMobile && "Exportar"}
-          </Button>
-          <Button onClick={openNew} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
-            <Plus className="h-4 w-4" />
-            {!isMobile && "Novo Cliente"}
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Clientes"
+        actions={
+          <>
+            <Button variant="outline" onClick={exportCSV} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
+              <Download className="h-4 w-4" />
+              {!isMobile && "Exportar"}
+            </Button>
+            <Button onClick={openNew} size={isMobile ? "icon" : "default"} className="gap-2 shrink-0">
+              <Plus className="h-4 w-4" />
+              {!isMobile && "Novo Cliente"}
+            </Button>
+          </>
+        }
+      />
 
       {/* Search & Filter */}
       <div className="flex gap-2">
