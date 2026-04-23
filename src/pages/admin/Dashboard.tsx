@@ -89,13 +89,17 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber] = await Promise.all([
-      supabase.from("pedido").select("total, status, origem").gte("data", today),
-      supabase.from("pedido").select("total, status, origem").gte("data", monthStartISO),
-      supabase.from("pedido").select("total, status, origem").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
+    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais] = await Promise.all([
+      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", today),
+      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", monthStartISO),
+      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
       supabase.from("contas_pagar").select("valor").eq("pago", false),
       supabase.from("contas_receber").select("valor").eq("recebido", false),
+      supabase.from("local_estoque").select("local_estoque_id, nome"),
     ]);
+
+    const localNomes: Record<string, string> = {};
+    (locais.data || []).forEach((l: any) => { localNomes[l.local_estoque_id] = l.nome; });
 
     const filterValid = (data: any[]) => (data || []).filter((p: any) => p.status !== "carrinho");
     const filterActive = (data: any[]) => data.filter((p: any) => p.status !== "cancelado");
