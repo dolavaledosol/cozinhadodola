@@ -5,6 +5,7 @@ import {
   ShoppingCart, TrendingDown, TrendingUp,
   CalendarDays, BarChart3, ClipboardList, Warehouse,
   ChevronRight, CalendarMinus, ArrowUpRight, ArrowDownRight, Minus,
+  Trophy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
