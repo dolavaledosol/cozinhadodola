@@ -41,6 +41,7 @@ type LocalFat = {
   totalMesAnt: number;
 };
 type StatusResumo = { status: string; qtd: number; total: number };
+type TopProduto = { produto_id: string; nome: string; quantidade: number; total: number };
 
 const STATUS_LABELS: Record<string, string> = {
   separacao: "Separação",
