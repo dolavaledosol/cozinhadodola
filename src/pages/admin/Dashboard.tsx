@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ShoppingCart, TrendingDown, TrendingUp,
-  CalendarDays, BarChart3, ClipboardList,
+  CalendarDays, BarChart3, ClipboardList, Warehouse,
   ChevronRight, CalendarMinus, ArrowUpRight, ArrowDownRight, Minus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
