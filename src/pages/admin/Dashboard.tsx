@@ -377,42 +377,63 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Faturamento por origem – gráfico único comparativo */}
+      {/* Faturamento por local de estoque – 3 gráficos: Hoje, Mês, Mês ant. */}
       <div className="rounded-xl bg-card border border-border overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Faturamento por origem</h2>
+            <Warehouse className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Faturamento por local de estoque</h2>
           </div>
-          <span className="text-[11px] text-muted-foreground">Hoje · Mês · Mês ant.</span>
+          <span className="text-[11px] text-muted-foreground">{localFat.length} {localFat.length === 1 ? "local" : "locais"}</span>
         </div>
-        {chartData.length === 0 ? (
+        {localFat.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhum pedido registrado
+            Nenhum pedido com local de estoque definido
           </div>
         ) : (
-          <div className="p-3 sm:p-4">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10 }} className="fill-muted-foreground" tickFormatter={(v) => fmtCompact(v).replace("R$ ", "")} width={50} axisLine={false} tickLine={false} />
-                <Tooltip
-                  formatter={(value: number) => fmt(value)}
-                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} iconType="circle" />
-                <Bar dataKey="Hoje" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="Mês" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="Mês ant." fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+            {([
+              { titulo: "Hoje", key: "totalHoje" as const, total: stats.faturamento, cor: "hsl(var(--primary))" },
+              { titulo: "Mês atual", key: "totalMes" as const, total: stats.faturamentoMes, cor: "hsl(var(--warning))" },
+              { titulo: "Mês anterior", key: "totalMesAnt" as const, total: stats.faturamentoMesAnt, cor: "hsl(var(--muted-foreground))" },
+            ]).map((col) => {
+              const data = localFat
+                .map((l) => ({ name: l.nome, valor: l[col.key] }))
+                .filter((d) => d.valor > 0)
+                .sort((a, b) => b.valor - a.valor);
+              return (
+                <div key={col.titulo} className="p-3 sm:p-4">
+                  <div className="flex items-baseline justify-between mb-2 gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{col.titulo}</span>
+                    <span className="text-xs font-bold text-foreground tabular-nums truncate">{fmtCompact(col.total)}</span>
+                  </div>
+                  {data.length === 0 ? (
+                    <div className="h-[180px] flex items-center justify-center text-xs text-muted-foreground">
+                      Sem vendas
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={180}>
+                      <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} className="fill-muted-foreground" axisLine={false} tickLine={false} interval={0} />
+                        <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" tickFormatter={(v) => fmtCompact(v).replace("R$ ", "")} width={42} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          formatter={(value: number) => fmt(value)}
+                          cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            borderColor: "hsl(var(--border))",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                          }}
+                        />
+                        <Bar dataKey="valor" name={col.titulo} fill={col.cor} radius={[4, 4, 0, 0]} maxBarSize={48} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
