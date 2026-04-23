@@ -127,6 +127,26 @@ const Dashboard = () => {
     addOrigem(pedidosMesAntData, "MesAnt");
     setOrigemFat(Object.values(origemMap).sort((a, b) => b.totalMes - a.totalMes));
 
+    // Local de estoque breakdown
+    const localMap: Record<string, LocalFat> = {};
+    const addLocal = (data: any[], key: "Hoje" | "Mes" | "MesAnt") => {
+      filterActive(data).forEach((p: any) => {
+        const id = p.local_estoque_id || "__sem__";
+        if (!localMap[id]) localMap[id] = {
+          local_estoque_id: p.local_estoque_id || null,
+          nome: p.local_estoque_id ? (localNomes[p.local_estoque_id] || "—") : "Sem local",
+          totalHoje: 0, totalMes: 0, totalMesAnt: 0,
+        };
+        if (key === "Hoje") localMap[id].totalHoje += Number(p.total);
+        if (key === "Mes") localMap[id].totalMes += Number(p.total);
+        if (key === "MesAnt") localMap[id].totalMesAnt += Number(p.total);
+      });
+    };
+    addLocal(pedidosHojeData, "Hoje");
+    addLocal(pedidosMesData, "Mes");
+    addLocal(pedidosMesAntData, "MesAnt");
+    setLocalFat(Object.values(localMap).sort((a, b) => b.totalMes - a.totalMes));
+
     // Status resumo
     const targetStatuses = ["separacao", "aguardando_pagamento", "pago"];
     const sMap: Record<string, { qtd: number; total: number }> = {};
