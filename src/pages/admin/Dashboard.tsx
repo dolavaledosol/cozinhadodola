@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ShoppingCart, TrendingDown, TrendingUp,
-  CalendarDays, BarChart3, ClipboardList,
+  CalendarDays, BarChart3, ClipboardList, Warehouse,
   ChevronRight, CalendarMinus, ArrowUpRight, ArrowDownRight, Minus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,13 @@ type OrigemFat = {
   qtdMes: number;
   totalMesAnt: number;
   qtdMesAnt: number;
+};
+type LocalFat = {
+  local_estoque_id: string | null;
+  nome: string;
+  totalHoje: number;
+  totalMes: number;
+  totalMesAnt: number;
 };
 type StatusResumo = { status: string; qtd: number; total: number };
 
@@ -63,6 +70,7 @@ const Dashboard = () => {
     totalReceber: 0, qtdReceber: 0,
   });
   const [origemFat, setOrigemFat] = useState<OrigemFat[]>([]);
+  const [localFat, setLocalFat] = useState<LocalFat[]>([]);
   const [statusResumo, setStatusResumo] = useState<StatusResumo[]>([]);
 
   const loadData = useCallback(async () => {
@@ -81,13 +89,17 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber] = await Promise.all([
-      supabase.from("pedido").select("total, status, origem").gte("data", today),
-      supabase.from("pedido").select("total, status, origem").gte("data", monthStartISO),
-      supabase.from("pedido").select("total, status, origem").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
+    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais] = await Promise.all([
+      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", today),
+      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", monthStartISO),
+      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
       supabase.from("contas_pagar").select("valor").eq("pago", false),
       supabase.from("contas_receber").select("valor").eq("recebido", false),
+      supabase.from("local_estoque").select("local_estoque_id, nome"),
     ]);
+
+    const localNomes: Record<string, string> = {};
+    (locais.data || []).forEach((l: any) => { localNomes[l.local_estoque_id] = l.nome; });
 
     const filterValid = (data: any[]) => (data || []).filter((p: any) => p.status !== "carrinho");
     const filterActive = (data: any[]) => data.filter((p: any) => p.status !== "cancelado");
@@ -114,6 +126,26 @@ const Dashboard = () => {
     addOrigem(pedidosMesData, "Mes");
     addOrigem(pedidosMesAntData, "MesAnt");
     setOrigemFat(Object.values(origemMap).sort((a, b) => b.totalMes - a.totalMes));
+
+    // Local de estoque breakdown
+    const localMap: Record<string, LocalFat> = {};
+    const addLocal = (data: any[], key: "Hoje" | "Mes" | "MesAnt") => {
+      filterActive(data).forEach((p: any) => {
+        const id = p.local_estoque_id || "__sem__";
+        if (!localMap[id]) localMap[id] = {
+          local_estoque_id: p.local_estoque_id || null,
+          nome: p.local_estoque_id ? (localNomes[p.local_estoque_id] || "—") : "Sem local",
+          totalHoje: 0, totalMes: 0, totalMesAnt: 0,
+        };
+        if (key === "Hoje") localMap[id].totalHoje += Number(p.total);
+        if (key === "Mes") localMap[id].totalMes += Number(p.total);
+        if (key === "MesAnt") localMap[id].totalMesAnt += Number(p.total);
+      });
+    };
+    addLocal(pedidosHojeData, "Hoje");
+    addLocal(pedidosMesData, "Mes");
+    addLocal(pedidosMesAntData, "MesAnt");
+    setLocalFat(Object.values(localMap).sort((a, b) => b.totalMes - a.totalMes));
 
     // Status resumo
     const targetStatuses = ["separacao", "aguardando_pagamento", "pago"];
@@ -172,6 +204,16 @@ const Dashboard = () => {
       "Mês ant.": o.totalMesAnt,
     }));
   }, [origemFat]);
+
+  // Dados do gráfico por local de estoque
+  const chartDataLocal = useMemo(() => {
+    return localFat.map((l) => ({
+      name: l.nome,
+      Hoje: l.totalHoje,
+      "Mês": l.totalMes,
+      "Mês ant.": l.totalMesAnt,
+    }));
+  }, [localFat]);
 
   if (loading) {
     return (
@@ -326,6 +368,46 @@ const Dashboard = () => {
               <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10 }} className="fill-muted-foreground" tickFormatter={(v) => fmtCompact(v).replace("R$ ", "")} width={50} axisLine={false} tickLine={false} />
+                <Tooltip
+                  formatter={(value: number) => fmt(value)}
+                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} iconType="circle" />
+                <Bar dataKey="Hoje" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="Mês" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="Mês ant." fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Faturamento por local de estoque – mesmo padrão do gráfico por origem */}
+      <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Warehouse className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Faturamento por local de estoque</h2>
+          </div>
+          <span className="text-[11px] text-muted-foreground">Hoje · Mês · Mês ant.</span>
+        </div>
+        {chartDataLocal.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Nenhum pedido registrado
+          </div>
+        ) : (
+          <div className="p-3 sm:p-4">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={chartDataLocal} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} interval={0} />
                 <YAxis tick={{ fontSize: 10 }} className="fill-muted-foreground" tickFormatter={(v) => fmtCompact(v).replace("R$ ", "")} width={50} axisLine={false} tickLine={false} />
                 <Tooltip
                   formatter={(value: number) => fmt(value)}
