@@ -205,6 +205,16 @@ const Dashboard = () => {
     }));
   }, [origemFat]);
 
+  // Dados do gráfico por local de estoque
+  const chartDataLocal = useMemo(() => {
+    return localFat.map((l) => ({
+      name: l.nome,
+      Hoje: l.totalHoje,
+      "Mês": l.totalMes,
+      "Mês ant.": l.totalMesAnt,
+    }));
+  }, [localFat]);
+
   if (loading) {
     return (
       <div className="space-y-4 pb-6">
