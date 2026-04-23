@@ -416,6 +416,42 @@ const Dashboard = () => {
         )}
       </div>
 
+      {/* Top 5 produtos mais vendidos no mês */}
+      <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Top 5 produtos do mês</h2>
+          </div>
+          <span className="text-[11px] text-muted-foreground">Por faturamento</span>
+        </div>
+        {topProdutos.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Nenhum produto vendido no mês
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {topProdutos.map((p, i) => (
+              <div key={p.produto_id} className="flex items-center gap-3 px-4 py-3">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${
+                  i === 0 ? "bg-warning/15 text-warning border border-warning/30"
+                  : i === 1 ? "bg-muted-foreground/15 text-muted-foreground border border-muted-foreground/30"
+                  : i === 2 ? "bg-primary/10 text-primary border border-primary/30"
+                  : "bg-muted text-muted-foreground border border-border"
+                }`}>
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{p.nome}</p>
+                  <p className="text-[11px] text-muted-foreground tabular-nums">{p.quantidade.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} un.</p>
+                </div>
+                <span className="text-sm font-semibold text-foreground tabular-nums shrink-0">{fmt(p.total)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Faturamento por local de estoque – mesmo padrão do gráfico por origem */}
       <div className="rounded-xl bg-card border border-border overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
