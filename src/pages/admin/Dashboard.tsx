@@ -32,6 +32,13 @@ type OrigemFat = {
   totalMesAnt: number;
   qtdMesAnt: number;
 };
+type LocalFat = {
+  local_estoque_id: string | null;
+  nome: string;
+  totalHoje: number;
+  totalMes: number;
+  totalMesAnt: number;
+};
 type StatusResumo = { status: string; qtd: number; total: number };
 
 const STATUS_LABELS: Record<string, string> = {
