@@ -472,47 +472,6 @@ const Dashboard = () => {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Faturamento por local de estoque – mesmo padrão do gráfico por origem */}
-      <div className="rounded-xl bg-card border border-border overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Warehouse className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Faturamento por local de estoque</h2>
-          </div>
-          <span className="text-[11px] text-muted-foreground">Hoje · Mês · Mês ant.</span>
-        </div>
-        {chartDataLocal.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhum pedido registrado
-          </div>
-        ) : (
-          <div className="p-3 sm:p-4">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartDataLocal} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} interval={0} />
-                <YAxis tick={{ fontSize: 10 }} className="fill-muted-foreground" tickFormatter={(v) => fmtCompact(v).replace("R$ ", "")} width={50} axisLine={false} tickLine={false} />
-                <Tooltip
-                  formatter={(value: number) => fmt(value)}
-                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} iconType="circle" />
-                <Bar dataKey="Hoje" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="Mês" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="Mês ant." fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
     </div>
   );
 
