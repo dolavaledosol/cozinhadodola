@@ -135,14 +135,15 @@ const Dashboard = () => {
     addOrigem(pedidosMesAntData, "MesAnt");
     setOrigemFat(Object.values(origemMap).sort((a, b) => b.totalMes - a.totalMes));
 
-    // Local de estoque breakdown
+    // Local de estoque breakdown — ignora pedidos sem local (definido na separação)
     const localMap: Record<string, LocalFat> = {};
     const addLocal = (data: any[], key: "Hoje" | "Mes" | "MesAnt") => {
       filterActive(data).forEach((p: any) => {
-        const id = p.local_estoque_id || "__sem__";
+        if (!p.local_estoque_id) return; // sem local ainda — ignora
+        const id = p.local_estoque_id;
         if (!localMap[id]) localMap[id] = {
-          local_estoque_id: p.local_estoque_id || null,
-          nome: p.local_estoque_id ? (localNomes[p.local_estoque_id] || "—") : "Sem local",
+          local_estoque_id: id,
+          nome: localNomes[id] || "—",
           totalHoje: 0, totalMes: 0, totalMesAnt: 0,
         };
         if (key === "Hoje") localMap[id].totalHoje += Number(p.total);
