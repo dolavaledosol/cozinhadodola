@@ -167,6 +167,25 @@ const Dashboard = () => {
     });
     setStatusResumo(targetStatuses.map(s => ({ status: s, ...sMap[s] })));
 
+    // Top 5 produtos do mês (exclui carrinho e cancelado)
+    const prodMap: Record<string, { nome: string; quantidade: number; total: number }> = {};
+    (itensMes.data || []).forEach((it: any) => {
+      const status = it.pedido?.status;
+      if (!status || status === "carrinho" || status === "cancelado") return;
+      const nome = it.produto?.nome || "—";
+      const key = nome;
+      if (!prodMap[key]) prodMap[key] = { nome, quantidade: 0, total: 0 };
+      const qtd = Number(it.quantidade) || 0;
+      const preco = Number(it.preco_unitario) || 0;
+      prodMap[key].quantidade += qtd;
+      prodMap[key].total += qtd * preco;
+    });
+    const top = Object.entries(prodMap)
+      .map(([produto_id, v]) => ({ produto_id, ...v }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+    setTopProdutos(top);
+
     const pagarData = pagar.data || [];
     const receberData = receber.data || [];
 
