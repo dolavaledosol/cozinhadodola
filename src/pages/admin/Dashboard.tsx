@@ -223,25 +223,6 @@ const Dashboard = () => {
     return { pct, dir: pct > 1 ? "up" : pct < -1 ? "down" : "flat" } as { pct: number; dir: "up" | "down" | "flat" };
   }, [stats.faturamentoMes, stats.faturamentoMesAnt]);
 
-  // Dados consolidados do gráfico comparativo
-  const chartData = useMemo(() => {
-    return origemFat.map((o) => ({
-      name: ORIGEM_LABELS[o.origem] || o.origem,
-      Hoje: o.totalHoje,
-      "Mês": o.totalMes,
-      "Mês ant.": o.totalMesAnt,
-    }));
-  }, [origemFat]);
-
-  // Dados do gráfico por local de estoque
-  const chartDataLocal = useMemo(() => {
-    return localFat.map((l) => ({
-      name: l.nome,
-      Hoje: l.totalHoje,
-      "Mês": l.totalMes,
-      "Mês ant.": l.totalMesAnt,
-    }));
-  }, [localFat]);
 
   if (loading) {
     return (
