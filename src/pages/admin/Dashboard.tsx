@@ -70,6 +70,7 @@ const Dashboard = () => {
     totalReceber: 0, qtdReceber: 0,
   });
   const [origemFat, setOrigemFat] = useState<OrigemFat[]>([]);
+  const [localFat, setLocalFat] = useState<LocalFat[]>([]);
   const [statusResumo, setStatusResumo] = useState<StatusResumo[]>([]);
 
   const loadData = useCallback(async () => {
