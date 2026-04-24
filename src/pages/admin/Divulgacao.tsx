@@ -1,7 +1,3 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EstoqueRelatorio from "@/components/admin/EstoqueRelatorio";
-import ClientesInativosRelatorio from "@/components/admin/ClientesInativosRelatorio";
-import CampanhaRelatorio from "@/components/admin/CampanhaRelatorio";
 import EnviarFotoRelatorio from "@/components/admin/EnviarFotoRelatorio";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
@@ -9,26 +5,7 @@ const Divulgacao = () => {
   return (
     <div className="space-y-4">
       <AdminPageHeader title="Divulgação" />
-      <Tabs defaultValue="estoque">
-        <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="estoque">Estoque</TabsTrigger>
-          <TabsTrigger value="clientes">Clientes Inativos</TabsTrigger>
-          <TabsTrigger value="campanha">Campanha</TabsTrigger>
-          <TabsTrigger value="enviar-foto">Enviar Foto</TabsTrigger>
-        </TabsList>
-        <TabsContent value="estoque">
-          <EstoqueRelatorio />
-        </TabsContent>
-        <TabsContent value="clientes">
-          <ClientesInativosRelatorio inline />
-        </TabsContent>
-        <TabsContent value="campanha">
-          <CampanhaRelatorio inline />
-        </TabsContent>
-        <TabsContent value="enviar-foto">
-          <EnviarFotoRelatorio inline />
-        </TabsContent>
-      </Tabs>
+      <EnviarFotoRelatorio inline />
     </div>
   );
 };
