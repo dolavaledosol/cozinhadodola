@@ -76,6 +76,7 @@ const Dashboard = () => {
   const [localFat, setLocalFat] = useState<LocalFat[]>([]);
   const [statusResumo, setStatusResumo] = useState<StatusResumo[]>([]);
   const [topProdutos, setTopProdutos] = useState<TopProduto[]>([]);
+  const [topProdutosMesAnt, setTopProdutosMesAnt] = useState<TopProduto[]>([]);
 
   const loadData = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
