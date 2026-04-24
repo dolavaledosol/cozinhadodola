@@ -13,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 const fmt = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -101,7 +102,7 @@ const Dashboard = () => {
       supabase.from("local_estoque").select("local_estoque_id, nome"),
       supabase
         .from("pedido_item")
-        .select("quantidade, preco_unitario, produto:produto_id(nome), pedido:pedido_id!inner(status, data)")
+        .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
         .gte("pedido.data", monthStartISO)
         .limit(5000),
     ]);
@@ -173,7 +174,7 @@ const Dashboard = () => {
     (itensMes.data || []).forEach((it: any) => {
       const status = it.pedido?.status;
       if (!status || status === "carrinho" || status === "cancelado") return;
-      const nome = it.produto?.nome || "—";
+      const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
       const key = nome;
       if (!prodMap[key]) prodMap[key] = { nome, quantidade: 0, total: 0 };
       const qtd = Number(it.quantidade) || 0;
