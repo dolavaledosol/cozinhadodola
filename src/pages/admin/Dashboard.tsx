@@ -176,24 +176,26 @@ const Dashboard = () => {
     });
     setStatusResumo(targetStatuses.map(s => ({ status: s, ...sMap[s] })));
 
-    // Top 5 produtos do mês (exclui carrinho e cancelado)
-    const prodMap: Record<string, { nome: string; quantidade: number; total: number }> = {};
-    (itensMes.data || []).forEach((it: any) => {
-      const status = it.pedido?.status;
-      if (!status || status === "carrinho" || status === "cancelado") return;
-      const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
-      const key = nome;
-      if (!prodMap[key]) prodMap[key] = { nome, quantidade: 0, total: 0 };
-      const qtd = Number(it.quantidade) || 0;
-      const preco = Number(it.preco_unitario) || 0;
-      prodMap[key].quantidade += qtd;
-      prodMap[key].total += qtd * preco;
-    });
-    const top = Object.entries(prodMap)
-      .map(([produto_id, v]) => ({ produto_id, ...v }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-    setTopProdutos(top);
+    // Top 5 produtos (exclui carrinho e cancelado)
+    const buildTop = (rows: any[]): TopProduto[] => {
+      const map: Record<string, { nome: string; quantidade: number; total: number }> = {};
+      rows.forEach((it: any) => {
+        const status = it.pedido?.status;
+        if (!status || status === "carrinho" || status === "cancelado") return;
+        const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
+        if (!map[nome]) map[nome] = { nome, quantidade: 0, total: 0 };
+        const qtd = Number(it.quantidade) || 0;
+        const preco = Number(it.preco_unitario) || 0;
+        map[nome].quantidade += qtd;
+        map[nome].total += qtd * preco;
+      });
+      return Object.entries(map)
+        .map(([produto_id, v]) => ({ produto_id, ...v }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+    };
+    setTopProdutos(buildTop(itensMes.data || []));
+    setTopProdutosMesAnt(buildTop(itensMesAnt.data || []));
 
     const pagarData = pagar.data || [];
     const receberData = receber.data || [];
