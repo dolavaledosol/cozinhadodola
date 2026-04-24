@@ -174,7 +174,7 @@ const Dashboard = () => {
     (itensMes.data || []).forEach((it: any) => {
       const status = it.pedido?.status;
       if (!status || status === "carrinho" || status === "cancelado") return;
-      const nome = it.produto?.nome || "—";
+      const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
       const key = nome;
       if (!prodMap[key]) prodMap[key] = { nome, quantidade: 0, total: 0 };
       const qtd = Number(it.quantidade) || 0;
