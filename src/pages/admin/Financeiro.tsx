@@ -788,7 +788,6 @@ const Financeiro = () => {
                    <TableHead className="hidden md:table-cell">Banco</TableHead>
                    <TableHead>Valor</TableHead>
                    <TableHead>Status</TableHead>
-                   <TableHead className="w-20 text-center" title="Cobrança automática">Auto</TableHead>
                  </TableRow>
               </TableHeader>
               <TableBody>
