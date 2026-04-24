@@ -24,30 +24,6 @@ const WEBHOOK_SECTIONS = [
     ],
   },
   {
-    title: "Webhook de Estoque",
-    description: "Configure a URL e a chave de autenticação para envio de relatórios de estoque e clientes via webhook.",
-    keys: [
-      { chave: "webhook_estoque_url", label: "URL do Webhook de Estoque", placeholder: "https://exemplo.com/webhook-estoque" },
-      { chave: "webhook_estoque_apikey", label: "API Key do Webhook de Estoque", placeholder: "Bearer token ou chave de autenticação" },
-    ],
-  },
-  {
-    title: "Webhook de Clientes",
-    description: "Configure a URL e a chave de autenticação para envio de relatórios de clientes inativos via webhook.",
-    keys: [
-      { chave: "webhook_cliente_url", label: "URL do Webhook de Clientes", placeholder: "https://exemplo.com/webhook-clientes" },
-      { chave: "webhook_cliente_apikey", label: "API Key do Webhook de Clientes", placeholder: "Bearer token ou chave de autenticação" },
-    ],
-  },
-  {
-    title: "Webhook de Campanha",
-    description: "Configure a URL e a chave de autenticação para envio de campanhas com clientes, produtos e vídeos via webhook.",
-    keys: [
-      { chave: "webhook_campanha_url", label: "URL do Webhook de Campanha", placeholder: "https://exemplo.com/webhook-campanha" },
-      { chave: "webhook_campanha_apikey", label: "API Key do Webhook de Campanha", placeholder: "Bearer token ou chave de autenticação" },
-    ],
-  },
-  {
     title: "Webhook Enviar Foto",
     description: "Configure a URL e a chave de autenticação para envio de fotos de produtos para clientes via webhook.",
     keys: [
