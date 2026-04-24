@@ -16,14 +16,6 @@ interface Configuracao {
 
 const WEBHOOK_SECTIONS = [
   {
-    title: "Webhook de Cobrança",
-    description: "Configure a URL e a chave de autenticação para envio automático de cobranças via webhook.",
-    keys: [
-      { chave: "webhook_cobranca_url", label: "URL do Webhook de Cobrança", placeholder: "https://exemplo.com/webhook" },
-      { chave: "webhook_cobranca_apikey", label: "API Key do Webhook de Cobrança", placeholder: "Bearer token ou chave de autenticação" },
-    ],
-  },
-  {
     title: "Webhook Enviar Foto",
     description: "Configure a URL e a chave de autenticação para envio de fotos de produtos para clientes via webhook.",
     keys: [
