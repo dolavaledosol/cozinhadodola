@@ -76,6 +76,7 @@ const Dashboard = () => {
   const [localFat, setLocalFat] = useState<LocalFat[]>([]);
   const [statusResumo, setStatusResumo] = useState<StatusResumo[]>([]);
   const [topProdutos, setTopProdutos] = useState<TopProduto[]>([]);
+  const [topProdutosMesAnt, setTopProdutosMesAnt] = useState<TopProduto[]>([]);
 
   const loadData = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
@@ -93,7 +94,7 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais, itensMes] = await Promise.all([
+    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais, itensMes, itensMesAnt] = await Promise.all([
       supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", today),
       supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", monthStartISO),
       supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
@@ -104,6 +105,12 @@ const Dashboard = () => {
         .from("pedido_item")
         .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
         .gte("pedido.data", monthStartISO)
+        .limit(5000),
+      supabase
+        .from("pedido_item")
+        .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
+        .gte("pedido.data", prevMonthStartISO)
+        .lte("pedido.data", prevMonthEndISO)
         .limit(5000),
     ]);
 
@@ -169,24 +176,26 @@ const Dashboard = () => {
     });
     setStatusResumo(targetStatuses.map(s => ({ status: s, ...sMap[s] })));
 
-    // Top 5 produtos do mês (exclui carrinho e cancelado)
-    const prodMap: Record<string, { nome: string; quantidade: number; total: number }> = {};
-    (itensMes.data || []).forEach((it: any) => {
-      const status = it.pedido?.status;
-      if (!status || status === "carrinho" || status === "cancelado") return;
-      const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
-      const key = nome;
-      if (!prodMap[key]) prodMap[key] = { nome, quantidade: 0, total: 0 };
-      const qtd = Number(it.quantidade) || 0;
-      const preco = Number(it.preco_unitario) || 0;
-      prodMap[key].quantidade += qtd;
-      prodMap[key].total += qtd * preco;
-    });
-    const top = Object.entries(prodMap)
-      .map(([produto_id, v]) => ({ produto_id, ...v }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-    setTopProdutos(top);
+    // Top 5 produtos (exclui carrinho e cancelado)
+    const buildTop = (rows: any[]): TopProduto[] => {
+      const map: Record<string, { nome: string; quantidade: number; total: number }> = {};
+      rows.forEach((it: any) => {
+        const status = it.pedido?.status;
+        if (!status || status === "carrinho" || status === "cancelado") return;
+        const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
+        if (!map[nome]) map[nome] = { nome, quantidade: 0, total: 0 };
+        const qtd = Number(it.quantidade) || 0;
+        const preco = Number(it.preco_unitario) || 0;
+        map[nome].quantidade += qtd;
+        map[nome].total += qtd * preco;
+      });
+      return Object.entries(map)
+        .map(([produto_id, v]) => ({ produto_id, ...v }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+    };
+    setTopProdutos(buildTop(itensMes.data || []));
+    setTopProdutosMesAnt(buildTop(itensMesAnt.data || []));
 
     const pagarData = pagar.data || [];
     const receberData = receber.data || [];
@@ -420,41 +429,46 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Top 5 produtos mais vendidos no mês */}
-      <div className="rounded-xl bg-card border border-border overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Top 5 produtos do mês</h2>
+      {/* Top 5 produtos mais vendidos */}
+      {[
+        { titulo: "Top 5 produtos do mês", lista: topProdutos, vazio: "Nenhum produto vendido no mês" },
+        { titulo: "Top 5 produtos do mês anterior", lista: topProdutosMesAnt, vazio: "Nenhum produto vendido no mês anterior" },
+      ].map((bloco) => (
+        <div key={bloco.titulo} className="rounded-xl bg-card border border-border overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground">{bloco.titulo}</h2>
+            </div>
+            <span className="text-[11px] text-muted-foreground">Por faturamento</span>
           </div>
-          <span className="text-[11px] text-muted-foreground">Por faturamento</span>
-        </div>
-        {topProdutos.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhum produto vendido no mês
-          </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {topProdutos.map((p, i) => (
-              <div key={p.produto_id} className="flex items-center gap-3 px-4 py-3">
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${
-                  i === 0 ? "bg-warning/15 text-warning border border-warning/30"
-                  : i === 1 ? "bg-muted-foreground/15 text-muted-foreground border border-muted-foreground/30"
-                  : i === 2 ? "bg-primary/10 text-primary border border-primary/30"
-                  : "bg-muted text-muted-foreground border border-border"
-                }`}>
-                  {i + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{p.nome}</p>
-                  <p className="text-[11px] text-muted-foreground tabular-nums">{p.quantidade.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} un.</p>
+          {bloco.lista.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+              {bloco.vazio}
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {bloco.lista.map((p, i) => (
+                <div key={p.produto_id} className="flex items-center gap-3 px-4 py-3">
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${
+                    i === 0 ? "bg-warning/15 text-warning border border-warning/30"
+                    : i === 1 ? "bg-muted-foreground/15 text-muted-foreground border border-muted-foreground/30"
+                    : i === 2 ? "bg-primary/10 text-primary border border-primary/30"
+                    : "bg-muted text-muted-foreground border border-border"
+                  }`}>
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">{p.nome}</p>
+                    <p className="text-[11px] text-muted-foreground tabular-nums">{p.quantidade.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} un.</p>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground tabular-nums shrink-0">{fmt(p.total)}</span>
                 </div>
-                <span className="text-sm font-semibold text-foreground tabular-nums shrink-0">{fmt(p.total)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 
