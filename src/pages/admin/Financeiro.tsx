@@ -792,34 +792,27 @@ const Financeiro = () => {
               </TableHeader>
               <TableBody>
                 {filteredReceber.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</TableCell></TableRow>
-                ) : filteredReceber.map((c) => {
-                  return (
-                  <TableRow key={c.contas_receber_id}>
-                     <TableCell>
-                       <button onClick={() => openEditReceber(c)} className="text-primary underline hover:text-primary/80 font-medium text-xs">
-                         {c.contas_receber_id.slice(0, 8).toUpperCase()}
-                       </button>
+                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</TableCell></TableRow>
+                 ) : filteredReceber.map((c) => {
+                   return (
+                   <TableRow key={c.contas_receber_id}>
+                      <TableCell>
+                        <button onClick={() => openEditReceber(c)} className="text-primary underline hover:text-primary/80 font-medium text-xs">
+                          {c.contas_receber_id.slice(0, 8).toUpperCase()}
+                        </button>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">{c.cliente?.nome || "—"}</TableCell>
+                      <TableCell className="text-xs">{format(new Date(c.created_at), "dd/MM/yy HH:mm")}</TableCell>
+                      <TableCell>{fmtDate(c.data_vencimento)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">{c._forma}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">{c._banco_pag}</TableCell>
+                      <TableCell>{fmtMoney(c.valor)}</TableCell>
+                      <TableCell>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                          {c.recebido ? "Recebido" : "Pendente"}
+                        </span>
                      </TableCell>
-                     <TableCell className="hidden sm:table-cell text-muted-foreground">{c.cliente?.nome || "—"}</TableCell>
-                     <TableCell className="text-xs">{format(new Date(c.created_at), "dd/MM/yy HH:mm")}</TableCell>
-                     <TableCell>{fmtDate(c.data_vencimento)}</TableCell>
-                     <TableCell className="hidden md:table-cell text-muted-foreground">{c._forma}</TableCell>
-                     <TableCell className="hidden md:table-cell text-muted-foreground">{c._banco_pag}</TableCell>
-                     <TableCell>{fmtMoney(c.valor)}</TableCell>
-                     <TableCell>
-                       <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                         {c.recebido ? "Recebido" : "Pendente"}
-                       </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Switch
-                        checked={c.cobrar_auto}
-                        onCheckedChange={() => toggleCobrarAuto(c.contas_receber_id, c.cobrar_auto)}
-                        disabled={c.recebido}
-                      />
-                    </TableCell>
-                  </TableRow>
+                   </TableRow>
                   );
                 })}
               </TableBody>
