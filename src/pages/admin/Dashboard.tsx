@@ -102,7 +102,7 @@ const Dashboard = () => {
       supabase.from("local_estoque").select("local_estoque_id, nome"),
       supabase
         .from("pedido_item")
-        .select("quantidade, preco_unitario, produto:produto_id(nome), pedido:pedido_id!inner(status, data)")
+        .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
         .gte("pedido.data", monthStartISO)
         .limit(5000),
     ]);
