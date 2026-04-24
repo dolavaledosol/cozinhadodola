@@ -94,7 +94,7 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais, itensMes] = await Promise.all([
+    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais, itensMes, itensMesAnt] = await Promise.all([
       supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", today),
       supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", monthStartISO),
       supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
@@ -105,6 +105,12 @@ const Dashboard = () => {
         .from("pedido_item")
         .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
         .gte("pedido.data", monthStartISO)
+        .limit(5000),
+      supabase
+        .from("pedido_item")
+        .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
+        .gte("pedido.data", prevMonthStartISO)
+        .lte("pedido.data", prevMonthEndISO)
         .limit(5000),
     ]);
 
