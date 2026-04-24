@@ -704,10 +704,6 @@ const Financeiro = () => {
               onSearchChange={setSearchReceber}
               actions={<>
                 <Button variant="outline" onClick={exportReceber} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
-                <Button variant="outline" onClick={webhookExport} disabled={sendingWebhook} className="gap-2">
-                  {sendingWebhook ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Cobrar
-                </Button>
                 <Button onClick={openNewReceber} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
               </>}
             >
