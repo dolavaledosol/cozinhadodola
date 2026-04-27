@@ -661,12 +661,14 @@ const Estoque = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AdminPageHeader
           title="Estoque"
-          actions={
+          actions={activeTab === "estoque" ? (
             <>
               <Button variant="outline" onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo</Button>
               <Button onClick={openTransfer} className="gap-2"><ArrowRightLeft className="h-4 w-4" /> Transferir</Button>
+              <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar</Button>
             </>
-          }
+          ) : null}
           tabs={(
             <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas de estoque">
               <Button type="button" variant={activeTab === "estoque" ? "default" : "outline"} onClick={() => setActiveTab("estoque")} className="flex-1 sm:flex-none">Estoque</Button>
@@ -681,12 +683,8 @@ const Estoque = () => {
              search={search}
              onSearchChange={setSearch}
              searchPlaceholder="Buscar produto, fabricante, família..."
-             actions={<>
-               <Button variant="outline" onClick={exportExcel} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
-               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2"><Upload className="h-4 w-4" /> Importar</Button>
-               <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
-             </>}
            >
+             <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
              <Select value={estoqueLocalFilter} onValueChange={setEstoqueLocalFilter}>
                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Local" /></SelectTrigger>
                <SelectContent>
