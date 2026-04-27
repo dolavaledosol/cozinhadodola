@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,6 +192,7 @@ function getTipoEntrega(p: Pedido): { label: string; icon: typeof Truck } {
 
 const Pedidos = () => {
   const [activeTab, setActiveTab] = useState("vendas");
+  const [producaoHeaderAction, setProducaoHeaderAction] = useState<ReactNode | null>(null);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ativos");
@@ -1763,7 +1764,7 @@ const Pedidos = () => {
             </>
           ) : activeTab === "compras" ? (
             <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
-          ) : null}
+          ) : producaoHeaderAction}
           tabs={(
             <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas de pedidos">
               <Button type="button" variant={activeTab === "vendas" ? "default" : "outline"} onClick={() => setActiveTab("vendas")} className="flex-1 sm:flex-none">Vendas</Button>
@@ -3015,7 +3016,7 @@ const Pedidos = () => {
         </TabsContent>
 
         <TabsContent value="producao" className="space-y-4">
-          <ProducaoTab />
+          <ProducaoTab registerHeaderAction={setProducaoHeaderAction} />
         </TabsContent>
       </Tabs>
 
