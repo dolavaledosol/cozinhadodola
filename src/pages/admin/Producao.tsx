@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,7 +32,11 @@ interface ProdItem {
 const formatBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const Producao = () => {
+interface ProducaoProps {
+  registerHeaderAction?: (action: ReactNode | null) => void;
+}
+
+const Producao = ({ registerHeaderAction }: ProducaoProps = {}) => {
   const qc = useQueryClient();
   const { user } = useAuth();
   const { can } = usePermissions();
@@ -262,7 +266,7 @@ const Producao = () => {
     onError: (e: any) => toast.error("Erro ao cancelar: " + e.message),
   });
 
-  const openNew = () => {
+  const openNew = useCallback(() => {
     setProdutoId("");
     setReceitaId("");
     setLocalEstoqueId("");
@@ -270,17 +274,25 @@ const Producao = () => {
     setObservacao("");
     setItens([]);
     setDialogOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!registerHeaderAction) return;
+    registerHeaderAction(canEdit ? (
+      <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />Nova Produção</Button>
+    ) : null);
+    return () => registerHeaderAction(null);
+  }, [registerHeaderAction, canEdit, openNew]);
 
   const valid = produtoId && localEstoqueId && qtdProduzir > 0 && itens.length > 0 && itens.every((i) => i.produto_id && i.quantidade > 0);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
+      {!registerHeaderAction && <div className="flex items-center justify-end">
         {canEdit && (
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />Nova Produção</Button>
         )}
-      </div>
+      </div>}
 
       <div className="border rounded-lg">
             <Table>
