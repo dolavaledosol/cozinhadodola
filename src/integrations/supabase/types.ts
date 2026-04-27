@@ -532,6 +532,8 @@ export type Database = {
           chat_id: string | null
           created_at: string
           id: string
+          media_type: string | null
+          media_url: string | null
           message: string | null
           payload: Json
           scheduled_for: string
@@ -544,6 +546,8 @@ export type Database = {
           chat_id?: string | null
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           message?: string | null
           payload: Json
           scheduled_for?: string
@@ -556,6 +560,8 @@ export type Database = {
           chat_id?: string | null
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           message?: string | null
           payload?: Json
           scheduled_for?: string
@@ -1665,6 +1671,17 @@ export type Database = {
           ultimo_pedido: string
         }[]
       }
+      clientes_por_produto: {
+        Args: { meses?: number; produto_ids: string[] }
+        Returns: {
+          cliente_id: string
+          lid: string
+          nome: string
+          pn: string
+          produtos: string
+          ultimo_pedido: string
+        }[]
+      }
       find_or_link_cliente_by_cpf: {
         Args: {
           _cpf_cnpj: string
@@ -1694,7 +1711,25 @@ export type Database = {
           similarity: number
         }[]
       }
+      produtos_com_estoque: {
+        Args: never
+        Returns: {
+          estoque_total: number
+          nome: string
+          preco: number
+          produto_id: string
+        }[]
+      }
       refresh_produtos_catalogo: { Args: never; Returns: undefined }
+      todos_contatos_campanha: {
+        Args: never
+        Returns: {
+          chat_id: string
+          contato_id: string
+          nome: string
+          origem: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "vendedor" | "cliente"
