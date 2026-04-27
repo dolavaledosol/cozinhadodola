@@ -668,7 +668,7 @@ const Estoque = () => {
       />
 
       <Tabs defaultValue="estoque">
-        <TabsList className="sticky top-[5.5rem] z-10 flex w-full sm:w-auto">
+        <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
           <TabsTrigger value="estoque" className="flex-1 sm:flex-none">Estoque</TabsTrigger>
           <TabsTrigger value="movimentacao" className="flex-1 sm:flex-none">Movimentação</TabsTrigger>
         </TabsList>
