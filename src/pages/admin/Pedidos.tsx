@@ -1755,10 +1755,10 @@ const Pedidos = () => {
       <AdminPageHeader title="Pedidos" />
 
       <Tabs defaultValue="vendas">
-        <TabsList>
-          <TabsTrigger value="vendas">Vendas</TabsTrigger>
-          <TabsTrigger value="compras">Compras</TabsTrigger>
-          <TabsTrigger value="producao">Produção</TabsTrigger>
+        <TabsList className="sticky top-[5.5rem] z-10 flex w-full sm:w-auto">
+          <TabsTrigger value="vendas" className="flex-1 sm:flex-none">Vendas</TabsTrigger>
+          <TabsTrigger value="compras" className="flex-1 sm:flex-none">Compras</TabsTrigger>
+          <TabsTrigger value="producao" className="flex-1 sm:flex-none">Produção</TabsTrigger>
         </TabsList>
 
         <TabsContent value="vendas" className="space-y-4">
