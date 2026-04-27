@@ -548,11 +548,14 @@ const Pedidos = () => {
         produto_id: l.produto_id, nome: l.nome, quantidade: Number(l.quantidade),
         preco_custo: Number(l.preco_custo), preco_venda: Number(l.preco_venda),
       }));
-      const freteVal = Number(entradaFrete);
+      const freteVal = Number(entradaFrete) || 0;
+      // totalNF inclui o frete rateado nos custos dos itens; descontar para que
+      // a conta do fornecedor não fique duplicada com a conta separada de frete.
+      const valorFornecedor = totalNF - freteVal;
       // Create contas_pagar NF record with status pendente (deferred)
-      if (totalNF > 0) {
+      if (valorFornecedor > 0) {
         await supabase.from("contas_pagar").insert({
-          descricao: `NF ${entradaNF || "s/n"} - ${fornNome}`, valor: totalNF,
+          descricao: `NF ${entradaNF || "s/n"} - ${fornNome}`, valor: valorFornecedor,
           data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
           status_compra: "pendente", local_estoque_id: entradaLocal,
           compra_itens: itensJson as any,
