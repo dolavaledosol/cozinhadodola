@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Search, Eye, Truck, Store, Clock, CalendarIcon, AlertTriangle, Split, Plus, Minus, Trash2, UserPlus, MapPin, PackagePlus, Share2, Download, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
@@ -191,6 +191,7 @@ function getTipoEntrega(p: Pedido): { label: string; icon: typeof Truck } {
 }
 
 const Pedidos = () => {
+  const [activeTab, setActiveTab] = useState("vendas");
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ativos");
@@ -1752,15 +1753,15 @@ const Pedidos = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <Tabs defaultValue="vendas">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AdminPageHeader
           title="Pedidos"
           tabs={(
-            <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
-              <TabsTrigger value="vendas" className="flex-1 sm:flex-none">Vendas</TabsTrigger>
-              <TabsTrigger value="compras" className="flex-1 sm:flex-none">Compras</TabsTrigger>
-              <TabsTrigger value="producao" className="flex-1 sm:flex-none">Produção</TabsTrigger>
-            </TabsList>
+            <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas de pedidos">
+              <Button type="button" variant={activeTab === "vendas" ? "default" : "outline"} onClick={() => setActiveTab("vendas")} className="flex-1 sm:flex-none">Vendas</Button>
+              <Button type="button" variant={activeTab === "compras" ? "default" : "outline"} onClick={() => setActiveTab("compras")} className="flex-1 sm:flex-none">Compras</Button>
+              <Button type="button" variant={activeTab === "producao" ? "default" : "outline"} onClick={() => setActiveTab("producao")} className="flex-1 sm:flex-none">Produção</Button>
+            </div>
           )}
         />
 

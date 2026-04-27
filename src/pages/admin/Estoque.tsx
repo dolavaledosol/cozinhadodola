@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Search, ArrowRightLeft, Download, Upload, CalendarIcon, Plus } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -77,6 +77,7 @@ const emptyForm = {
 };
 
 const Estoque = () => {
+  const [activeTab, setActiveTab] = useState("estoque");
   const [items, setItems] = useState<EstoqueRow[]>([]);
   const [produtos, setProdutos] = useState<SelectOption[]>([]);
   const [locais, setLocais] = useState<LocalEstoque[]>([]);
@@ -657,7 +658,7 @@ const Estoque = () => {
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="estoque">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AdminPageHeader
           title="Estoque"
           actions={
@@ -667,10 +668,10 @@ const Estoque = () => {
             </>
           }
           tabs={(
-            <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
-              <TabsTrigger value="estoque" className="flex-1 sm:flex-none">Estoque</TabsTrigger>
-              <TabsTrigger value="movimentacao" className="flex-1 sm:flex-none">Movimentação</TabsTrigger>
-            </TabsList>
+            <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas de estoque">
+              <Button type="button" variant={activeTab === "estoque" ? "default" : "outline"} onClick={() => setActiveTab("estoque")} className="flex-1 sm:flex-none">Estoque</Button>
+              <Button type="button" variant={activeTab === "movimentacao" ? "default" : "outline"} onClick={() => setActiveTab("movimentacao")} className="flex-1 sm:flex-none">Movimentação</Button>
+            </div>
           )}
         />
 

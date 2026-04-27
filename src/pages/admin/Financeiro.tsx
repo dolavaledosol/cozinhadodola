@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Download, Send, Loader2, AlertTriangle, CalendarIcon, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -69,6 +69,7 @@ const emptyReceber = {
 const Financeiro = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("receber");
 
   /* ── Lookup data ── */
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
@@ -558,14 +559,14 @@ const Financeiro = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <Tabs defaultValue="receber">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AdminPageHeader
           title="Financeiro"
           tabs={(
-            <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
-              <TabsTrigger value="pagar" className="flex-1 sm:flex-none">Contas a Pagar</TabsTrigger>
-              <TabsTrigger value="receber" className="flex-1 sm:flex-none">Contas a Receber</TabsTrigger>
-            </TabsList>
+            <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas do financeiro">
+              <Button type="button" variant={activeTab === "pagar" ? "default" : "outline"} onClick={() => setActiveTab("pagar")} className="flex-1 sm:flex-none">Contas a Pagar</Button>
+              <Button type="button" variant={activeTab === "receber" ? "default" : "outline"} onClick={() => setActiveTab("receber")} className="flex-1 sm:flex-none">Contas a Receber</Button>
+            </div>
           )}
         />
 
