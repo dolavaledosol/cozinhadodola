@@ -1756,6 +1756,14 @@ const Pedidos = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AdminPageHeader
           title="Pedidos"
+          actions={activeTab === "vendas" ? (
+            <>
+              <Button variant="outline" onClick={exportPedidos} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+              <Button onClick={openNewOrder} className="gap-2"><Plus className="h-4 w-4" /> Novo Pedido</Button>
+            </>
+          ) : activeTab === "compras" ? (
+            <Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>
+          ) : null}
           tabs={(
             <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas de pedidos">
               <Button type="button" variant={activeTab === "vendas" ? "default" : "outline"} onClick={() => setActiveTab("vendas")} className="flex-1 sm:flex-none">Vendas</Button>
@@ -1766,13 +1774,6 @@ const Pedidos = () => {
         />
 
         <TabsContent value="vendas" className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div />
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPedidos} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
-          <Button onClick={openNewOrder} className="gap-2"><Plus className="h-4 w-4" /> Novo Pedido</Button>
-        </div>
-      </div>
 
       <div className="flex flex-col gap-3">
         <AdminFilterBar
@@ -2870,7 +2871,6 @@ const Pedidos = () => {
             search={searchCompras}
             onSearchChange={setSearchCompras}
             searchPlaceholder="Buscar por descrição ou fornecedor..."
-            actions={<Button onClick={openEntrada} className="gap-2"><PackagePlus className="h-4 w-4" /> Entrada</Button>}
           >
             <Select value={statusCompraFilter} onValueChange={setStatusCompraFilter}>
               <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>

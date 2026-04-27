@@ -562,6 +562,14 @@ const Financeiro = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AdminPageHeader
           title="Financeiro"
+          actions={activeTab === "pagar" ? (
+            <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={exportReceber} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+              <Button onClick={openNewReceber} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
+            </>
+          )}
           tabs={(
             <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas do financeiro">
               <Button type="button" variant={activeTab === "pagar" ? "default" : "outline"} onClick={() => setActiveTab("pagar")} className="flex-1 sm:flex-none">Contas a Pagar</Button>
@@ -576,7 +584,6 @@ const Financeiro = () => {
             <AdminFilterBar
               search={searchPagar}
               onSearchChange={setSearchPagar}
-              actions={<Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>}
             >
               <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
@@ -706,10 +713,6 @@ const Financeiro = () => {
             <AdminFilterBar
               search={searchReceber}
               onSearchChange={setSearchReceber}
-              actions={<>
-                <Button variant="outline" onClick={exportReceber} className="gap-2"><Download className="h-4 w-4" /> Exportar</Button>
-                <Button onClick={openNewReceber} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
-              </>}
             >
               <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
