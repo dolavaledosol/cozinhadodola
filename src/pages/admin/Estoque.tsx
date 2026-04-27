@@ -668,9 +668,9 @@ const Estoque = () => {
       />
 
       <Tabs defaultValue="estoque">
-        <TabsList>
-          <TabsTrigger value="estoque">Estoque</TabsTrigger>
-          <TabsTrigger value="movimentacao">Movimentação</TabsTrigger>
+        <TabsList className="sticky top-[5.5rem] z-10 flex w-full sm:w-auto">
+          <TabsTrigger value="estoque" className="flex-1 sm:flex-none">Estoque</TabsTrigger>
+          <TabsTrigger value="movimentacao" className="flex-1 sm:flex-none">Movimentação</TabsTrigger>
         </TabsList>
 
         {/* ── Tab Estoque ── */}

@@ -561,9 +561,9 @@ const Financeiro = () => {
       <AdminPageHeader title="Financeiro" />
 
       <Tabs defaultValue="receber">
-        <TabsList>
-          <TabsTrigger value="pagar">Contas a Pagar</TabsTrigger>
-          <TabsTrigger value="receber">Contas a Receber</TabsTrigger>
+        <TabsList className="sticky top-[5.5rem] z-10 flex w-full sm:w-auto">
+          <TabsTrigger value="pagar" className="flex-1 sm:flex-none">Contas a Pagar</TabsTrigger>
+          <TabsTrigger value="receber" className="flex-1 sm:flex-none">Contas a Receber</TabsTrigger>
         </TabsList>
 
         {/* ══════════ TAB PAGAR ══════════ */}
