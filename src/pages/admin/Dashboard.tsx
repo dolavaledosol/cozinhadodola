@@ -201,22 +201,22 @@ const Dashboard = () => {
     const buildTop = (rows: any[]): TopProduto[] => {
       const map: Record<string, { nome: string; quantidade: number; total: number }> = {};
       rows.forEach((it: any) => {
-        const status = it.pedido?.status;
-        if (!status || status === "carrinho" || status === "cancelado") return;
-        const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
-        if (!map[nome]) map[nome] = { nome, quantidade: 0, total: 0 };
+        const prod = produtosMap[it.produto_id];
+        const nome = formatProdutoLabel(prod) || prod?.nome || "—";
+        const key = it.produto_id || nome;
+        if (!map[key]) map[key] = { nome, quantidade: 0, total: 0 };
         const qtd = Number(it.quantidade) || 0;
         const preco = Number(it.preco_unitario) || 0;
-        map[nome].quantidade += qtd;
-        map[nome].total += qtd * preco;
+        map[key].quantidade += qtd;
+        map[key].total += qtd * preco;
       });
       return Object.entries(map)
         .map(([produto_id, v]) => ({ produto_id, ...v }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
     };
-    setTopProdutos(buildTop(itensMes.data || []));
-    setTopProdutosMesAnt(buildTop(itensMesAnt.data || []));
+    setTopProdutos(buildTop(itensMesData));
+    setTopProdutosMesAnt(buildTop(itensMesAntData));
 
     const pagarData = pagar.data || [];
     const receberData = receber.data || [];
