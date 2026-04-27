@@ -43,12 +43,12 @@ const AdminFilterBar = ({
             value={search ?? ""}
             onChange={(e) => onSearchChange?.(e.target.value)}
             onKeyDown={onSearchKeyDown}
-            className="pl-10"
+            className="pl-10 h-10 sm:h-10 rounded-xl sm:rounded-md bg-muted/40 sm:bg-background border-border/60 focus-visible:bg-background"
           />
         </div>
       )}
       {children && (
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 sm:shrink-0">
+        <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 sm:gap-3 sm:shrink-0 overflow-x-auto scrollbar-hide -mx-1 px-1 sm:mx-0 sm:px-0">
           {children}
         </div>
       )}
