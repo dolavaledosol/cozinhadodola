@@ -657,21 +657,22 @@ const Estoque = () => {
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader
-        title="Estoque"
-        actions={
-          <>
-            <Button variant="outline" onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo</Button>
-            <Button onClick={openTransfer} className="gap-2"><ArrowRightLeft className="h-4 w-4" /> Transferir</Button>
-          </>
-        }
-      />
-
       <Tabs defaultValue="estoque">
-        <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
-          <TabsTrigger value="estoque" className="flex-1 sm:flex-none">Estoque</TabsTrigger>
-          <TabsTrigger value="movimentacao" className="flex-1 sm:flex-none">Movimentação</TabsTrigger>
-        </TabsList>
+        <AdminPageHeader
+          title="Estoque"
+          actions={
+            <>
+              <Button variant="outline" onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Novo</Button>
+              <Button onClick={openTransfer} className="gap-2"><ArrowRightLeft className="h-4 w-4" /> Transferir</Button>
+            </>
+          }
+          tabs={(
+            <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
+              <TabsTrigger value="estoque" className="flex-1 sm:flex-none">Estoque</TabsTrigger>
+              <TabsTrigger value="movimentacao" className="flex-1 sm:flex-none">Movimentação</TabsTrigger>
+            </TabsList>
+          )}
+        />
 
         {/* ── Tab Estoque ── */}
         <TabsContent value="estoque" className="space-y-4">

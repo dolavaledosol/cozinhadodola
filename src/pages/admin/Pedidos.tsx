@@ -1752,14 +1752,17 @@ const Pedidos = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <AdminPageHeader title="Pedidos" />
-
       <Tabs defaultValue="vendas">
-        <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
-          <TabsTrigger value="vendas" className="flex-1 sm:flex-none">Vendas</TabsTrigger>
-          <TabsTrigger value="compras" className="flex-1 sm:flex-none">Compras</TabsTrigger>
-          <TabsTrigger value="producao" className="flex-1 sm:flex-none">Produção</TabsTrigger>
-        </TabsList>
+        <AdminPageHeader
+          title="Pedidos"
+          tabs={(
+            <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
+              <TabsTrigger value="vendas" className="flex-1 sm:flex-none">Vendas</TabsTrigger>
+              <TabsTrigger value="compras" className="flex-1 sm:flex-none">Compras</TabsTrigger>
+              <TabsTrigger value="producao" className="flex-1 sm:flex-none">Produção</TabsTrigger>
+            </TabsList>
+          )}
+        />
 
         <TabsContent value="vendas" className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

@@ -558,13 +558,16 @@ const Financeiro = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <AdminPageHeader title="Financeiro" />
-
       <Tabs defaultValue="receber">
-        <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
-          <TabsTrigger value="pagar" className="flex-1 sm:flex-none">Contas a Pagar</TabsTrigger>
-          <TabsTrigger value="receber" className="flex-1 sm:flex-none">Contas a Receber</TabsTrigger>
-        </TabsList>
+        <AdminPageHeader
+          title="Financeiro"
+          tabs={(
+            <TabsList className="flex h-auto min-h-10 w-full justify-start sm:w-fit">
+              <TabsTrigger value="pagar" className="flex-1 sm:flex-none">Contas a Pagar</TabsTrigger>
+              <TabsTrigger value="receber" className="flex-1 sm:flex-none">Contas a Receber</TabsTrigger>
+            </TabsList>
+          )}
+        />
 
         {/* ══════════ TAB PAGAR ══════════ */}
         <TabsContent value="pagar" className="space-y-4">

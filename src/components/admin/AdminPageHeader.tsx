@@ -4,6 +4,7 @@ interface AdminPageHeaderProps {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  tabs?: ReactNode;
 }
 
 /**
@@ -12,7 +13,7 @@ interface AdminPageHeaderProps {
  * - Altura e tipografia uniformes
  * - Mobile-first: ações empilham abaixo do título quando necessário
  */
-const AdminPageHeader = ({ title, subtitle, actions }: AdminPageHeaderProps) => {
+const AdminPageHeader = ({ title, subtitle, actions, tabs }: AdminPageHeaderProps) => {
   return (
     <div className="sticky top-12 -mx-3 sm:-mx-4 md:-mx-6 -mt-3 sm:-mt-4 md:-mt-6 mb-4 z-20 bg-background/95 backdrop-blur-sm border-b">
       <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
@@ -28,6 +29,11 @@ const AdminPageHeader = ({ title, subtitle, actions }: AdminPageHeaderProps) => 
           </div>
         )}
       </div>
+      {tabs && (
+        <div className="px-3 sm:px-4 md:px-6 pb-3 overflow-x-auto">
+          {tabs}
+        </div>
+      )}
     </div>
   );
 };
