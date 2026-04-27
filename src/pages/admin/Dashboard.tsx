@@ -94,25 +94,46 @@ const Dashboard = () => {
     const prevMonthStartISO = prevMonthStart.toISOString();
     const prevMonthEndISO = prevMonthEnd.toISOString();
 
-    const [pedidosHoje, pedidosMes, pedidosMesAnt, pagar, receber, locais, itensMes, itensMesAnt] = await Promise.all([
-      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", today),
-      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", monthStartISO),
-      supabase.from("pedido").select("total, status, origem, local_estoque_id").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
+    // Buscar pedidos do mês atual e anterior (com IDs para join client-side dos itens)
+    const [pedidosHoje, pedidosMesRes, pedidosMesAntRes, pagar, receber, locais] = await Promise.all([
+      supabase.from("pedido").select("pedido_id, total, status, origem, local_estoque_id, data").gte("data", today),
+      supabase.from("pedido").select("pedido_id, total, status, origem, local_estoque_id, data").gte("data", monthStartISO),
+      supabase.from("pedido").select("pedido_id, total, status, origem, local_estoque_id, data").gte("data", prevMonthStartISO).lte("data", prevMonthEndISO),
       supabase.from("contas_pagar").select("valor").eq("pago", false),
       supabase.from("contas_receber").select("valor").eq("recebido", false),
       supabase.from("local_estoque").select("local_estoque_id, nome"),
-      supabase
-        .from("pedido_item")
-        .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
-        .gte("pedido.data", monthStartISO)
-        .limit(5000),
-      supabase
-        .from("pedido_item")
-        .select("quantidade, preco_unitario, produto:produto_id(nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)), pedido:pedido_id!inner(status, data)")
-        .gte("pedido.data", prevMonthStartISO)
-        .lte("pedido.data", prevMonthEndISO)
-        .limit(5000),
     ]);
+
+    const pedidosMes = pedidosMesRes;
+    const pedidosMesAnt = pedidosMesAntRes;
+
+    // Coletar IDs de pedidos válidos (não-carrinho/cancelado) para puxar itens
+    const validIds = (rows: any[] | null) =>
+      (rows || []).filter((p) => p.status !== "carrinho" && p.status !== "cancelado").map((p) => p.pedido_id);
+    const idsMes = validIds(pedidosMes.data);
+    const idsMesAnt = validIds(pedidosMesAnt.data);
+
+    const fetchItens = async (ids: string[]) => {
+      if (!ids.length) return [] as any[];
+      const { data } = await supabase
+        .from("pedido_item")
+        .select("quantidade, preco_unitario, produto_id, pedido_id")
+        .in("pedido_id", ids)
+        .limit(10000);
+      return data || [];
+    };
+    const [itensMesData, itensMesAntData] = await Promise.all([fetchItens(idsMes), fetchItens(idsMesAnt)]);
+
+    // Buscar produtos referenciados (uma única query)
+    const allProdIds = Array.from(new Set([...itensMesData, ...itensMesAntData].map((i: any) => i.produto_id).filter(Boolean)));
+    const produtosMap: Record<string, any> = {};
+    if (allProdIds.length) {
+      const { data: prods } = await supabase
+        .from("produto")
+        .select("produto_id, nome, peso_liquido, peso_bruto, unidade_medida, fabricante:fabricante_id(nome)")
+        .in("produto_id", allProdIds);
+      (prods || []).forEach((p: any) => { produtosMap[p.produto_id] = p; });
+    }
 
     const localNomes: Record<string, string> = {};
     (locais.data || []).forEach((l: any) => { localNomes[l.local_estoque_id] = l.nome; });
@@ -180,22 +201,22 @@ const Dashboard = () => {
     const buildTop = (rows: any[]): TopProduto[] => {
       const map: Record<string, { nome: string; quantidade: number; total: number }> = {};
       rows.forEach((it: any) => {
-        const status = it.pedido?.status;
-        if (!status || status === "carrinho" || status === "cancelado") return;
-        const nome = formatProdutoLabel(it.produto) || it.produto?.nome || "—";
-        if (!map[nome]) map[nome] = { nome, quantidade: 0, total: 0 };
+        const prod = produtosMap[it.produto_id];
+        const nome = formatProdutoLabel(prod) || prod?.nome || "—";
+        const key = it.produto_id || nome;
+        if (!map[key]) map[key] = { nome, quantidade: 0, total: 0 };
         const qtd = Number(it.quantidade) || 0;
         const preco = Number(it.preco_unitario) || 0;
-        map[nome].quantidade += qtd;
-        map[nome].total += qtd * preco;
+        map[key].quantidade += qtd;
+        map[key].total += qtd * preco;
       });
       return Object.entries(map)
         .map(([produto_id, v]) => ({ produto_id, ...v }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
     };
-    setTopProdutos(buildTop(itensMes.data || []));
-    setTopProdutosMesAnt(buildTop(itensMesAnt.data || []));
+    setTopProdutos(buildTop(itensMesData));
+    setTopProdutosMesAnt(buildTop(itensMesAntData));
 
     const pagarData = pagar.data || [];
     const receberData = receber.data || [];
