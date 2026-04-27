@@ -127,20 +127,20 @@ export function AdminListView<T>({
           <div
             key={rowKey(row)}
             className={cn(
-              "border rounded-lg bg-card p-3 space-y-2",
-              onRowClick && "cursor-pointer active:bg-muted/50 transition-colors",
+              "border border-border/60 rounded-xl bg-card p-3 space-y-2 shadow-sm",
+              onRowClick && "cursor-pointer active:scale-[0.99] active:bg-muted/40 transition-all",
             )}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
           >
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="min-w-0 flex-1 space-y-1">
                 {codeCol && (
-                  <div className="text-xs font-mono text-primary">
+                  <div className="text-[11px] font-mono text-primary/80 tracking-wide">
                     {codeCol.render(row)}
                   </div>
                 )}
                 {titleCol && (
-                  <div className="font-medium text-sm leading-snug break-words">
+                  <div className="font-semibold text-sm leading-snug break-words text-foreground">
                     {titleCol.render(row)}
                   </div>
                 )}
@@ -154,16 +154,16 @@ export function AdminListView<T>({
               )}
             </div>
             {metaCols.length > 0 && (
-              <div className="grid grid-cols-1 gap-1 text-xs">
+              <div className="grid grid-cols-1 gap-0.5 text-xs pt-1 border-t border-border/40">
                 {metaCols.map((col) => {
                   const value = col.render(row);
                   if (value === null || value === undefined || value === "") return null;
                   return (
-                    <div key={col.key} className="flex items-baseline gap-2">
-                      <span className="text-muted-foreground shrink-0">
-                        {col.mobileLabel ?? col.header}:
+                    <div key={col.key} className="flex items-baseline gap-2 py-0.5">
+                      <span className="text-muted-foreground shrink-0 text-[11px] uppercase tracking-wide">
+                        {col.mobileLabel ?? col.header}
                       </span>
-                      <span className="text-foreground min-w-0 break-words">{value}</span>
+                      <span className="text-foreground min-w-0 break-words ml-auto text-right font-medium">{value}</span>
                     </div>
                   );
                 })}
