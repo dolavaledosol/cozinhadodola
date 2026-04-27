@@ -30,7 +30,7 @@ const AdminPageHeader = ({ title, subtitle, actions, tabs }: AdminPageHeaderProp
         )}
       </div>
       {tabs && (
-        <div className="px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 overflow-x-auto scrollbar-none -mb-px">
+        <div className="px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 overflow-x-auto scrollbar-hide -mb-px">
           {tabs}
         </div>
       )}

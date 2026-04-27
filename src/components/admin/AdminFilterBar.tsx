@@ -48,7 +48,7 @@ const AdminFilterBar = ({
         </div>
       )}
       {children && (
-        <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 sm:gap-3 sm:shrink-0 overflow-x-auto scrollbar-none -mx-1 px-1 sm:mx-0 sm:px-0">
+        <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 sm:gap-3 sm:shrink-0 overflow-x-auto scrollbar-hide -mx-1 px-1 sm:mx-0 sm:px-0">
           {children}
         </div>
       )}
