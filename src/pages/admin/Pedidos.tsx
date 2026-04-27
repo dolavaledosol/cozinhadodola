@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,7 +192,7 @@ function getTipoEntrega(p: Pedido): { label: string; icon: typeof Truck } {
 
 const Pedidos = () => {
   const [activeTab, setActiveTab] = useState("vendas");
-  const [producaoHeaderAction, setProducaoHeaderAction] = useState<React.ReactNode | null>(null);
+  const [producaoHeaderAction, setProducaoHeaderAction] = useState<ReactNode | null>(null);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ativos");
