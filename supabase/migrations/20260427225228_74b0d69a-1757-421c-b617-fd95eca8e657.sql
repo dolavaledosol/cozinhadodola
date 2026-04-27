@@ -1,0 +1,1 @@
+UPDATE public.contas_pagar SET valor = 507.00 WHERE contas_pagar_id = '80de0beb-1b23-4f45-b1b6-988ef8658711';
