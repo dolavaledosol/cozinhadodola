@@ -92,25 +92,21 @@ const StatusPill = (props: StatusPillProps) => {
   let label: ReactNode;
   let tone: PillTone;
 
-  if ("active" in props && props.active !== undefined) {
-    const {
-      active,
-      trueLabel = "Ativo",
-      falseLabel = "Inativo",
-      trueTone = "success",
-      falseTone = "danger",
-    } = props;
-    label = active ? trueLabel : falseLabel;
-    tone = active ? trueTone : falseTone;
+  if ("active" in props && typeof props.active === "boolean") {
+    const trueLabel = props.trueLabel ?? "Ativo";
+    const falseLabel = props.falseLabel ?? "Inativo";
+    const trueTone: PillTone = props.trueTone ?? "success";
+    const falseTone: PillTone = props.falseTone ?? "danger";
+    label = props.active ? trueLabel : falseLabel;
+    tone = props.active ? trueTone : falseTone;
   } else if ("map" in props && props.map) {
-    const entry = props.map[props.value] ?? props.fallback ?? {
-      label: props.value,
-      tone: "neutral" as PillTone,
-    };
+    const mapped = props.map[props.value];
+    const fallback = props.fallback ?? { label: props.value, tone: "neutral" as PillTone };
+    const entry = mapped ?? fallback;
     label = entry.label;
     tone = entry.tone;
   } else if ("tone" in props && props.tone) {
-    label = (props as DirectProps).children;
+    label = props.children;
     tone = props.tone;
   } else {
     label = "—";
