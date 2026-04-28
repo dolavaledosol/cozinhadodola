@@ -91,9 +91,15 @@ const Index = () => {
 
     const { data } = await query;
 
+    // Buscar IDs dos top 5 mais vendidos (últimos 90 dias)
+    const { data: maisVendidos } = await supabase.rpc("produtos_mais_vendidos", {
+      _periodo_dias: 90,
+      _limite: 5,
+    });
+    const maisVendidosSet = new Set<string>((maisVendidos || []).map((m: any) => m.produto_id));
+
     if (data) {
-      const sortedData = [...data].sort((a: any, b: any) => (b.destacar ? 1 : 0) - (a.destacar ? 1 : 0));
-      const mapped: ProdutoComPreco[] = sortedData.map((p: any) => {
+      const mapped: ProdutoComPreco[] = data.map((p: any) => {
         const imgs = p.produto_imagem || [];
         const sorted = [...imgs].sort((a: any, b: any) => a.ordem - b.ordem);
         return {
@@ -105,7 +111,15 @@ const Index = () => {
           unidade_medida: p.unidade_medida || "un",
           aceita_fracionado: p.aceita_fracionado ?? false,
           quantidade_default: p.quantidade_default ?? 1,
+          destacar: p.destacar ?? false,
+          mais_vendido: maisVendidosSet.has(p.produto_id),
         };
+      });
+      // Ordenação: destacar > mais_vendido > resto
+      mapped.sort((a, b) => {
+        const sa = (a.destacar ? 2 : 0) + (a.mais_vendido ? 1 : 0);
+        const sb = (b.destacar ? 2 : 0) + (b.mais_vendido ? 1 : 0);
+        return sb - sa;
       });
       setProdutos(mapped);
     }
