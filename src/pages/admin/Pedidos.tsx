@@ -49,17 +49,21 @@ function getAllowedNextStatuses(currentStatus: string): string[] {
   return allowed;
 }
 
-const statusLabels: Record<string, string> = {
-  carrinho: "Carrinho", separacao: "Separação", aguardando_pagamento: "Aguardando Pgto",
-  pago: "Pago", enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado",
+const pedidoStatusMap: PillMap = {
+  carrinho: { label: "Carrinho", tone: "neutral" },
+  separacao: { label: "Separação", tone: "warning" },
+  aguardando_pagamento: { label: "Aguardando Pgto", tone: "warning" },
+  pago: { label: "Pago", tone: "success" },
+  enviado: { label: "Enviado", tone: "info" },
+  entregue: { label: "Entregue", tone: "success" },
+  cancelado: { label: "Cancelado", tone: "danger" },
 };
-
-const statusColors: Record<string, string> = {
-  carrinho: "bg-muted text-muted-foreground", separacao: "pill-warning",
-  aguardando_pagamento: "pill-warning", pago: "pill-success",
-  enviado: "pill-info", entregue: "pill-success",
-  cancelado: "pill-danger",
-};
+const statusLabels: Record<string, string> = Object.fromEntries(
+  Object.entries(pedidoStatusMap).map(([k, v]) => [k, v.label])
+);
+const statusColors: Record<string, string> = Object.fromEntries(
+  Object.entries(pedidoStatusMap).map(([k, v]) => [k, pillClass(v.tone)])
+);
 
 const origemLabels: Record<string, string> = {
   web: "Web", whatsapp: "WhatsApp", admin: "Admin",
