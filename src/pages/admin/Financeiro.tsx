@@ -639,7 +639,7 @@ const Financeiro = () => {
                     <button onClick={() => openEditPagar(c)} className="text-xs font-mono text-primary hover:underline">
                       {c.contas_pagar_id.slice(0, 8).toUpperCase()}
                     </button>
-                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${c.pago ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${c.pago ? "pill-success" : "pill-warning"}`}>
                       {c.pago ? "Pago" : "Pendente"}
                     </span>
                   </div>
@@ -694,7 +694,7 @@ const Financeiro = () => {
                      <TableCell className="hidden md:table-cell text-muted-foreground">{c.forma_pagamento?.nome || "—"}</TableCell>
                      <TableCell>{fmtMoney(c.valor)}</TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${c.pago ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${c.pago ? "pill-success" : "pill-warning"}`}>
                         {c.pago ? "Pago" : "Pendente"}
                       </span>
                     </TableCell>
@@ -768,7 +768,7 @@ const Financeiro = () => {
                     <button onClick={() => openEditReceber(c)} className="text-xs font-mono text-primary hover:underline">
                       {c.contas_receber_id.slice(0, 8).toUpperCase()}
                     </button>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "pill-success" : "pill-warning"}`}>
                       {c.recebido ? "Recebido" : "Pendente"}
                     </span>
                   </div>
@@ -815,7 +815,7 @@ const Financeiro = () => {
                       <TableCell className="hidden md:table-cell text-muted-foreground">{c._banco_pag}</TableCell>
                       <TableCell>{fmtMoney(c.valor)}</TableCell>
                       <TableCell>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "pill-success" : "pill-warning"}`}>
                           {c.recebido ? "Recebido" : "Pendente"}
                         </span>
                      </TableCell>
@@ -1043,7 +1043,7 @@ const Financeiro = () => {
                       <span className="underline decoration-dotted">{format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">{count} cobranças</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${log.status === "sucesso" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${log.status === "sucesso" ? "pill-success" : "pill-danger"}`}>
                           {log.status || "—"}
                         </span>
                       </div>

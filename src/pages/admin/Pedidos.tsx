@@ -55,10 +55,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  carrinho: "bg-muted text-muted-foreground", separacao: "bg-yellow-100 text-yellow-800",
-  aguardando_pagamento: "bg-orange-100 text-orange-800", pago: "bg-green-100 text-green-700",
-  enviado: "bg-blue-100 text-blue-700", entregue: "bg-emerald-100 text-emerald-700",
-  cancelado: "bg-red-100 text-red-700",
+  carrinho: "bg-muted text-muted-foreground", separacao: "pill-warning",
+  aguardando_pagamento: "pill-warning", pago: "pill-success",
+  enviado: "pill-info", entregue: "pill-success",
+  cancelado: "pill-danger",
 };
 
 const origemLabels: Record<string, string> = {
@@ -118,8 +118,8 @@ const statusCompraLabels: Record<string, string> = {
   pendente: "Pendente", recebido: "Recebido", pago: "Pago", cancelado: "Cancelado",
 };
 const statusCompraColors: Record<string, string> = {
-  pendente: "bg-orange-100 text-orange-700", recebido: "bg-blue-100 text-blue-700",
-  pago: "bg-green-100 text-green-700", cancelado: "bg-red-100 text-red-700",
+  pendente: "pill-warning", recebido: "pill-info",
+  pago: "pill-success", cancelado: "pill-danger",
 };
 const statusCompraOrder = ["pendente", "recebido", "pago"];
 function getAllowedCompraStatuses(current: string): string[] {
