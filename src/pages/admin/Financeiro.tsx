@@ -189,7 +189,7 @@ const Financeiro = () => {
   const [statusFilterReceber, setStatusFilterReceber] = useState<"pendente" | "recebido" | "todos">("pendente");
   const [receberDateFrom, setReceberDateFrom] = useState<Date | null>(null);
   const [receberDateTo, setReceberDateTo] = useState<Date | null>(null);
-  const [receberClienteFilter, setReceberClienteFilter] = useState("todos");
+  
   const [dialogReceber, setDialogReceber] = useState(false);
   const [editReceberId, setEditReceberId] = useState<string | null>(null);
   const [formReceber, setFormReceber] = useState(emptyReceber);
