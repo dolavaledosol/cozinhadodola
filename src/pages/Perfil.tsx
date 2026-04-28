@@ -240,11 +240,11 @@ const Perfil = () => {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader backTo="/" backLabel="Catálogo" />
-        <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
+        <PageContainer width="narrow" className="space-y-4">
           <Skeleton className="h-8 w-48 rounded-xl" />
           <Skeleton className="h-40 w-full rounded-xl" />
           <Skeleton className="h-40 w-full rounded-xl" />
-        </div>
+        </PageContainer>
       </div>
     );
   }
