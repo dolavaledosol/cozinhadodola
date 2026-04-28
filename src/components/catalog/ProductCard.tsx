@@ -20,6 +20,7 @@ interface ProductCardProps {
   unidade_medida?: string;
   aceita_fracionado?: boolean;
   quantidade_default?: number;
+  mais_vendido?: boolean;
 }
 
 const unidadeLabels: Record<string, string> = {
