@@ -30,7 +30,10 @@ const SOCIAL_KEYS = [
   { chave: "instagram_handle", label: "Usuário do Instagram (sem @)", placeholder: "cozinhadodola", help: "Apenas o handle, sem @ ou URL. O link gerado será https://instagram.com/handle" },
 ];
 
-const ALL_WEBHOOK_KEYS = WEBHOOK_SECTIONS.flatMap((s) => s.keys.map((k) => k.chave));
+const ALL_WEBHOOK_KEYS = [
+  ...WEBHOOK_SECTIONS.flatMap((s) => s.keys.map((k) => k.chave)),
+  ...SOCIAL_KEYS.map((k) => k.chave),
+];
 
 const Configuracoes = () => {
   const [items, setItems] = useState<Configuracao[]>([]);
