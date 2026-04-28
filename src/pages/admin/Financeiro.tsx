@@ -591,14 +591,11 @@ const Financeiro = () => {
                   className="h-11 md:h-10 pl-10 bg-background"
                 />
               </div>
-              <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
-                <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="pago">Pago</SelectItem>
-                  <SelectItem value="todos">Todos</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex min-h-11 w-full gap-2 overflow-x-auto scrollbar-hide sm:w-auto sm:shrink-0" aria-label="Filtrar contas a pagar por status">
+                <Button type="button" variant={statusFilterPagar === "pendente" ? "default" : "outline"} onClick={() => setStatusFilterPagar("pendente")} className="flex-1 sm:flex-none">Pendente</Button>
+                <Button type="button" variant={statusFilterPagar === "pago" ? "default" : "outline"} onClick={() => setStatusFilterPagar("pago")} className="flex-1 sm:flex-none">Pago</Button>
+                <Button type="button" variant={statusFilterPagar === "todos" ? "default" : "outline"} onClick={() => setStatusFilterPagar("todos")} className="flex-1 sm:flex-none">Todos</Button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
@@ -716,14 +713,11 @@ const Financeiro = () => {
                   className="h-11 md:h-10 pl-10 bg-background"
                 />
               </div>
-              <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
-                <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="recebido">Recebido</SelectItem>
-                  <SelectItem value="todos">Todos</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex min-h-11 w-full gap-2 overflow-x-auto scrollbar-hide sm:w-auto sm:shrink-0" aria-label="Filtrar contas a receber por status">
+                <Button type="button" variant={statusFilterReceber === "pendente" ? "default" : "outline"} onClick={() => setStatusFilterReceber("pendente")} className="flex-1 sm:flex-none">Pendente</Button>
+                <Button type="button" variant={statusFilterReceber === "recebido" ? "default" : "outline"} onClick={() => setStatusFilterReceber("recebido")} className="flex-1 sm:flex-none">Recebido</Button>
+                <Button type="button" variant={statusFilterReceber === "todos" ? "default" : "outline"} onClick={() => setStatusFilterReceber("todos")} className="flex-1 sm:flex-none">Todos</Button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
