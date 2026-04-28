@@ -104,7 +104,7 @@ const Financeiro = () => {
   const [statusFilterPagar, setStatusFilterPagar] = useState<"pendente" | "pago" | "todos">("pendente");
   const [pagarDateFrom, setPagarDateFrom] = useState<Date | null>(null);
   const [pagarDateTo, setPagarDateTo] = useState<Date | null>(null);
-  const [pagarFornecedorFilter, setPagarFornecedorFilter] = useState("todos");
+  
   const [dialogPagar, setDialogPagar] = useState(false);
   const [editPagarId, setEditPagarId] = useState<string | null>(null);
   const [formPagar, setFormPagar] = useState(emptyPagar);
@@ -128,8 +128,7 @@ const Financeiro = () => {
     const matchStatus = statusFilterPagar === "todos" || (statusFilterPagar === "pago" ? c.pago : !c.pago);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
     const matchDate = (!pagarDateFrom || cDate >= pagarDateFrom) && (!pagarDateTo || cDate <= pagarDateTo);
-    const matchFornecedor = pagarFornecedorFilter === "todos" || c.fornecedor_id === pagarFornecedorFilter;
-    return matchSearch && matchStatus && matchDate && matchFornecedor;
+    return matchSearch && matchStatus && matchDate;
   });
 
   const openNewPagar = () => {
@@ -585,6 +584,7 @@ const Financeiro = () => {
             <AdminFilterBar
               search={searchPagar}
               onSearchChange={setSearchPagar}
+              searchPlaceholder="Buscar por fornecedor ou descrição..."
             >
               <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
@@ -619,15 +619,6 @@ const Financeiro = () => {
                   <Calendar mode="single" selected={pagarDateTo ?? undefined} onSelect={(d) => d && setPagarDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
-              <Select value={pagarFornecedorFilter} onValueChange={setPagarFornecedorFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos fornecedores</SelectItem>
-                  {fornecedores.map((f) => (
-                    <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           {isMobile ? (
