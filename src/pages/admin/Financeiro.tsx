@@ -568,13 +568,12 @@ const Financeiro = () => {
               <Button onClick={openNewReceber} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
             </>
           )}
-          tabs={(
-            <div className="flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas do financeiro">
-              <Button type="button" variant={activeTab === "pagar" ? "default" : "outline"} onClick={() => setActiveTab("pagar")} className="flex-1 sm:flex-none">Contas a Pagar</Button>
-              <Button type="button" variant={activeTab === "receber" ? "default" : "outline"} onClick={() => setActiveTab("receber")} className="flex-1 sm:flex-none">Contas a Receber</Button>
-            </div>
-          )}
         />
+
+        <div className="mb-4 flex min-h-11 w-full gap-2 sm:w-fit" role="tablist" aria-label="Abas do financeiro">
+          <Button type="button" variant={activeTab === "pagar" ? "default" : "outline"} onClick={() => setActiveTab("pagar")} className="flex-1 sm:flex-none">Contas a Pagar</Button>
+          <Button type="button" variant={activeTab === "receber" ? "default" : "outline"} onClick={() => setActiveTab("receber")} className="flex-1 sm:flex-none">Contas a Receber</Button>
+        </div>
 
         {/* ══════════ TAB PAGAR ══════════ */}
         {activeTab === "pagar" && (
