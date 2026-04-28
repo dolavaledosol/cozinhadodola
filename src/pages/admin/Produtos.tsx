@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import StatusPill from "@/components/shared/StatusPill";
 import ProdutoImageUpload from "@/components/admin/ProdutoImageUpload";
 
 interface Produto {
@@ -268,9 +269,7 @@ const Produtos = () => {
                  <TableCell className="hidden md:table-cell text-muted-foreground">{p.fabricante?.nome || "—"}</TableCell>
                  <TableCell className="hidden sm:table-cell font-medium">R$ {p.preco?.toFixed(2) || "0.00"}</TableCell>
                  <TableCell className="hidden sm:table-cell">
-                   <span className={`text-xs px-2 py-0.5 rounded-full ${p.ativo ? "pill-success" : "pill-danger"}`}>
-                     {p.ativo ? "Ativo" : "Inativo"}
-                   </span>
+                   <StatusPill active={p.ativo} />
                  </TableCell>
                  <TableCell className="hidden sm:table-cell text-center">
                    <Checkbox

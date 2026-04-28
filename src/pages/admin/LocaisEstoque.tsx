@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import StatusPill from "@/components/shared/StatusPill";
 import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 
 interface LocalEstoque { local_estoque_id: string; nome: string; ativo: boolean; }
@@ -117,9 +118,7 @@ const LocaisEstoque = () => {
             sortable: true,
             mobileSlot: "badge",
             render: (i) => (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${i.ativo ? "pill-success" : "pill-danger"}`}>
-                {i.ativo ? "Ativo" : "Inativo"}
-              </span>
+              <StatusPill active={i.ativo} />
             ),
           },
         ] satisfies AdminListColumn<LocalEstoque>[]}
