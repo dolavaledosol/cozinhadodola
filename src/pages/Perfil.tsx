@@ -511,7 +511,7 @@ const Perfil = () => {
                 </div>
                 <div className="bg-muted/50 rounded-xl p-3">
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</span>
-                  <p className="mt-0.5"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${(statusConfig[pedidoDetail.status] || { color: "bg-muted" }).color}`}>{(statusConfig[pedidoDetail.status] || { label: pedidoDetail.status }).label}</span></p>
+                  <p className="mt-0.5"><StatusPill value={pedidoDetail.status} map={pedidoStatusMap} /></p>
                 </div>
                 <div className="bg-muted/50 rounded-xl p-3">
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Origem</span>
