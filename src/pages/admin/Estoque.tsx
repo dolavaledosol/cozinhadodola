@@ -703,6 +703,15 @@ const Estoque = () => {
                  ))}
                </SelectContent>
              </Select>
+             <Select value={estoqueFabricanteFilter} onValueChange={setEstoqueFabricanteFilter}>
+               <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Fabricante" /></SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="todos">Todos fabricantes</SelectItem>
+                 {fabricantesUnicos.map((f) => (
+                   <SelectItem key={f} value={f}>{f}</SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
              <Select value={estoqueTipoFilter} onValueChange={(v) => setEstoqueTipoFilter(v as any)}>
                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                <SelectContent>
