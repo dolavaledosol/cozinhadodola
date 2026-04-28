@@ -415,7 +415,6 @@ const Perfil = () => {
               </div>
             ) : (
               pedidos.map((p) => {
-                const s = statusConfig[p.status] || { label: p.status, color: "bg-muted text-muted-foreground" };
                 return (
                   <div
                     key={p.pedido_id}
@@ -424,7 +423,7 @@ const Perfil = () => {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-mono text-muted-foreground"># {p.pedido_id.slice(0, 8).toUpperCase()}</span>
-                      <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
+                      <StatusPill value={p.status} map={pedidoStatusMap} />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">{new Date(p.data).toLocaleDateString("pt-BR")}</span>
