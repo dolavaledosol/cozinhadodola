@@ -215,6 +215,7 @@ const Index = () => {
                   unidade_medida={p.unidade_medida}
                   aceita_fracionado={p.aceita_fracionado}
                   quantidade_default={p.quantidade_default}
+                  mais_vendido={p.mais_vendido}
                 />
               </div>
             ))}
