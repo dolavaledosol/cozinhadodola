@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useCep } from "@/hooks/useCep";
 import AppHeader from "@/components/shared/AppHeader";
+import PageContainer from "@/components/shared/PageContainer";
 import { PhoneInput, phoneToDigits, digitsToPhone } from "@/components/ui/phone-input";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
@@ -241,7 +242,7 @@ const Checkout = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader backTo="/" backLabel="Catálogo" />
 
-      <main className="flex-1 px-4 py-5 md:py-8 max-w-lg mx-auto w-full">
+      <main className="flex-1 w-full"><PageContainer width="narrow" className="py-5 md:py-8">
         <h1 className="text-xl font-bold mb-5">Finalizar Pedido</h1>
 
         {/* Order summary */}
