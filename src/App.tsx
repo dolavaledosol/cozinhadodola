@@ -32,6 +32,7 @@ import Receitas from "./pages/admin/Receitas";
 
 import Divulgacao from "./pages/admin/Divulgacao";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import SocialFloatingButtons from "@/components/shared/SocialFloatingButtons";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <SocialFloatingButtons />
             </CartProvider>
           </PermissionsProvider>
         </AuthProvider>
