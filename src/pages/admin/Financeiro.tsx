@@ -104,7 +104,7 @@ const Financeiro = () => {
   const [statusFilterPagar, setStatusFilterPagar] = useState<"pendente" | "pago" | "todos">("pendente");
   const [pagarDateFrom, setPagarDateFrom] = useState<Date | null>(null);
   const [pagarDateTo, setPagarDateTo] = useState<Date | null>(null);
-  const [pagarFornecedorFilter, setPagarFornecedorFilter] = useState("todos");
+  
   const [dialogPagar, setDialogPagar] = useState(false);
   const [editPagarId, setEditPagarId] = useState<string | null>(null);
   const [formPagar, setFormPagar] = useState(emptyPagar);
@@ -128,8 +128,7 @@ const Financeiro = () => {
     const matchStatus = statusFilterPagar === "todos" || (statusFilterPagar === "pago" ? c.pago : !c.pago);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
     const matchDate = (!pagarDateFrom || cDate >= pagarDateFrom) && (!pagarDateTo || cDate <= pagarDateTo);
-    const matchFornecedor = pagarFornecedorFilter === "todos" || c.fornecedor_id === pagarFornecedorFilter;
-    return matchSearch && matchStatus && matchDate && matchFornecedor;
+    return matchSearch && matchStatus && matchDate;
   });
 
   const openNewPagar = () => {
