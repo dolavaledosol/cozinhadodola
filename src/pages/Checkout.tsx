@@ -436,7 +436,7 @@ const Checkout = () => {
             )}
           </Button>
         </div>
-      </main>
+      </PageContainer></main>
 
       {/* Address dialog */}
       <Dialog open={endDialogOpen} onOpenChange={setEndDialogOpen}>
