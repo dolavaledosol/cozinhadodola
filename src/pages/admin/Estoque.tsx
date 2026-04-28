@@ -84,6 +84,7 @@ const Estoque = () => {
   const [search, setSearch] = useState("");
   const [estoqueLocalFilter, setEstoqueLocalFilter] = useState("todos");
   const [estoqueTipoFilter, setEstoqueTipoFilter] = useState<"ambos" | "estoque" | "pedidos">("ambos");
+  const [estoqueFabricanteFilter, setEstoqueFabricanteFilter] = useState("todos");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
