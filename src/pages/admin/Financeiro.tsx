@@ -762,6 +762,10 @@ const Financeiro = () => {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Venc: {fmtDate(c.data_vencimento)}</span>
+                    <label className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <span>Auto</span>
+                      <Switch checked={c.cobrar_auto} onCheckedChange={() => toggleCobrarAuto(c.contas_receber_id, c.cobrar_auto)} disabled={c.recebido} />
+                    </label>
                   </div>
                 </div>
               ))}
