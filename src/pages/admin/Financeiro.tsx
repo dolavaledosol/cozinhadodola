@@ -762,6 +762,10 @@ const Financeiro = () => {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Venc: {fmtDate(c.data_vencimento)}</span>
+                    <label className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <span>Auto</span>
+                      <Switch checked={c.cobrar_auto} onCheckedChange={() => toggleCobrarAuto(c.contas_receber_id, c.cobrar_auto)} disabled={c.recebido} />
+                    </label>
                   </div>
                 </div>
               ))}
@@ -779,11 +783,12 @@ const Financeiro = () => {
                    <TableHead className="hidden md:table-cell">Banco</TableHead>
                    <TableHead>Valor</TableHead>
                    <TableHead>Status</TableHead>
+                   <TableHead className="text-center">Auto</TableHead>
                  </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReceber.length === 0 ? (
-                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</TableCell></TableRow>
+                   <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</TableCell></TableRow>
                  ) : filteredReceber.map((c) => {
                    return (
                    <TableRow key={c.contas_receber_id}>
@@ -800,6 +805,9 @@ const Financeiro = () => {
                       <TableCell>{fmtMoney(c.valor)}</TableCell>
                       <TableCell>
                         <StatusPill active={c.recebido} trueLabel="Recebido" falseLabel="Pendente" falseTone="warning" />
+                     </TableCell>
+                     <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                       <Switch checked={c.cobrar_auto} onCheckedChange={() => toggleCobrarAuto(c.contas_receber_id, c.cobrar_auto)} disabled={c.recebido} />
                      </TableCell>
                    </TableRow>
                   );
