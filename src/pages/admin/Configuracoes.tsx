@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Webhook } from "lucide-react";
+import { Save, Webhook, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
@@ -23,6 +23,11 @@ const WEBHOOK_SECTIONS = [
       { chave: "webhook_envia_foto_apikey", label: "API Key do Webhook Enviar Foto", placeholder: "Bearer token ou chave de autenticação" },
     ],
   },
+];
+
+const SOCIAL_KEYS = [
+  { chave: "whatsapp_numero", label: "Número do WhatsApp (com DDI e DDD)", placeholder: "+55 31 99999-9999", help: "Apenas dígitos serão usados no link wa.me. Ex: +5531999999999" },
+  { chave: "instagram_handle", label: "Usuário do Instagram (sem @)", placeholder: "cozinhadodola", help: "Apenas o handle, sem @ ou URL. O link gerado será https://instagram.com/handle" },
 ];
 
 const ALL_WEBHOOK_KEYS = WEBHOOK_SECTIONS.flatMap((s) => s.keys.map((k) => k.chave));
