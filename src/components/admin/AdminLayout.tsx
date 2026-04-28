@@ -8,6 +8,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Megaphone, Settings, ShieldAlert, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PageContainer from "@/components/shared/PageContainer";
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
