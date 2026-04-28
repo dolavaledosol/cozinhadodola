@@ -578,8 +578,8 @@ const Financeiro = () => {
 
         {/* ══════════ TAB PAGAR ══════════ */}
         {activeTab === "pagar" && (
-        <div className="space-y-4 mt-4">
-          <div className="relative z-30 rounded-lg border bg-card p-3 shadow-sm">
+        <div className="space-y-4 mt-6">
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
             <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-center">
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -700,8 +700,8 @@ const Financeiro = () => {
 
         {/* ══════════ TAB RECEBER ══════════ */}
         {activeTab === "receber" && (
-        <div className="space-y-4 mt-4">
-          <div className="relative z-30 rounded-lg border bg-card p-3 shadow-sm">
+        <div className="space-y-4 mt-6">
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
             <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-center">
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
