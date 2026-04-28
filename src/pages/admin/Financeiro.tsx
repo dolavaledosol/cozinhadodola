@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Download, Send, Loader2, AlertTriangle, CalendarIcon, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -559,7 +559,7 @@ const Financeiro = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <div>
         <AdminPageHeader
           title="Financeiro"
           actions={activeTab === "pagar" ? (
@@ -579,7 +579,8 @@ const Financeiro = () => {
         />
 
         {/* ══════════ TAB PAGAR ══════════ */}
-        <TabsContent value="pagar" className="space-y-4">
+        {activeTab === "pagar" && (
+        <div className="space-y-4 mt-4">
           <div className="flex flex-col gap-3">
             <AdminFilterBar
               search={searchPagar}
@@ -701,10 +702,12 @@ const Financeiro = () => {
             </Table>
           </div>
           )}
-        </TabsContent>
+        </div>
+        )}
 
         {/* ══════════ TAB RECEBER ══════════ */}
-        <TabsContent value="receber" className="space-y-4">
+        {activeTab === "receber" && (
+        <div className="space-y-4 mt-4">
           <div className="flex flex-col gap-3">
             <AdminFilterBar
               search={searchReceber}
@@ -810,8 +813,9 @@ const Financeiro = () => {
             </Table>
           </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+        )}
+      </div>
 
       {/* ══════════ DIALOG PAGAR ══════════ */}
       <Dialog open={dialogPagar} onOpenChange={setDialogPagar}>
