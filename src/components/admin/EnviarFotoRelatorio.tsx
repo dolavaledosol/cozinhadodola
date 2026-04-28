@@ -108,7 +108,7 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
     // Fallback: cliente_telefone (only for clients not already in cwFromMap)
     if (telefones) {
       for (const t of telefones as any[]) {
-        const effectiveFrom = t.lid || t.pn || null;
+        const effectiveFrom = t.pn || t.lid || null;
         if (effectiveFrom && !cwFromMap.has(t.cliente_id)) {
           cwFromMap.set(t.cliente_id, effectiveFrom);
         }
