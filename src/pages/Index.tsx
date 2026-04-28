@@ -24,6 +24,8 @@ interface ProdutoComPreco {
   unidade_medida: string;
   aceita_fracionado: boolean;
   quantidade_default: number;
+  destacar: boolean;
+  mais_vendido: boolean;
 }
 
 const ProductSkeleton = () => (
