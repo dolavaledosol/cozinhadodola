@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
-import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import PageHeader from "@/components/shared/PageHeader";
 import StatusPill from "@/components/shared/StatusPill";
 
 /* ── Shared types ── */
@@ -558,7 +558,7 @@ const Financeiro = () => {
     <PullToRefresh onRefresh={handleRefresh} enabled={isMobile}>
     <div className="space-y-4">
       <div>
-        <AdminPageHeader
+        <PageHeader
           title="Financeiro"
           actions={activeTab === "pagar" ? (
             <Button onClick={openNewPagar} className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button>
@@ -578,7 +578,7 @@ const Financeiro = () => {
 
         {/* ══════════ TAB PAGAR ══════════ */}
         {activeTab === "pagar" && (
-        <div className="space-y-4 mt-6">
+        <div className="space-y-4">
           <div className="rounded-lg border bg-card p-3 shadow-sm">
             <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-center">
               <div className="relative flex-1 min-w-0">
@@ -700,7 +700,7 @@ const Financeiro = () => {
 
         {/* ══════════ TAB RECEBER ══════════ */}
         {activeTab === "receber" && (
-        <div className="space-y-4 mt-6">
+        <div className="space-y-4">
           <div className="rounded-lg border bg-card p-3 shadow-sm">
             <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-center">
               <div className="relative flex-1 min-w-0">
