@@ -579,8 +579,8 @@ const Financeiro = () => {
         {/* ══════════ TAB PAGAR ══════════ */}
         {activeTab === "pagar" && (
         <div className="space-y-4 mt-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+          <div className="relative z-30 rounded-lg border bg-card p-3 shadow-sm">
+            <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-center">
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -597,7 +597,7 @@ const Financeiro = () => {
                 <Button type="button" variant={statusFilterPagar === "todos" ? "default" : "outline"} onClick={() => setStatusFilterPagar("todos")} className="flex-1 sm:flex-none">Todos</Button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="mt-3 flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !pagarDateFrom && "text-muted-foreground")}>
@@ -701,8 +701,8 @@ const Financeiro = () => {
         {/* ══════════ TAB RECEBER ══════════ */}
         {activeTab === "receber" && (
         <div className="space-y-4 mt-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+          <div className="relative z-30 rounded-lg border bg-card p-3 shadow-sm">
+            <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-center">
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -719,7 +719,7 @@ const Financeiro = () => {
                 <Button type="button" variant={statusFilterReceber === "todos" ? "default" : "outline"} onClick={() => setStatusFilterReceber("todos")} className="flex-1 sm:flex-none">Todos</Button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="mt-3 flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal", !receberDateFrom && "text-muted-foreground")}>
