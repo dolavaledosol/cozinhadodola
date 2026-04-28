@@ -1720,6 +1720,14 @@ export type Database = {
           produto_id: string
         }[]
       }
+      produtos_mais_vendidos: {
+        Args: { _limite?: number; _periodo_dias?: number }
+        Returns: {
+          produto_id: string
+          qtd_pedidos: number
+          total_vendido: number
+        }[]
+      }
       refresh_produtos_catalogo: { Args: never; Returns: undefined }
       todos_contatos_campanha: {
         Args: never
