@@ -383,6 +383,8 @@ const Estoque = () => {
     items.forEach((e) => {
       // Skip records from inactive locals
       if (!activeLocalIds.has(e.local_estoque_id)) return;
+      // Skip inactive products
+      if (e.produto && e.produto.ativo === false) return;
       let grupo = map.get(e.produto_id);
       if (!grupo) {
         grupo = {
