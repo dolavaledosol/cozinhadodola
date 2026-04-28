@@ -339,12 +339,12 @@ const Perfil = () => {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-sm font-medium">{displayPhone(t.telefone)}</span>
                           {t.verificado && t.is_whatsapp && telefonePreferencialId === t.cliente_telefone_id && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium" title="Telefone preferencial">
+                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full pill-warning font-medium" title="Telefone preferencial">
                               <Star className="h-2.5 w-2.5 fill-yellow-400" /> Preferencial
                             </span>
                           )}
                           {t.verificado && t.is_whatsapp && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium" title="WhatsApp verificado">
+                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full pill-success font-medium" title="WhatsApp verificado">
                               <MessageCircle className="h-2.5 w-2.5" /> WhatsApp
                             </span>
                           )}

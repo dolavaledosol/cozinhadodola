@@ -48,32 +48,44 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-12 flex items-center justify-between gap-2 border-b px-3 bg-background sticky top-0 z-30">
-            <div className="flex items-center gap-2 min-w-0">
-              <SidebarTrigger />
-              <Link to="/admin" className="flex items-center shrink-0">
-                <img src="/images/logo-cozinha-dodola.png" alt="CozinhaDoDola" className="h-8 w-auto" />
-              </Link>
-              <span className="text-sm font-semibold text-muted-foreground hidden sm:inline">Painel Admin</span>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs text-muted-foreground hover:text-foreground shrink-0"
-                onClick={() => navigate("/")}
-              >
-                <Store className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Catálogo</span>
-              </Button>
+          <header className="sticky top-0 z-30 bg-sidebar text-sidebar-foreground">
+            <div className="flex h-14 md:h-16 items-center justify-between gap-2 px-3 md:px-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground" />
+                <Link to="/admin" className="flex items-center shrink-0">
+                  <img
+                    src="/images/logo-cozinha-dodola-branco.png"
+                    alt="CozinhaDoDola"
+                    className="h-10 md:h-12 w-auto"
+                  />
+                </Link>
+                <span className="text-sm font-semibold text-sidebar-foreground/70 hidden md:inline">
+                  Painel Admin
+                </span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+                  onClick={() => navigate("/")}
+                >
+                  <Store className="h-4 w-4" />
+                  <span className="hidden sm:inline">Catálogo</span>
+                </Button>
+              </div>
             </div>
           </header>
-          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
-            {hasAccess ? children : (
-              <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground">
+          <main className="flex-1 overflow-auto bg-background p-3 sm:p-4 md:p-6">
+            {hasAccess ? (
+              children
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground px-4">
                 <ShieldAlert className="h-12 w-12" />
                 <p className="text-lg font-medium">Acesso negado</p>
-                <p className="text-sm">Você não tem permissão para acessar este recurso.</p>
+                <p className="text-sm text-center">
+                  Você não tem permissão para acessar este recurso.
+                </p>
               </div>
             )}
           </main>

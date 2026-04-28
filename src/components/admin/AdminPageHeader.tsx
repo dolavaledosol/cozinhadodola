@@ -15,8 +15,8 @@ interface AdminPageHeaderProps {
  */
 const AdminPageHeader = ({ title, subtitle, actions, tabs }: AdminPageHeaderProps) => {
   return (
-    <div className="sticky top-12 -mx-3 sm:-mx-4 md:-mx-6 -mt-3 sm:-mt-4 md:-mt-6 mb-3 sm:mb-4 z-20 bg-background/95 backdrop-blur-md border-b border-border/60 supports-[backdrop-filter]:bg-background/75">
-      <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 flex flex-row items-center justify-between gap-2 sm:gap-3">
+    <div className="sticky top-14 md:top-16 -mx-3 sm:-mx-4 md:-mx-6 -mt-3 sm:-mt-4 md:-mt-6 mb-3 sm:mb-4 z-20 bg-background/95 backdrop-blur-md border-b border-border/60 supports-[backdrop-filter]:bg-background/75">
+      <div className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 flex flex-row items-center justify-between gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="text-base sm:text-xl md:text-2xl font-bold leading-tight truncate tracking-tight">{title}</h1>
           {subtitle && (

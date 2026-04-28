@@ -144,7 +144,7 @@ const Bancos = () => {
             sortable: true,
             mobileSlot: "badge",
             render: (b) => (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${b.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${b.ativo ? "pill-success" : "pill-danger"}`}>
                 {b.ativo ? "Ativo" : "Inativo"}
               </span>
             ),

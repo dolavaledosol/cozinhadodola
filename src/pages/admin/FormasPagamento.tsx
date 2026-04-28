@@ -117,7 +117,7 @@ const FormasPagamento = () => {
             sortable: true,
             mobileSlot: "badge",
             render: (f) => (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "pill-success" : "pill-danger"}`}>
                 {f.ativo ? "Ativo" : "Inativo"}
               </span>
             ),

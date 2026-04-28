@@ -268,7 +268,7 @@ const Produtos = () => {
                  <TableCell className="hidden md:table-cell text-muted-foreground">{p.fabricante?.nome || "—"}</TableCell>
                  <TableCell className="hidden sm:table-cell font-medium">R$ {p.preco?.toFixed(2) || "0.00"}</TableCell>
                  <TableCell className="hidden sm:table-cell">
-                   <span className={`text-xs px-2 py-0.5 rounded-full ${p.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                   <span className={`text-xs px-2 py-0.5 rounded-full ${p.ativo ? "pill-success" : "pill-danger"}`}>
                      {p.ativo ? "Ativo" : "Inativo"}
                    </span>
                  </TableCell>
