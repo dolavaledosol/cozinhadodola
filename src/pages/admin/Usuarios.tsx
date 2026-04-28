@@ -215,15 +215,12 @@ const Usuarios = () => {
                 <Label>Roles atuais</Label>
                 {roleUser.roles.length === 0 ? (<p className="text-sm text-muted-foreground">Nenhuma role atribuída</p>) : (
                   <div className="space-y-2">
-                    {roleUser.roles.map((r) => {
-                      const opt = ROLE_OPTIONS.find((o) => o.value === r);
-                      return (
-                        <div key={r} className="flex items-center justify-between border rounded-md px-3 py-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${opt?.color || "bg-muted"}`}>{opt?.label || r}</span>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRole(r)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
-                        </div>
-                      );
-                    })}
+                    {roleUser.roles.map((r) => (
+                      <div key={r} className="flex items-center justify-between border rounded-md px-3 py-2">
+                        <StatusPill value={r} map={roleMap} />
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRole(r)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
