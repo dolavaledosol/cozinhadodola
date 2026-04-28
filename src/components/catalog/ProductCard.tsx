@@ -3,7 +3,7 @@ import LazyImage from "./LazyImage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ShoppingCart, Package, Weight, Share2, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Package, Weight, Share2, Minus, Plus, Flame } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 
