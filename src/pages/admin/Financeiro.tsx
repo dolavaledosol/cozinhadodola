@@ -802,6 +802,9 @@ const Financeiro = () => {
                       <TableCell>
                         <StatusPill active={c.recebido} trueLabel="Recebido" falseLabel="Pendente" falseTone="warning" />
                      </TableCell>
+                     <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                       <Switch checked={c.cobrar_auto} onCheckedChange={() => toggleCobrarAuto(c.contas_receber_id, c.cobrar_auto)} disabled={c.recebido} />
+                     </TableCell>
                    </TableRow>
                   );
                 })}
