@@ -18,6 +18,7 @@ import { useCep } from "@/hooks/useCep";
 import { Switch } from "@/components/ui/switch";
 import AppHeader from "@/components/shared/AppHeader";
 import PageContainer from "@/components/shared/PageContainer";
+import StatusPill, { type PillMap } from "@/components/shared/StatusPill";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface Cliente {
@@ -66,14 +67,14 @@ interface PedidoItem {
 
 const emptyEndereco = { cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacao: "" };
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  carrinho: { label: "Carrinho", color: "bg-muted text-muted-foreground" },
-  separacao: { label: "Separação", color: "bg-accent text-accent-foreground" },
-  aguardando_pagamento: { label: "Aguardando pgto", color: "bg-accent text-accent-foreground" },
-  pago: { label: "Pago", color: "bg-primary/10 text-primary" },
-  enviado: { label: "Enviado", color: "bg-primary/10 text-primary" },
-  entregue: { label: "Entregue", color: "bg-primary/15 text-primary" },
-  cancelado: { label: "Cancelado", color: "bg-destructive/10 text-destructive" },
+const pedidoStatusMap: PillMap = {
+  carrinho: { label: "Carrinho", tone: "neutral" },
+  separacao: { label: "Separação", tone: "warning" },
+  aguardando_pagamento: { label: "Aguardando pgto", tone: "warning" },
+  pago: { label: "Pago", tone: "success" },
+  enviado: { label: "Enviado", tone: "info" },
+  entregue: { label: "Entregue", tone: "success" },
+  cancelado: { label: "Cancelado", tone: "danger" },
 };
 
 const Perfil = () => {
