@@ -20,6 +20,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { formatCpfCnpj, unformatCpfCnpj } from "@/lib/cpfCnpj";
 
 import { Badge } from "@/components/ui/badge";
+import StatusPill, { type PillMap, pillClass } from "@/components/shared/StatusPill";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -118,13 +119,18 @@ interface NovoPedidoItem {
 }
 
 /* ── Compras types ── */
-const statusCompraLabels: Record<string, string> = {
-  pendente: "Pendente", recebido: "Recebido", pago: "Pago", cancelado: "Cancelado",
+const compraStatusMap: PillMap = {
+  pendente: { label: "Pendente", tone: "warning" },
+  recebido: { label: "Recebido", tone: "info" },
+  pago: { label: "Pago", tone: "success" },
+  cancelado: { label: "Cancelado", tone: "danger" },
 };
-const statusCompraColors: Record<string, string> = {
-  pendente: "pill-warning", recebido: "pill-info",
-  pago: "pill-success", cancelado: "pill-danger",
-};
+const statusCompraLabels: Record<string, string> = Object.fromEntries(
+  Object.entries(compraStatusMap).map(([k, v]) => [k, v.label])
+);
+const statusCompraColors: Record<string, string> = Object.fromEntries(
+  Object.entries(compraStatusMap).map(([k, v]) => [k, pillClass(v.tone)])
+);
 const statusCompraOrder = ["pendente", "recebido", "pago"];
 function getAllowedCompraStatuses(current: string): string[] {
   const idx = statusCompraOrder.indexOf(current);
