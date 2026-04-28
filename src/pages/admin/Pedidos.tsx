@@ -2950,9 +2950,7 @@ const Pedidos = () => {
                   <button key={c.contas_pagar_id} onClick={() => openCompraEdit(c)} className="w-full text-left border rounded-xl p-3 space-y-1.5 bg-card hover:bg-muted/50 transition-colors active:scale-[0.98]">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono text-primary">{c.contas_pagar_id.slice(0, 8)}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusCompraColors[st] || "bg-muted text-muted-foreground"}`}>
-                        {statusCompraLabels[st] || st}
-                      </span>
+                      <StatusPill value={st} map={compraStatusMap} />
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground truncate mr-2">{c.fornecedor?.nome || "—"}</span>
@@ -3015,9 +3013,7 @@ const Pedidos = () => {
                     <TableCell className="text-right">{freteVal > 0 ? fmtMoney(freteVal) : "—"}</TableCell>
                     <TableCell className="text-right font-semibold">{fmtMoney(totalGeral)}</TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusCompraColors[st] || "bg-muted text-muted-foreground"}`}>
-                        {statusCompraLabels[st] || st}
-                      </span>
+                      <StatusPill value={st} map={compraStatusMap} />
                     </TableCell>
                   </TableRow>
                   );
