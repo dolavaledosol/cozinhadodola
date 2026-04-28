@@ -148,4 +148,47 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* ── Status pills (semantic, consistent across the app) ─────────── */
+  .pill {
+    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap;
+  }
+  .pill-success {
+    background-color: hsl(142 60% 92%);
+    color: hsl(142 60% 25%);
+  }
+  .pill-danger {
+    background-color: hsl(0 75% 94%);
+    color: hsl(0 65% 35%);
+  }
+  .pill-warning {
+    background-color: hsl(38 90% 90%);
+    color: hsl(28 75% 32%);
+  }
+  .pill-info {
+    background-color: hsl(210 80% 93%);
+    color: hsl(210 70% 32%);
+  }
+  .pill-neutral {
+    @apply bg-muted text-muted-foreground;
+  }
+  .pill-accent {
+    @apply bg-accent text-accent-foreground;
+  }
+  .dark .pill-success {
+    background-color: hsl(142 40% 18%);
+    color: hsl(142 60% 75%);
+  }
+  .dark .pill-danger {
+    background-color: hsl(0 50% 20%);
+    color: hsl(0 70% 80%);
+  }
+  .dark .pill-warning {
+    background-color: hsl(28 50% 20%);
+    color: hsl(38 80% 75%);
+  }
+  .dark .pill-info {
+    background-color: hsl(210 50% 20%);
+    color: hsl(210 70% 78%);
+  }
 }
