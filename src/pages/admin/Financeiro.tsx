@@ -779,11 +779,12 @@ const Financeiro = () => {
                    <TableHead className="hidden md:table-cell">Banco</TableHead>
                    <TableHead>Valor</TableHead>
                    <TableHead>Status</TableHead>
+                   <TableHead className="text-center">Auto</TableHead>
                  </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReceber.length === 0 ? (
-                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</TableCell></TableRow>
+                   <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada</TableCell></TableRow>
                  ) : filteredReceber.map((c) => {
                    return (
                    <TableRow key={c.contas_receber_id}>
