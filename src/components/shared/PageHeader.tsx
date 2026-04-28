@@ -39,10 +39,17 @@ const PageHeader = ({
 
   const innerPadding = sticky ? "px-4 md:px-6 py-2.5 md:py-4" : "";
 
-  const marginBottom = compact ? "mb-3 md:mb-4" : "mb-4 md:mb-6";
+  // Quando sticky, o espaçamento abaixo do header é dado pelo padding interno
+  // do wrapper sticky (para evitar gap visível entre o header fixo e o conteúdo
+  // que rola por baixo). Quando não-sticky, usamos margin-bottom normal.
+  const marginBottom = sticky
+    ? "mb-4 md:mb-6"
+    : compact
+      ? "mb-3 md:mb-4"
+      : "mb-4 md:mb-6";
 
   return (
-    <div className={cn(wrapperBase, marginBottom, className)}>
+    <div className={cn(wrapperBase, !sticky && marginBottom, className)}>
       <div
         className={cn(
           innerPadding,
