@@ -126,6 +126,12 @@ const ProductCard = memo(function ProductCard({
               <Package className="h-10 w-10 text-muted-foreground/30" />
             </div>
           )}
+          {mais_vendido && (
+            <div className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+              <Flame className="h-3 w-3" />
+              Mais vendido
+            </div>
+          )}
           {/* Quick add floating button */}
           <button
             onClick={handleAdd}
