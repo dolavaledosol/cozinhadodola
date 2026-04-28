@@ -31,7 +31,7 @@ interface EstoqueRow {
   preco_promocional: number | null;
   quantidade_disponivel: number;
   quantidade_pedida_nao_separada: number;
-  produto: { nome: string; preco: number; peso_liquido: number | null; unidade_medida: string; destacar: boolean; fabricante: { nome: string } | null; familia: { nome: string } | null } | null;
+  produto: { nome: string; preco: number; peso_liquido: number | null; unidade_medida: string; destacar: boolean; ativo: boolean; fabricante: { nome: string } | null; familia: { nome: string } | null } | null;
   local_estoque: { nome: string } | null;
 }
 interface LocalEstoque { local_estoque_id: string; nome: string; }
@@ -84,6 +84,7 @@ const Estoque = () => {
   const [search, setSearch] = useState("");
   const [estoqueLocalFilter, setEstoqueLocalFilter] = useState("todos");
   const [estoqueTipoFilter, setEstoqueTipoFilter] = useState<"ambos" | "estoque" | "pedidos">("ambos");
+  const [estoqueFabricanteFilter, setEstoqueFabricanteFilter] = useState("todos");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -130,7 +131,7 @@ const Estoque = () => {
 
   const load = async () => {
     const [{ data: est }, { data: prod }, { data: loc }] = await Promise.all([
-      supabase.from("estoque_local").select("*, produto(nome, preco, peso_liquido, unidade_medida, destacar, fabricante(nome), familia(nome)), local_estoque(nome)").order("produto_id"),
+      supabase.from("estoque_local").select("*, produto(nome, preco, peso_liquido, unidade_medida, destacar, ativo, fabricante(nome), familia(nome)), local_estoque(nome)").order("produto_id"),
       supabase.from("produto").select("produto_id, nome, peso_liquido, unidade_medida, fabricante:fabricante_id(nome)").eq("ativo", true).order("nome"),
       supabase.from("local_estoque").select("local_estoque_id, nome").eq("ativo", true).order("nome"),
     ]);
@@ -382,6 +383,8 @@ const Estoque = () => {
     items.forEach((e) => {
       // Skip records from inactive locals
       if (!activeLocalIds.has(e.local_estoque_id)) return;
+      // Skip inactive products
+      if (e.produto && e.produto.ativo === false) return;
       let grupo = map.get(e.produto_id);
       if (!grupo) {
         grupo = {
@@ -403,7 +406,13 @@ const Estoque = () => {
     return Array.from(map.values());
   }, [items, locais]);
 
+  const fabricantesUnicos = useMemo(
+    () => [...new Set(agrupados.map((g) => g.fabricante).filter((f) => f && f !== "—"))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [agrupados]
+  );
+
   const filtered = agrupados.filter((g) => {
+    if (estoqueFabricanteFilter !== "todos" && g.fabricante !== estoqueFabricanteFilter) return false;
     const term = search.toLowerCase();
     if (!term) return true;
     return g.nome.toLowerCase().includes(term) || g.fabricante.toLowerCase().includes(term) ||
@@ -691,6 +700,15 @@ const Estoque = () => {
                  <SelectItem value="todos">Todos locais</SelectItem>
                  {locais.map((l) => (
                    <SelectItem key={l.local_estoque_id} value={l.local_estoque_id}>{l.nome}</SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
+             <Select value={estoqueFabricanteFilter} onValueChange={setEstoqueFabricanteFilter}>
+               <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Fabricante" /></SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="todos">Todos fabricantes</SelectItem>
+                 {fabricantesUnicos.map((f) => (
+                   <SelectItem key={f} value={f}>{f}</SelectItem>
                  ))}
                </SelectContent>
              </Select>
