@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Webhook } from "lucide-react";
+import { Save, Webhook, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
@@ -25,7 +25,15 @@ const WEBHOOK_SECTIONS = [
   },
 ];
 
-const ALL_WEBHOOK_KEYS = WEBHOOK_SECTIONS.flatMap((s) => s.keys.map((k) => k.chave));
+const SOCIAL_KEYS = [
+  { chave: "whatsapp_numero", label: "Número do WhatsApp (com DDI e DDD)", placeholder: "+55 31 99999-9999", help: "Apenas dígitos serão usados no link wa.me. Ex: +5531999999999" },
+  { chave: "instagram_handle", label: "Usuário do Instagram (sem @)", placeholder: "cozinhadodola", help: "Apenas o handle, sem @ ou URL. O link gerado será https://instagram.com/handle" },
+];
+
+const ALL_WEBHOOK_KEYS = [
+  ...WEBHOOK_SECTIONS.flatMap((s) => s.keys.map((k) => k.chave)),
+  ...SOCIAL_KEYS.map((k) => k.chave),
+];
 
 const Configuracoes = () => {
   const [items, setItems] = useState<Configuracao[]>([]);
@@ -84,6 +92,36 @@ const Configuracoes = () => {
         title="Configurações"
         subtitle="URLs dos payloads ficam visíveis abaixo de cada campo para facilitar a conferência."
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><MessageCircle className="h-5 w-5" /> Redes Sociais</CardTitle>
+          <CardDescription>
+            Configure o WhatsApp e Instagram exibidos no botão flutuante do site.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {SOCIAL_KEYS.map((sk) => (
+            <div key={sk.chave} className="space-y-2">
+              <Label>{sk.label}</Label>
+              <Input
+                value={webhookValues[sk.chave] || ""}
+                onChange={(e) => setWebhookValues((prev) => ({ ...prev, [sk.chave]: e.target.value }))}
+                placeholder={sk.placeholder}
+              />
+              <p className="text-xs text-muted-foreground">{sk.help}</p>
+            </div>
+          ))}
+          <Button
+            onClick={() => saveWebhookSection("Redes Sociais", SOCIAL_KEYS as any)}
+            disabled={savingSection === "Redes Sociais"}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {savingSection === "Redes Sociais" ? "Salvando..." : "Salvar Redes Sociais"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {WEBHOOK_SECTIONS.map((section) => (
         <Card key={section.title}>
