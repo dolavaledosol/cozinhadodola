@@ -710,6 +710,7 @@ const Financeiro = () => {
             <AdminFilterBar
               search={searchReceber}
               onSearchChange={setSearchReceber}
+              searchPlaceholder="Buscar por cliente ou descrição..."
             >
               <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
