@@ -12,6 +12,7 @@ import PermissionsDialog from "@/components/admin/PermissionsDialog";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
 import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
+import StatusPill, { type PillMap } from "@/components/shared/StatusPill";
 
 interface UserProfile {
   profile_id: string;
@@ -22,10 +23,16 @@ interface UserProfile {
 }
 
 const ROLE_OPTIONS = [
-  { value: "admin", label: "Admin", color: "pill-danger" },
-  { value: "vendedor", label: "Vendedor", color: "pill-info" },
-  { value: "cliente", label: "Cliente", color: "pill-success" },
+  { value: "admin", label: "Admin" },
+  { value: "vendedor", label: "Vendedor" },
+  { value: "cliente", label: "Cliente" },
 ];
+
+const roleMap: PillMap = {
+  admin: { label: "Admin", tone: "danger" },
+  vendedor: { label: "Vendedor", tone: "info" },
+  cliente: { label: "Cliente", tone: "success" },
+};
 
 type SortKey = "profile_id" | "nome" | "email" | "roles";
 
@@ -116,10 +123,9 @@ const Usuarios = () => {
     else { toast({ title: `Role "${role}" removida` }); setRoleUser({ ...roleUser, roles: roleUser.roles.filter((r) => r !== role) }); loadUsers(); }
   };
 
-  const roleBadge = (r: string) => {
-    const opt = ROLE_OPTIONS.find((o) => o.value === r);
-    return <span key={r} className={`text-xs px-2 py-0.5 rounded-full ${opt?.color || "bg-muted"}`}>{opt?.label || r}</span>;
-  };
+  const roleBadge = (r: string) => (
+    <StatusPill key={r} value={r} map={roleMap} />
+  );
 
   return (
     <div className="space-y-6">
