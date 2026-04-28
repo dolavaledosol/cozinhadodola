@@ -49,7 +49,7 @@ const PageHeader = ({
       : "mb-4 md:mb-6";
 
   return (
-    <div className={cn(wrapperBase, !sticky && marginBottom, className)}>
+    <div className={cn(wrapperBase, marginBottom, className)}>
       <div
         className={cn(
           innerPadding,
