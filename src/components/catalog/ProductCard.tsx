@@ -46,6 +46,7 @@ const ProductCard = memo(function ProductCard({
   unidade_medida = "un",
   aceita_fracionado = false,
   quantidade_default = 1,
+  mais_vendido = false,
 }: ProductCardProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
