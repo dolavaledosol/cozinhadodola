@@ -90,27 +90,29 @@ const EnviarFotoRelatorio = ({ inline = false }: { inline?: boolean }) => {
       supabase.from("produto").select("produto_id, nome, produto_imagem(url_imagem, ordem)").eq("ativo", true).order("nome"),
     ]);
 
-    // Build from map: prioritize clientewhats, fallback to cliente_telefone
+    // Build from map: prioritize cliente_telefone (pn), fallback to clientewhats
     const cwFromMap = new Map<string, string>();
     const cwStandalone: ClienteFoto[] = [];
-    if (clienteWhatsDb) {
-      for (const cw of clienteWhatsDb as any[]) {
-        const effectiveFrom = cw.lid || cw.pn || null;
-        if (!effectiveFrom) continue;
-        if (cw.cliente_id) {
-          if (!cwFromMap.has(cw.cliente_id)) cwFromMap.set(cw.cliente_id, effectiveFrom);
-        } else {
-          cwStandalone.push({ cliente_id: `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", from: effectiveFrom, checked: false });
-        }
-      }
-    }
 
-    // Fallback: cliente_telefone (only for clients not already in cwFromMap)
+    // Primary: cliente_telefone with pn preferred over lid
     if (telefones) {
       for (const t of telefones as any[]) {
         const effectiveFrom = t.pn || t.lid || null;
         if (effectiveFrom && !cwFromMap.has(t.cliente_id)) {
           cwFromMap.set(t.cliente_id, effectiveFrom);
+        }
+      }
+    }
+
+    // Fallback: clientewhats (only for clients not already mapped)
+    if (clienteWhatsDb) {
+      for (const cw of clienteWhatsDb as any[]) {
+        const effectiveFrom = cw.pn || cw.lid || null;
+        if (!effectiveFrom) continue;
+        if (cw.cliente_id) {
+          if (!cwFromMap.has(cw.cliente_id)) cwFromMap.set(cw.cliente_id, effectiveFrom);
+        } else {
+          cwStandalone.push({ cliente_id: `cw_${cw.clientewhats_id}`, nome: cw.nome || "—", from: effectiveFrom, checked: false });
         }
       }
     }
