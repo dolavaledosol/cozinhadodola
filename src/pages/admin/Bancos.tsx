@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import StatusPill from "@/components/shared/StatusPill";
 import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 
 interface Banco { banco_id: string; nome: string; codigo: string | null; conta_corrente: string | null; ativo: boolean; }
@@ -144,9 +145,7 @@ const Bancos = () => {
             sortable: true,
             mobileSlot: "badge",
             render: (b) => (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${b.ativo ? "pill-success" : "pill-danger"}`}>
-                {b.ativo ? "Ativo" : "Inativo"}
-              </span>
+              <StatusPill active={b.ativo} />
             ),
           },
         ] satisfies AdminListColumn<Banco>[]}

@@ -20,6 +20,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { formatCpfCnpj, unformatCpfCnpj } from "@/lib/cpfCnpj";
 
 import { Badge } from "@/components/ui/badge";
+import StatusPill, { type PillMap, pillClass } from "@/components/shared/StatusPill";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -49,17 +50,21 @@ function getAllowedNextStatuses(currentStatus: string): string[] {
   return allowed;
 }
 
-const statusLabels: Record<string, string> = {
-  carrinho: "Carrinho", separacao: "Separação", aguardando_pagamento: "Aguardando Pgto",
-  pago: "Pago", enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado",
+const pedidoStatusMap: PillMap = {
+  carrinho: { label: "Carrinho", tone: "neutral" },
+  separacao: { label: "Separação", tone: "warning" },
+  aguardando_pagamento: { label: "Aguardando Pgto", tone: "warning" },
+  pago: { label: "Pago", tone: "success" },
+  enviado: { label: "Enviado", tone: "info" },
+  entregue: { label: "Entregue", tone: "success" },
+  cancelado: { label: "Cancelado", tone: "danger" },
 };
-
-const statusColors: Record<string, string> = {
-  carrinho: "bg-muted text-muted-foreground", separacao: "pill-warning",
-  aguardando_pagamento: "pill-warning", pago: "pill-success",
-  enviado: "pill-info", entregue: "pill-success",
-  cancelado: "pill-danger",
-};
+const statusLabels: Record<string, string> = Object.fromEntries(
+  Object.entries(pedidoStatusMap).map(([k, v]) => [k, v.label])
+);
+const statusColors: Record<string, string> = Object.fromEntries(
+  Object.entries(pedidoStatusMap).map(([k, v]) => [k, pillClass(v.tone)])
+);
 
 const origemLabels: Record<string, string> = {
   web: "Web", whatsapp: "WhatsApp", admin: "Admin",
@@ -114,13 +119,18 @@ interface NovoPedidoItem {
 }
 
 /* ── Compras types ── */
-const statusCompraLabels: Record<string, string> = {
-  pendente: "Pendente", recebido: "Recebido", pago: "Pago", cancelado: "Cancelado",
+const compraStatusMap: PillMap = {
+  pendente: { label: "Pendente", tone: "warning" },
+  recebido: { label: "Recebido", tone: "info" },
+  pago: { label: "Pago", tone: "success" },
+  cancelado: { label: "Cancelado", tone: "danger" },
 };
-const statusCompraColors: Record<string, string> = {
-  pendente: "pill-warning", recebido: "pill-info",
-  pago: "pill-success", cancelado: "pill-danger",
-};
+const statusCompraLabels: Record<string, string> = Object.fromEntries(
+  Object.entries(compraStatusMap).map(([k, v]) => [k, v.label])
+);
+const statusCompraColors: Record<string, string> = Object.fromEntries(
+  Object.entries(compraStatusMap).map(([k, v]) => [k, pillClass(v.tone)])
+);
 const statusCompraOrder = ["pendente", "recebido", "pago"];
 function getAllowedCompraStatuses(current: string): string[] {
   const idx = statusCompraOrder.indexOf(current);
@@ -2940,9 +2950,7 @@ const Pedidos = () => {
                   <button key={c.contas_pagar_id} onClick={() => openCompraEdit(c)} className="w-full text-left border rounded-xl p-3 space-y-1.5 bg-card hover:bg-muted/50 transition-colors active:scale-[0.98]">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono text-primary">{c.contas_pagar_id.slice(0, 8)}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusCompraColors[st] || "bg-muted text-muted-foreground"}`}>
-                        {statusCompraLabels[st] || st}
-                      </span>
+                      <StatusPill value={st} map={compraStatusMap} />
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground truncate mr-2">{c.fornecedor?.nome || "—"}</span>
@@ -3005,9 +3013,7 @@ const Pedidos = () => {
                     <TableCell className="text-right">{freteVal > 0 ? fmtMoney(freteVal) : "—"}</TableCell>
                     <TableCell className="text-right font-semibold">{fmtMoney(totalGeral)}</TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusCompraColors[st] || "bg-muted text-muted-foreground"}`}>
-                        {statusCompraLabels[st] || st}
-                      </span>
+                      <StatusPill value={st} map={compraStatusMap} />
                     </TableCell>
                   </TableRow>
                   );

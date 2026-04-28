@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Package } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import StatusPill from "@/components/shared/StatusPill";
 import AdminListView, { type AdminListColumn } from "@/components/admin/AdminListView";
 import { Badge } from "@/components/ui/badge";
 
@@ -223,9 +224,7 @@ const Fornecedores = () => {
             sortable: true,
             mobileSlot: "badge",
             render: (f) => (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${f.ativo ? "pill-success" : "pill-danger"}`}>
-                {f.ativo ? "Ativo" : "Inativo"}
-              </span>
+              <StatusPill active={f.ativo} />
             ),
           },
         ] satisfies AdminListColumn<Fornecedor>[]}

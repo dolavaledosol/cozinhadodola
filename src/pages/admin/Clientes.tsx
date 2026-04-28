@@ -15,6 +15,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import StatusPill from "@/components/shared/StatusPill";
 
 interface ClienteTelefone {
   cliente_telefone_id: string;
@@ -322,9 +323,7 @@ const Clientes = () => {
                 <p className="font-medium text-sm leading-tight">{c.nome}</p>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted">{tipoLabel(c.tipo_cliente)}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${c.ativo ? "pill-success" : "pill-danger"}`}>
-                    {c.ativo ? "Ativo" : "Inativo"}
-                  </span>
+                  <StatusPill active={c.ativo} />
                 </div>
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -365,9 +364,7 @@ const Clientes = () => {
                     <span className="text-xs px-2 py-0.5 rounded-full bg-muted">{tipoLabel(c.tipo_cliente)}</span>
                   </TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.ativo ? "pill-success" : "pill-danger"}`}>
-                      {c.ativo ? "Ativo" : "Inativo"}
-                    </span>
+                    <StatusPill active={c.ativo} />
                   </TableCell>
                 </TableRow>
               ))}

@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import StatusPill from "@/components/shared/StatusPill";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 /* ── Shared types ── */
@@ -639,9 +640,7 @@ const Financeiro = () => {
                     <button onClick={() => openEditPagar(c)} className="text-xs font-mono text-primary hover:underline">
                       {c.contas_pagar_id.slice(0, 8).toUpperCase()}
                     </button>
-                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${c.pago ? "pill-success" : "pill-warning"}`}>
-                      {c.pago ? "Pago" : "Pendente"}
-                    </span>
+                    <StatusPill active={c.pago} trueLabel="Pago" falseLabel="Pendente" falseTone="warning" />
                   </div>
                   <span className="font-medium text-sm truncate block">{c.descricao}</span>
                   <div className="flex items-center justify-between text-sm">
@@ -694,9 +693,7 @@ const Financeiro = () => {
                      <TableCell className="hidden md:table-cell text-muted-foreground">{c.forma_pagamento?.nome || "—"}</TableCell>
                      <TableCell>{fmtMoney(c.valor)}</TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${c.pago ? "pill-success" : "pill-warning"}`}>
-                        {c.pago ? "Pago" : "Pendente"}
-                      </span>
+                      <StatusPill active={c.pago} trueLabel="Pago" falseLabel="Pendente" falseTone="warning" />
                     </TableCell>
                   </TableRow>
                   );
@@ -768,9 +765,7 @@ const Financeiro = () => {
                     <button onClick={() => openEditReceber(c)} className="text-xs font-mono text-primary hover:underline">
                       {c.contas_receber_id.slice(0, 8).toUpperCase()}
                     </button>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "pill-success" : "pill-warning"}`}>
-                      {c.recebido ? "Recebido" : "Pendente"}
-                    </span>
+                    <StatusPill active={c.recebido} trueLabel="Recebido" falseLabel="Pendente" falseTone="warning" />
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground truncate mr-2">{c.cliente?.nome || "—"}</span>
@@ -815,9 +810,7 @@ const Financeiro = () => {
                       <TableCell className="hidden md:table-cell text-muted-foreground">{c._banco_pag}</TableCell>
                       <TableCell>{fmtMoney(c.valor)}</TableCell>
                       <TableCell>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.recebido ? "pill-success" : "pill-warning"}`}>
-                          {c.recebido ? "Recebido" : "Pendente"}
-                        </span>
+                        <StatusPill active={c.recebido} trueLabel="Recebido" falseLabel="Pendente" falseTone="warning" />
                      </TableCell>
                    </TableRow>
                   );
@@ -1043,9 +1036,7 @@ const Financeiro = () => {
                       <span className="underline decoration-dotted">{format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">{count} cobranças</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${log.status === "sucesso" ? "pill-success" : "pill-danger"}`}>
-                          {log.status || "—"}
-                        </span>
+                        <StatusPill tone={log.status === "sucesso" ? "success" : "danger"}>{log.status || "—"}</StatusPill>
                       </div>
                     </button>
                     {isExpanded && items.length > 0 && (

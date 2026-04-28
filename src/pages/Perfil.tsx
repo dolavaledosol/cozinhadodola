@@ -18,6 +18,7 @@ import { useCep } from "@/hooks/useCep";
 import { Switch } from "@/components/ui/switch";
 import AppHeader from "@/components/shared/AppHeader";
 import PageContainer from "@/components/shared/PageContainer";
+import StatusPill, { type PillMap } from "@/components/shared/StatusPill";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface Cliente {
@@ -66,14 +67,14 @@ interface PedidoItem {
 
 const emptyEndereco = { cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacao: "" };
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  carrinho: { label: "Carrinho", color: "bg-muted text-muted-foreground" },
-  separacao: { label: "Separação", color: "bg-accent text-accent-foreground" },
-  aguardando_pagamento: { label: "Aguardando pgto", color: "bg-accent text-accent-foreground" },
-  pago: { label: "Pago", color: "bg-primary/10 text-primary" },
-  enviado: { label: "Enviado", color: "bg-primary/10 text-primary" },
-  entregue: { label: "Entregue", color: "bg-primary/15 text-primary" },
-  cancelado: { label: "Cancelado", color: "bg-destructive/10 text-destructive" },
+const pedidoStatusMap: PillMap = {
+  carrinho: { label: "Carrinho", tone: "neutral" },
+  separacao: { label: "Separação", tone: "warning" },
+  aguardando_pagamento: { label: "Aguardando pgto", tone: "warning" },
+  pago: { label: "Pago", tone: "success" },
+  enviado: { label: "Enviado", tone: "info" },
+  entregue: { label: "Entregue", tone: "success" },
+  cancelado: { label: "Cancelado", tone: "danger" },
 };
 
 const Perfil = () => {
@@ -340,14 +341,24 @@ const Perfil = () => {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-sm font-medium">{displayPhone(t.telefone)}</span>
                           {t.verificado && t.is_whatsapp && telefonePreferencialId === t.cliente_telefone_id && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full pill-warning font-medium" title="Telefone preferencial">
-                              <Star className="h-2.5 w-2.5 fill-yellow-400" /> Preferencial
-                            </span>
+                            <StatusPill
+                              tone="warning"
+                              size="sm"
+                              icon={<Star className="h-2.5 w-2.5 fill-yellow-400" />}
+                              title="Telefone preferencial"
+                            >
+                              Preferencial
+                            </StatusPill>
                           )}
                           {t.verificado && t.is_whatsapp && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full pill-success font-medium" title="WhatsApp verificado">
-                              <MessageCircle className="h-2.5 w-2.5" /> WhatsApp
-                            </span>
+                            <StatusPill
+                              tone="success"
+                              size="sm"
+                              icon={<MessageCircle className="h-2.5 w-2.5" />}
+                              title="WhatsApp verificado"
+                            >
+                              WhatsApp
+                            </StatusPill>
                           )}
                         </div>
                       </div>
@@ -414,7 +425,6 @@ const Perfil = () => {
               </div>
             ) : (
               pedidos.map((p) => {
-                const s = statusConfig[p.status] || { label: p.status, color: "bg-muted text-muted-foreground" };
                 return (
                   <div
                     key={p.pedido_id}
@@ -423,7 +433,7 @@ const Perfil = () => {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-mono text-muted-foreground"># {p.pedido_id.slice(0, 8).toUpperCase()}</span>
-                      <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
+                      <StatusPill value={p.status} map={pedidoStatusMap} />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">{new Date(p.data).toLocaleDateString("pt-BR")}</span>
@@ -511,7 +521,7 @@ const Perfil = () => {
                 </div>
                 <div className="bg-muted/50 rounded-xl p-3">
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</span>
-                  <p className="mt-0.5"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${(statusConfig[pedidoDetail.status] || { color: "bg-muted" }).color}`}>{(statusConfig[pedidoDetail.status] || { label: pedidoDetail.status }).label}</span></p>
+                  <p className="mt-0.5"><StatusPill value={pedidoDetail.status} map={pedidoStatusMap} /></p>
                 </div>
                 <div className="bg-muted/50 rounded-xl p-3">
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Origem</span>
