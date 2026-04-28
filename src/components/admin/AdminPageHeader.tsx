@@ -13,7 +13,7 @@ interface AdminPageHeaderProps {
  * Internamente usa o PageHeader unificado em modo sticky.
  */
 const AdminPageHeader = (props: AdminPageHeaderProps) => {
-  return <PageHeader {...props} sticky />;
+  return <PageHeader {...props} />;
 };
 
 export default AdminPageHeader;
