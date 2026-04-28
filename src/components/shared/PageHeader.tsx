@@ -37,16 +37,12 @@ const PageHeader = ({
     ? "sticky top-14 md:top-16 z-20 -mx-4 md:-mx-6 -mt-4 md:-mt-6 bg-background/95 backdrop-blur-md border-b border-border/60 supports-[backdrop-filter]:bg-background/75"
     : "";
 
-  const innerPadding = sticky
-    ? "px-4 md:px-6 py-2.5 md:py-4"
-    : "";
+  const innerPadding = sticky ? "px-4 md:px-6 py-2.5 md:py-4" : "";
 
-  const marginBottom = sticky
-    ? compact ? "mb-3" : "mb-4 md:mb-5"
-    : compact ? "mb-4" : "mb-5 md:mb-6";
+  const marginBottom = compact ? "mb-3 md:mb-4" : "mb-4 md:mb-6";
 
   return (
-    <div className={cn(wrapperBase, !sticky && marginBottom, className)}>
+    <div className={cn(wrapperBase, marginBottom, className)}>
       <div
         className={cn(
           innerPadding,
@@ -86,7 +82,6 @@ const PageHeader = ({
           {tabs}
         </div>
       )}
-      {sticky && marginBottom && <div className={marginBottom} />}
     </div>
   );
 };
