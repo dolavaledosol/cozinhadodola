@@ -585,6 +585,7 @@ const Financeiro = () => {
             <AdminFilterBar
               search={searchPagar}
               onSearchChange={setSearchPagar}
+              searchPlaceholder="Buscar por fornecedor ou descrição..."
             >
               <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
@@ -619,15 +620,6 @@ const Financeiro = () => {
                   <Calendar mode="single" selected={pagarDateTo ?? undefined} onSelect={(d) => d && setPagarDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
-              <Select value={pagarFornecedorFilter} onValueChange={setPagarFornecedorFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos fornecedores</SelectItem>
-                  {fornecedores.map((f) => (
-                    <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           {isMobile ? (
