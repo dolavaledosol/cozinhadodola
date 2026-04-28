@@ -438,7 +438,7 @@ const Perfil = () => {
             )}
           </div>
         )}
-      </main>
+      </PageContainer></main>
 
       {/* Endereco Dialog */}
       <Dialog open={endDialogOpen} onOpenChange={setEndDialogOpen}>
