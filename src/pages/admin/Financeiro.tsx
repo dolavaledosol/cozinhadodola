@@ -21,7 +21,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import StatusPill from "@/components/shared/StatusPill";
-import AdminFilterBar from "@/components/admin/AdminFilterBar";
 
 /* ── Shared types ── */
 interface Fornecedor { fornecedor_id: string; nome: string; }
@@ -581,11 +580,17 @@ const Financeiro = () => {
         {activeTab === "pagar" && (
         <div className="space-y-4 mt-4">
           <div className="flex flex-col gap-3">
-            <AdminFilterBar
-              search={searchPagar}
-              onSearchChange={setSearchPagar}
-              searchPlaceholder="Buscar por fornecedor ou descrição..."
-            >
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  aria-label="Buscar contas a pagar"
+                  placeholder="Buscar por fornecedor ou descrição..."
+                  value={searchPagar}
+                  onChange={(e) => setSearchPagar(e.target.value)}
+                  className="h-11 md:h-10 pl-10 bg-background"
+                />
+              </div>
               <Select value={statusFilterPagar} onValueChange={(v) => setStatusFilterPagar(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -594,7 +599,7 @@ const Financeiro = () => {
                   <SelectItem value="todos">Todos</SelectItem>
                 </SelectContent>
               </Select>
-            </AdminFilterBar>
+            </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
@@ -700,11 +705,17 @@ const Financeiro = () => {
         {activeTab === "receber" && (
         <div className="space-y-4 mt-4">
           <div className="flex flex-col gap-3">
-            <AdminFilterBar
-              search={searchReceber}
-              onSearchChange={setSearchReceber}
-              searchPlaceholder="Buscar por cliente ou descrição..."
-            >
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  aria-label="Buscar contas a receber"
+                  placeholder="Buscar por cliente ou descrição..."
+                  value={searchReceber}
+                  onChange={(e) => setSearchReceber(e.target.value)}
+                  className="h-11 md:h-10 pl-10 bg-background"
+                />
+              </div>
               <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -713,7 +724,7 @@ const Financeiro = () => {
                   <SelectItem value="todos">Todos</SelectItem>
                 </SelectContent>
               </Select>
-            </AdminFilterBar>
+            </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Popover>
                 <PopoverTrigger asChild>
