@@ -22,9 +22,9 @@ interface UserProfile {
 }
 
 const ROLE_OPTIONS = [
-  { value: "admin", label: "Admin", color: "bg-red-100 text-red-800" },
-  { value: "vendedor", label: "Vendedor", color: "bg-blue-100 text-blue-800" },
-  { value: "cliente", label: "Cliente", color: "bg-green-100 text-green-800" },
+  { value: "admin", label: "Admin", color: "pill-danger" },
+  { value: "vendedor", label: "Vendedor", color: "pill-info" },
+  { value: "cliente", label: "Cliente", color: "pill-success" },
 ];
 
 type SortKey = "profile_id" | "nome" | "email" | "roles";
