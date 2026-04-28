@@ -93,6 +93,36 @@ const Configuracoes = () => {
         subtitle="URLs dos payloads ficam visíveis abaixo de cada campo para facilitar a conferência."
       />
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><MessageCircle className="h-5 w-5" /> Redes Sociais</CardTitle>
+          <CardDescription>
+            Configure o WhatsApp e Instagram exibidos no botão flutuante do site.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {SOCIAL_KEYS.map((sk) => (
+            <div key={sk.chave} className="space-y-2">
+              <Label>{sk.label}</Label>
+              <Input
+                value={webhookValues[sk.chave] || ""}
+                onChange={(e) => setWebhookValues((prev) => ({ ...prev, [sk.chave]: e.target.value }))}
+                placeholder={sk.placeholder}
+              />
+              <p className="text-xs text-muted-foreground">{sk.help}</p>
+            </div>
+          ))}
+          <Button
+            onClick={() => saveWebhookSection("Redes Sociais", SOCIAL_KEYS as any)}
+            disabled={savingSection === "Redes Sociais"}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {savingSection === "Redes Sociais" ? "Salvando..." : "Salvar Redes Sociais"}
+          </Button>
+        </CardContent>
+      </Card>
+
       {WEBHOOK_SECTIONS.map((section) => (
         <Card key={section.title}>
           <CardHeader>
