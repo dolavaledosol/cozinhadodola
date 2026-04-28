@@ -19,52 +19,31 @@ export interface PillMapEntry {
 export type PillMap = Record<string, PillMapEntry>;
 
 /** Retorna a classe utilitária correspondente ao tom (uso em templates de string). */
-export const pillClass = (tone: PillTone = "neutral"): string => `pill pill-${tone}`;
+export const pillClass = (tone: PillTone = "neutral"): string =>
+  `pill pill-${tone}`;
 
-interface BaseProps {
+export interface StatusPillProps {
   size?: PillSize;
   className?: string;
   icon?: ReactNode;
   title?: string;
-}
 
-interface BooleanProps extends BaseProps {
-  /** Modo booleano: true→success, false→danger (sobrescreva via labels/tones) */
-  active: boolean;
+  /** Modo booleano: ativo/inativo, pago/pendente, etc. */
+  active?: boolean;
   trueLabel?: string;
   falseLabel?: string;
   trueTone?: PillTone;
   falseTone?: PillTone;
-  // Outros modos não usados aqui
-  value?: never;
-  map?: never;
-  tone?: never;
-  children?: never;
-}
 
-interface MappedProps<K extends string = string> extends BaseProps {
-  /** Modo mapeado: recebe valor + mapa */
-  value: K;
-  map: PillMap;
-  /** Fallback quando valor não está no mapa */
+  /** Modo mapeado: valor + mapa { valor: { label, tone } } */
+  value?: string;
+  map?: PillMap;
   fallback?: PillMapEntry;
-  // Outros modos não usados aqui
-  active?: never;
-  tone?: never;
-  children?: never;
-}
 
-interface DirectProps extends BaseProps {
   /** Modo direto: tom + children */
-  tone: PillTone;
-  children: ReactNode;
-  // Outros modos não usados aqui
-  active?: never;
-  value?: never;
-  map?: never;
+  tone?: PillTone;
+  children?: ReactNode;
 }
-
-type StatusPillProps = BooleanProps | MappedProps | DirectProps;
 
 const sizeClasses: Record<PillSize, string> = {
   sm: "text-[10px] px-1.5 py-0.5",
@@ -74,52 +53,56 @@ const sizeClasses: Record<PillSize, string> = {
 /**
  * StatusPill — badge unificado de status.
  *
- * Três modos de uso:
+ * Três modos:
  *
- * 1) Booleano (ativo/inativo, pago/pendente, etc.)
- *    <StatusPill active={banco.ativo} />
- *    <StatusPill active={c.pago} trueLabel="Pago" falseLabel="Pendente" falseTone="warning" />
+ * 1) Booleano:    <StatusPill active={banco.ativo} />
+ *                 <StatusPill active={c.pago} trueLabel="Pago" falseLabel="Pendente" falseTone="warning" />
  *
- * 2) Mapeado (status com múltiplos valores)
- *    <StatusPill value={pedido.status} map={pedidoStatusMap} />
+ * 2) Mapeado:     <StatusPill value={pedido.status} map={pedidoStatusMap} />
  *
- * 3) Direto
- *    <StatusPill tone="info">Enviado</StatusPill>
+ * 3) Direto:      <StatusPill tone="info">Enviado</StatusPill>
  */
-const StatusPill = (props: StatusPillProps) => {
-  const { size = "md", className, icon, title } = props;
+const StatusPill = ({
+  size = "md",
+  className,
+  icon,
+  title,
+  active,
+  trueLabel = "Ativo",
+  falseLabel = "Inativo",
+  trueTone = "success",
+  falseTone = "danger",
+  value,
+  map,
+  fallback,
+  tone,
+  children,
+}: StatusPillProps) => {
+  let resolvedLabel: ReactNode;
+  let resolvedTone: PillTone;
 
-  let label: ReactNode;
-  let tone: PillTone;
-
-  if ("active" in props && typeof props.active === "boolean") {
-    const trueLabel = props.trueLabel ?? "Ativo";
-    const falseLabel = props.falseLabel ?? "Inativo";
-    const trueTone: PillTone = props.trueTone ?? "success";
-    const falseTone: PillTone = props.falseTone ?? "danger";
-    label = props.active ? trueLabel : falseLabel;
-    tone = props.active ? trueTone : falseTone;
-  } else if ("map" in props && props.map) {
-    const mapped = props.map[props.value];
-    const fallback = props.fallback ?? { label: props.value, tone: "neutral" as PillTone };
-    const entry = mapped ?? fallback;
-    label = entry.label;
-    tone = entry.tone;
-  } else if ("tone" in props && props.tone) {
-    label = props.children;
-    tone = props.tone;
+  if (typeof active === "boolean") {
+    resolvedLabel = active ? trueLabel : falseLabel;
+    resolvedTone = active ? trueTone : falseTone;
+  } else if (map && value !== undefined) {
+    const entry = map[value] ?? fallback ?? { label: value, tone: "neutral" as PillTone };
+    resolvedLabel = entry.label;
+    resolvedTone = entry.tone;
+  } else if (tone) {
+    resolvedLabel = children;
+    resolvedTone = tone;
   } else {
-    label = "—";
-    tone = "neutral";
+    resolvedLabel = children ?? "—";
+    resolvedTone = "neutral";
   }
 
   return (
     <span
-      className={cn("pill", `pill-${tone}`, sizeClasses[size], className)}
+      className={cn("pill", `pill-${resolvedTone}`, sizeClasses[size], className)}
       title={title}
     >
       {icon}
-      {label}
+      {resolvedLabel}
     </span>
   );
 };
