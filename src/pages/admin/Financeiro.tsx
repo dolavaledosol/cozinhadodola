@@ -744,15 +744,6 @@ const Financeiro = () => {
                   <Calendar mode="single" selected={receberDateTo ?? undefined} onSelect={(d) => d && setReceberDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
-              <Select value={receberClienteFilter} onValueChange={setReceberClienteFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos clientes</SelectItem>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.cliente_id} value={c.cliente_id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           {isMobile ? (
