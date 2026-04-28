@@ -3,7 +3,7 @@ import LazyImage from "./LazyImage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ShoppingCart, Package, Weight, Share2, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Package, Weight, Share2, Minus, Plus, Flame } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +20,7 @@ interface ProductCardProps {
   unidade_medida?: string;
   aceita_fracionado?: boolean;
   quantidade_default?: number;
+  mais_vendido?: boolean;
 }
 
 const unidadeLabels: Record<string, string> = {
@@ -45,6 +46,7 @@ const ProductCard = memo(function ProductCard({
   unidade_medida = "un",
   aceita_fracionado = false,
   quantidade_default = 1,
+  mais_vendido = false,
 }: ProductCardProps) {
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -122,6 +124,12 @@ const ProductCard = memo(function ProductCard({
           ) : (
             <div className="h-full w-full flex items-center justify-center">
               <Package className="h-10 w-10 text-muted-foreground/30" />
+            </div>
+          )}
+          {mais_vendido && (
+            <div className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+              <Flame className="h-3 w-3" />
+              Mais vendido
             </div>
           )}
           {/* Quick add floating button */}
