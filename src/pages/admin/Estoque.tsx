@@ -406,7 +406,13 @@ const Estoque = () => {
     return Array.from(map.values());
   }, [items, locais]);
 
+  const fabricantesUnicos = useMemo(
+    () => [...new Set(agrupados.map((g) => g.fabricante).filter((f) => f && f !== "—"))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [agrupados]
+  );
+
   const filtered = agrupados.filter((g) => {
+    if (estoqueFabricanteFilter !== "todos" && g.fabricante !== estoqueFabricanteFilter) return false;
     const term = search.toLowerCase();
     if (!term) return true;
     return g.nome.toLowerCase().includes(term) || g.fabricante.toLowerCase().includes(term) ||
