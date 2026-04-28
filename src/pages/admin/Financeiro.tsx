@@ -189,7 +189,7 @@ const Financeiro = () => {
   const [statusFilterReceber, setStatusFilterReceber] = useState<"pendente" | "recebido" | "todos">("pendente");
   const [receberDateFrom, setReceberDateFrom] = useState<Date | null>(null);
   const [receberDateTo, setReceberDateTo] = useState<Date | null>(null);
-  const [receberClienteFilter, setReceberClienteFilter] = useState("todos");
+  
   const [dialogReceber, setDialogReceber] = useState(false);
   const [editReceberId, setEditReceberId] = useState<string | null>(null);
   const [formReceber, setFormReceber] = useState(emptyReceber);
@@ -249,8 +249,7 @@ const Financeiro = () => {
     const matchStatus = statusFilterReceber === "todos" || (statusFilterReceber === "recebido" ? c.recebido : !c.recebido);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
     const matchDate = (!receberDateFrom || cDate >= receberDateFrom) && (!receberDateTo || cDate <= receberDateTo);
-    const matchCliente = receberClienteFilter === "todos" || c.cliente_id === receberClienteFilter;
-    return matchSearch && matchStatus && matchDate && matchCliente;
+    return matchSearch && matchStatus && matchDate;
   });
 
   const openNewReceber = () => { setEditReceberId(null); setFormReceber(emptyReceber); setDialogReceber(true); };
@@ -710,6 +709,7 @@ const Financeiro = () => {
             <AdminFilterBar
               search={searchReceber}
               onSearchChange={setSearchReceber}
+              searchPlaceholder="Buscar por cliente ou descrição..."
             >
               <Select value={statusFilterReceber} onValueChange={(v) => setStatusFilterReceber(v as any)}>
                 <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
@@ -744,15 +744,6 @@ const Financeiro = () => {
                   <Calendar mode="single" selected={receberDateTo ?? undefined} onSelect={(d) => d && setReceberDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
-              <Select value={receberClienteFilter} onValueChange={setReceberClienteFilter}>
-                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos clientes</SelectItem>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.cliente_id} value={c.cliente_id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           {isMobile ? (
