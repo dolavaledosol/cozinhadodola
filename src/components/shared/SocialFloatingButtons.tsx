@@ -31,13 +31,21 @@ const SocialFloatingButtons = () => {
   const whatsDigits = whats.replace(/\D/g, "");
   const instaHandle = insta.replace(/^@/, "").trim();
 
-  if (!whatsDigits && !instaHandle) return null;
+  const openExternal = (url: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      (window.top ?? window).open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end pointer-events-none">
       {instaHandle && (
         <a
-          href={`https://instagram.com/${instaHandle}`}
+          href={`https://www.instagram.com/${instaHandle}`}
+          onClick={openExternal(`https://www.instagram.com/${instaHandle}`)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
@@ -53,6 +61,7 @@ const SocialFloatingButtons = () => {
       {whatsDigits && (
         <a
           href={`https://wa.me/${whatsDigits}`}
+          onClick={openExternal(`https://wa.me/${whatsDigits}`)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Fale conosco no WhatsApp"
