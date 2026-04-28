@@ -5,6 +5,7 @@ import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFilters from "@/components/catalog/CatalogFilters";
 import ProductCard from "@/components/catalog/ProductCard";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import PageContainer from "@/components/shared/PageContainer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Search as SearchIcon } from "lucide-react";
 
@@ -164,7 +165,7 @@ const Index = () => {
       </div>
 
       <PullToRefresh onRefresh={loadProdutos}>
-      <main className="flex-1 px-4 py-4 md:px-6 md:py-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 w-full"><PageContainer width="wide">
         {/* Count */}
         <p className="text-xs text-muted-foreground mb-3">
           {loading ? "Carregando..." : `${filtered.length} produto(s)`}
@@ -221,7 +222,7 @@ const Index = () => {
             ))}
           </div>
         )}
-      </main>
+      </PageContainer></main>
       </PullToRefresh>
 
       {/* Footer */}

@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCep } from "@/hooks/useCep";
 import { Switch } from "@/components/ui/switch";
 import AppHeader from "@/components/shared/AppHeader";
+import PageContainer from "@/components/shared/PageContainer";
 import { formatProdutoLabel } from "@/lib/produtoLabel";
 
 interface Cliente {
@@ -240,11 +241,11 @@ const Perfil = () => {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader backTo="/" backLabel="Catálogo" />
-        <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
+        <PageContainer width="narrow" className="space-y-4">
           <Skeleton className="h-8 w-48 rounded-xl" />
           <Skeleton className="h-40 w-full rounded-xl" />
           <Skeleton className="h-40 w-full rounded-xl" />
-        </div>
+        </PageContainer>
       </div>
     );
   }
@@ -288,7 +289,7 @@ const Perfil = () => {
         </div>
       </div>
 
-      <main className="flex-1 px-4 py-5 max-w-lg mx-auto w-full">
+      <main className="flex-1 w-full"><PageContainer width="narrow" className="py-5 md:py-6">
         {/* DADOS */}
         {activeTab === "dados" && (
           <div className="space-y-5 animate-in fade-in duration-200">
@@ -437,7 +438,7 @@ const Perfil = () => {
             )}
           </div>
         )}
-      </main>
+      </PageContainer></main>
 
       {/* Endereco Dialog */}
       <Dialog open={endDialogOpen} onOpenChange={setEndDialogOpen}>

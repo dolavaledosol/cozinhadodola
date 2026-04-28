@@ -8,6 +8,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Megaphone, Settings, ShieldAlert, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PageContainer from "@/components/shared/PageContainer";
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
@@ -76,18 +77,20 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-auto bg-background p-3 sm:p-4 md:p-6">
-            {hasAccess ? (
-              children
-            ) : (
-              <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground px-4">
-                <ShieldAlert className="h-12 w-12" />
-                <p className="text-lg font-medium">Acesso negado</p>
-                <p className="text-sm text-center">
-                  Você não tem permissão para acessar este recurso.
-                </p>
-              </div>
-            )}
+          <main className="flex-1 overflow-auto bg-background">
+            <PageContainer width="full">
+              {hasAccess ? (
+                children
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground">
+                  <ShieldAlert className="h-12 w-12" />
+                  <p className="text-lg font-medium">Acesso negado</p>
+                  <p className="text-sm text-center">
+                    Você não tem permissão para acessar este recurso.
+                  </p>
+                </div>
+              )}
+            </PageContainer>
           </main>
         </div>
       </div>
