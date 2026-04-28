@@ -31,6 +31,8 @@ const SocialFloatingButtons = () => {
   const whatsDigits = whats.replace(/\D/g, "");
   const instaHandle = insta.replace(/^@/, "").trim();
 
+  if (!whatsDigits && !instaHandle) return null;
+
   const openExternal = (url: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     try {
