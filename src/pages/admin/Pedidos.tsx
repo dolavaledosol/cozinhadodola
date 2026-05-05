@@ -761,7 +761,7 @@ const Pedidos = () => {
     setEditStatus(p.status);
     setEditFrete(Number(p.frete).toFixed(2));
     setEditLocalEstoqueId(p.local_estoque_id);
-    setEditTipoEntrega(p.local_estoque_id ? "retirada" : "entrega");
+    setEditTipoEntrega(p.endereco_id ? "entrega" : "retirada");
     setEditEnderecoId(p.endereco_id || "");
     setPagFormaId("");
     setPagBancoId("");
