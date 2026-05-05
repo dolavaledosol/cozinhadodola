@@ -2330,10 +2330,10 @@ const Pedidos = () => {
                 </div>
               )}
 
-              {/* Local de Estoque - editable only during separacao + retirada */}
-              {selectedPedido.status === "separacao" && editTipoEntrega === "retirada" && (
+              {/* Local de Estoque - editable during separacao (origem do estoque, mesmo em entrega) */}
+              {selectedPedido.status === "separacao" && (
                 <div className="space-y-2">
-                  <Label>Local de Estoque</Label>
+                  <Label>Local de Estoque {editTipoEntrega === "entrega" ? "(origem)" : ""}</Label>
                   <Select value={editLocalEstoqueId || ""} onValueChange={(v) => setEditLocalEstoqueId(v || null)}>
                     <SelectTrigger><SelectValue placeholder="Selecione o local de estoque" /></SelectTrigger>
                     <SelectContent>
