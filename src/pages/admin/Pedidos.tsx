@@ -1087,13 +1087,12 @@ const Pedidos = () => {
     }
     // Update local_estoque_id and endereco_id if changed during separacao
     if (selectedPedido.status === "separacao") {
+      if (editLocalEstoqueId !== selectedPedido.local_estoque_id) {
+        updateData.local_estoque_id = editLocalEstoqueId || null;
+      }
       if (editTipoEntrega === "entrega") {
-        updateData.local_estoque_id = null;
         updateData.endereco_id = resolvedEnderecoId || null;
       } else {
-        if (editLocalEstoqueId !== selectedPedido.local_estoque_id) {
-          updateData.local_estoque_id = editLocalEstoqueId || null;
-        }
         updateData.endereco_id = null;
       }
     }
