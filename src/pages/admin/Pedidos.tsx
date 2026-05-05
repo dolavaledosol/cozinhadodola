@@ -810,15 +810,26 @@ const Pedidos = () => {
       if (prodsData) setEditItemProdutos(prodsData as any);
     }
     // Load client addresses for entrega option
+    const enderecosMap = new Map<string, any>();
     if (p.cliente_id) {
       const { data: ceData } = await supabase
         .from("cliente_endereco")
         .select("endereco_id, endereco:endereco_id(endereco_id, logradouro, numero, bairro, cidade, estado, cep)")
         .eq("cliente_id", p.cliente_id);
       if (ceData) {
-        setEditEnderecos(ceData.map((d: any) => d.endereco).filter(Boolean));
+        ceData.forEach((d: any) => { if (d.endereco) enderecosMap.set(d.endereco.endereco_id, d.endereco); });
       }
     }
+    // Always include the pedido's saved endereco (may not be linked to cliente_endereco)
+    if (p.endereco_id && !enderecosMap.has(p.endereco_id)) {
+      const { data: endData } = await supabase
+        .from("endereco")
+        .select("endereco_id, logradouro, numero, bairro, cidade, estado, cep")
+        .eq("endereco_id", p.endereco_id)
+        .maybeSingle();
+      if (endData) enderecosMap.set(endData.endereco_id, endData);
+    }
+    setEditEnderecos(Array.from(enderecosMap.values()));
     setDialogOpen(true);
   };
 
