@@ -196,8 +196,8 @@ function validateCpfCnpj(value: string): boolean {
 }
 
 function getTipoEntrega(p: Pedido): { label: string; icon: typeof Truck } {
-  if (p.local_estoque_id) return { label: "Retirada", icon: Store };
-  return { label: "Entrega", icon: Truck };
+  if (p.endereco_id) return { label: "Entrega", icon: Truck };
+  return { label: "Retirada", icon: Store };
 }
 
 const Pedidos = () => {
@@ -749,8 +749,8 @@ const Pedidos = () => {
     const matchDate = (!dateFrom || pedidoDate >= dateFrom) && (!dateTo || pedidoDate <= dateTo);
     // Local filter
     const matchLocal = localFilter === "todos" || (localFilter === "sem_local" ? !p.local_estoque_id : p.local_estoque_id === localFilter);
-    // Tipo filter (entrega = sem local_estoque_id, retirada = com local_estoque_id)
-    const matchTipo = tipoFilter === "todos" || (tipoFilter === "entrega" ? !p.local_estoque_id : !!p.local_estoque_id);
+    // Tipo filter (entrega = tem endereco_id, retirada = sem endereco_id)
+    const matchTipo = tipoFilter === "todos" || (tipoFilter === "entrega" ? !!p.endereco_id : !p.endereco_id);
     // Origem filter
     const matchOrigem = origemFilter === "todos" || p.origem === origemFilter;
     return matchSearch && matchStatus && matchDate && matchLocal && matchTipo && matchOrigem;
@@ -761,7 +761,7 @@ const Pedidos = () => {
     setEditStatus(p.status);
     setEditFrete(Number(p.frete).toFixed(2));
     setEditLocalEstoqueId(p.local_estoque_id);
-    setEditTipoEntrega(p.local_estoque_id ? "retirada" : "entrega");
+    setEditTipoEntrega(p.endereco_id ? "entrega" : "retirada");
     setEditEnderecoId(p.endereco_id || "");
     setPagFormaId("");
     setPagBancoId("");
@@ -810,15 +810,26 @@ const Pedidos = () => {
       if (prodsData) setEditItemProdutos(prodsData as any);
     }
     // Load client addresses for entrega option
+    const enderecosMap = new Map<string, any>();
     if (p.cliente_id) {
       const { data: ceData } = await supabase
         .from("cliente_endereco")
         .select("endereco_id, endereco:endereco_id(endereco_id, logradouro, numero, bairro, cidade, estado, cep)")
         .eq("cliente_id", p.cliente_id);
       if (ceData) {
-        setEditEnderecos(ceData.map((d: any) => d.endereco).filter(Boolean));
+        ceData.forEach((d: any) => { if (d.endereco) enderecosMap.set(d.endereco.endereco_id, d.endereco); });
       }
     }
+    // Always include the pedido's saved endereco (may not be linked to cliente_endereco)
+    if (p.endereco_id && !enderecosMap.has(p.endereco_id)) {
+      const { data: endData } = await supabase
+        .from("endereco")
+        .select("endereco_id, logradouro, numero, bairro, cidade, estado, cep")
+        .eq("endereco_id", p.endereco_id)
+        .maybeSingle();
+      if (endData) enderecosMap.set(endData.endereco_id, endData);
+    }
+    setEditEnderecos(Array.from(enderecosMap.values()));
     setDialogOpen(true);
   };
 
@@ -1076,13 +1087,12 @@ const Pedidos = () => {
     }
     // Update local_estoque_id and endereco_id if changed during separacao
     if (selectedPedido.status === "separacao") {
+      if (editLocalEstoqueId !== selectedPedido.local_estoque_id) {
+        updateData.local_estoque_id = editLocalEstoqueId || null;
+      }
       if (editTipoEntrega === "entrega") {
-        updateData.local_estoque_id = null;
         updateData.endereco_id = resolvedEnderecoId || null;
       } else {
-        if (editLocalEstoqueId !== selectedPedido.local_estoque_id) {
-          updateData.local_estoque_id = editLocalEstoqueId || null;
-        }
         updateData.endereco_id = null;
       }
     }
@@ -2319,10 +2329,10 @@ const Pedidos = () => {
                 </div>
               )}
 
-              {/* Local de Estoque - editable only during separacao + retirada */}
-              {selectedPedido.status === "separacao" && editTipoEntrega === "retirada" && (
+              {/* Local de Estoque - editable during separacao (origem do estoque, mesmo em entrega) */}
+              {selectedPedido.status === "separacao" && (
                 <div className="space-y-2">
-                  <Label>Local de Estoque</Label>
+                  <Label>Local de Estoque {editTipoEntrega === "entrega" ? "(origem)" : ""}</Label>
                   <Select value={editLocalEstoqueId || ""} onValueChange={(v) => setEditLocalEstoqueId(v || null)}>
                     <SelectTrigger><SelectValue placeholder="Selecione o local de estoque" /></SelectTrigger>
                     <SelectContent>
