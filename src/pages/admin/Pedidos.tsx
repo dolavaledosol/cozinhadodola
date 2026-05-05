@@ -749,8 +749,8 @@ const Pedidos = () => {
     const matchDate = (!dateFrom || pedidoDate >= dateFrom) && (!dateTo || pedidoDate <= dateTo);
     // Local filter
     const matchLocal = localFilter === "todos" || (localFilter === "sem_local" ? !p.local_estoque_id : p.local_estoque_id === localFilter);
-    // Tipo filter (entrega = sem local_estoque_id, retirada = com local_estoque_id)
-    const matchTipo = tipoFilter === "todos" || (tipoFilter === "entrega" ? !p.local_estoque_id : !!p.local_estoque_id);
+    // Tipo filter (entrega = tem endereco_id, retirada = sem endereco_id)
+    const matchTipo = tipoFilter === "todos" || (tipoFilter === "entrega" ? !!p.endereco_id : !p.endereco_id);
     // Origem filter
     const matchOrigem = origemFilter === "todos" || p.origem === origemFilter;
     return matchSearch && matchStatus && matchDate && matchLocal && matchTipo && matchOrigem;
