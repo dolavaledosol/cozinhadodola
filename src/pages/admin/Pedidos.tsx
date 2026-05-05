@@ -196,8 +196,8 @@ function validateCpfCnpj(value: string): boolean {
 }
 
 function getTipoEntrega(p: Pedido): { label: string; icon: typeof Truck } {
-  if (p.local_estoque_id) return { label: "Retirada", icon: Store };
-  return { label: "Entrega", icon: Truck };
+  if (p.endereco_id) return { label: "Entrega", icon: Truck };
+  return { label: "Retirada", icon: Store };
 }
 
 const Pedidos = () => {
