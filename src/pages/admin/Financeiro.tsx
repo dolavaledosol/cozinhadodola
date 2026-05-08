@@ -971,6 +971,19 @@ const Financeiro = () => {
               <div className="flex items-center gap-2 pt-6"><Switch checked={formReceber.recebido} onCheckedChange={(v) => setFormReceber({ ...formReceber, recebido: v })} /><Label>Recebido</Label></div>
             </div>
             <div className="space-y-2"><Label>Observação</Label><Input value={formReceber.observacao} onChange={(e) => setFormReceber({ ...formReceber, observacao: e.target.value })} /></div>
+            {editReceberId && formReceber.pedido_id && (
+              <div className="space-y-2">
+                <Label>Pedido vinculado</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => { window.location.href = `/admin/pedidos?pedido=${formReceber.pedido_id}`; }}
+                >
+                  Abrir pedido #{formReceber.pedido_id.slice(0, 8).toUpperCase()}
+                </Button>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogReceber(false)}>Cancelar</Button>

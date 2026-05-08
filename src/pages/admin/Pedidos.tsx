@@ -293,6 +293,23 @@ const Pedidos = () => {
 
   useEffect(() => { load(); }, []);
 
+  // Deep-link: open pedido details when ?pedido=ID is present
+  useEffect(() => {
+    if (!pedidos.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const pid = params.get("pedido");
+    if (!pid) return;
+    const found = pedidos.find((p) => p.pedido_id === pid);
+    if (found) {
+      openDetails(found);
+      // clear param to avoid reopening on later renders
+      const url = new URL(window.location.href);
+      url.searchParams.delete("pedido");
+      window.history.replaceState({}, "", url.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidos]);
+
   useEffect(() => {
     const loadAux = async () => {
       const [fpRes, bRes] = await Promise.all([
