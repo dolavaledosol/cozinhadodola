@@ -187,6 +187,8 @@ const Financeiro = () => {
   const [statusFilterReceber, setStatusFilterReceber] = useState<"pendente" | "recebido" | "todos">("pendente");
   const [receberDateFrom, setReceberDateFrom] = useState<Date | null>(null);
   const [receberDateTo, setReceberDateTo] = useState<Date | null>(null);
+  const [filterBancoReceber, setFilterBancoReceber] = useState<string>("all");
+  const [filterFormaReceber, setFilterFormaReceber] = useState<string>("all");
   
   const [dialogReceber, setDialogReceber] = useState(false);
   const [editReceberId, setEditReceberId] = useState<string | null>(null);
@@ -247,7 +249,9 @@ const Financeiro = () => {
     const matchStatus = statusFilterReceber === "todos" || (statusFilterReceber === "recebido" ? c.recebido : !c.recebido);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
     const matchDate = (!receberDateFrom || cDate >= receberDateFrom) && (!receberDateTo || cDate <= receberDateTo);
-    return matchSearch && matchStatus && matchDate;
+    const matchBanco = filterBancoReceber === "all" || c.banco_id === filterBancoReceber || c._banco_pag === bancos.find(b => b.banco_id === filterBancoReceber)?.nome;
+    const matchForma = filterFormaReceber === "all" || c._forma === formasPagamento.find(f => f.forma_pagamento_id === filterFormaReceber)?.nome;
+    return matchSearch && matchStatus && matchDate && matchBanco && matchForma;
   });
 
   const openNewReceber = () => { setEditReceberId(null); setFormReceber(emptyReceber); setDialogReceber(true); };
