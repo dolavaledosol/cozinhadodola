@@ -746,6 +746,28 @@ const Financeiro = () => {
                   <Calendar mode="single" selected={receberDateTo ?? undefined} onSelect={(d) => d && setReceberDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
+              <Select value={filterBancoReceber} onValueChange={setFilterBancoReceber}>
+                <SelectTrigger className="w-[160px] h-11 md:h-10">
+                  <SelectValue placeholder="Banco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos bancos</SelectItem>
+                  {bancos.map((b) => (
+                    <SelectItem key={b.banco_id} value={b.banco_id}>{b.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterFormaReceber} onValueChange={setFilterFormaReceber}>
+                <SelectTrigger className="w-[180px] h-11 md:h-10">
+                  <SelectValue placeholder="Forma de pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas formas</SelectItem>
+                  {formasPagamento.map((f) => (
+                    <SelectItem key={f.forma_pagamento_id} value={f.forma_pagamento_id}>{f.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {isMobile ? (
