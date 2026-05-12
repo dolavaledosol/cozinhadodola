@@ -187,6 +187,8 @@ const Financeiro = () => {
   const [statusFilterReceber, setStatusFilterReceber] = useState<"pendente" | "recebido" | "todos">("pendente");
   const [receberDateFrom, setReceberDateFrom] = useState<Date | null>(null);
   const [receberDateTo, setReceberDateTo] = useState<Date | null>(null);
+  const [filterBancoReceber, setFilterBancoReceber] = useState<string>("all");
+  const [filterFormaReceber, setFilterFormaReceber] = useState<string>("all");
   
   const [dialogReceber, setDialogReceber] = useState(false);
   const [editReceberId, setEditReceberId] = useState<string | null>(null);
@@ -247,7 +249,9 @@ const Financeiro = () => {
     const matchStatus = statusFilterReceber === "todos" || (statusFilterReceber === "recebido" ? c.recebido : !c.recebido);
     const cDate = new Date(c.data_vencimento + "T00:00:00");
     const matchDate = (!receberDateFrom || cDate >= receberDateFrom) && (!receberDateTo || cDate <= receberDateTo);
-    return matchSearch && matchStatus && matchDate;
+    const matchBanco = filterBancoReceber === "all" || c.banco_id === filterBancoReceber || c._banco_pag === bancos.find(b => b.banco_id === filterBancoReceber)?.nome;
+    const matchForma = filterFormaReceber === "all" || c._forma === formasPagamento.find(f => f.forma_pagamento_id === filterFormaReceber)?.nome;
+    return matchSearch && matchStatus && matchDate && matchBanco && matchForma;
   });
 
   const openNewReceber = () => { setEditReceberId(null); setFormReceber(emptyReceber); setDialogReceber(true); };
@@ -742,6 +746,28 @@ const Financeiro = () => {
                   <Calendar mode="single" selected={receberDateTo ?? undefined} onSelect={(d) => d && setReceberDateTo(d)} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
+              <Select value={filterBancoReceber} onValueChange={setFilterBancoReceber}>
+                <SelectTrigger className="w-[160px] h-11 md:h-10">
+                  <SelectValue placeholder="Banco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos bancos</SelectItem>
+                  {bancos.map((b) => (
+                    <SelectItem key={b.banco_id} value={b.banco_id}>{b.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterFormaReceber} onValueChange={setFilterFormaReceber}>
+                <SelectTrigger className="w-[180px] h-11 md:h-10">
+                  <SelectValue placeholder="Forma de pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas formas</SelectItem>
+                  {formasPagamento.map((f) => (
+                    <SelectItem key={f.forma_pagamento_id} value={f.forma_pagamento_id}>{f.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {isMobile ? (
