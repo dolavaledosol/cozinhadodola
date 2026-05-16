@@ -510,6 +510,8 @@ const Pedidos = () => {
     ];
     const rows = entradaLinhas.map(l => ({
       "Produto": l.nome,
+      "Peso (kg)": l.peso_liquido ?? "",
+      "Unidade": l.unidade_medida || "",
       "Quantidade": l.checked ? Number(l.quantidade) || "" : "",
       "Custo Unitário": Number(l.preco_custo) || "",
       "Valor Venda": Number(l.preco_venda) || "",
@@ -519,8 +521,8 @@ const Pedidos = () => {
     const wsCab = XLSX.utils.json_to_sheet(cabecalho);
     wsCab["!cols"] = [{ wch: 20 }, { wch: 30 }];
     XLSX.utils.book_append_sheet(wb, wsCab, "Cabeçalho");
-    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Produto: "", Quantidade: "", "Custo Unitário": "", "Valor Venda": "", produto_id: "" }]);
-    ws["!cols"] = [{ wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 38 }];
+    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Produto: "", "Peso (kg)": "", Unidade: "", Quantidade: "", "Custo Unitário": "", "Valor Venda": "", produto_id: "" }]);
+    ws["!cols"] = [{ wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 38 }];
     XLSX.utils.book_append_sheet(wb, ws, "Entrada");
     XLSX.writeFile(wb, `entrada_${fornNome.replace(/\s+/g, "_")}.xlsx`);
     toast({ title: "Planilha exportada! Preencha e importe de volta." });
