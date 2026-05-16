@@ -612,13 +612,15 @@ const Pedidos = () => {
       // a conta do fornecedor não fique duplicada com a conta separada de frete.
       const valorFornecedor = totalNF - freteVal;
       // Create contas_pagar NF record with status pendente (deferred)
+      let parentCompraId: string | null = null;
       if (valorFornecedor > 0) {
-        await supabase.from("contas_pagar").insert({
+        const { data: inserted } = await supabase.from("contas_pagar").insert({
           descricao: `NF ${entradaNF || "s/n"} - ${fornNome}`, valor: valorFornecedor,
           data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
           status_compra: "pendente", local_estoque_id: entradaLocal,
           compra_itens: itensJson as any,
-        });
+        }).select("contas_pagar_id").maybeSingle();
+        parentCompraId = inserted?.contas_pagar_id || null;
       }
       // Create frete record if applicable
       if (freteVal > 0) {
@@ -626,6 +628,7 @@ const Pedidos = () => {
           descricao: `Frete NF ${entradaNF || "s/n"} - ${fornNome}`, valor: freteVal,
           data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
           status_compra: "pendente",
+          observacao: parentCompraId ? `frete_ref:${parentCompraId}` : null,
         });
       }
       toast({ title: "Compra registrada como pendente!" });
