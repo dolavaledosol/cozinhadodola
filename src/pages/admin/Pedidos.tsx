@@ -3354,13 +3354,6 @@ const Pedidos = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Filtrar produtos..." value={entradaSearchProd} onChange={(e) => setEntradaSearchProd(e.target.value)} className="pl-10" />
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={exportEntradaPlanilha}>
-                    <Download className="h-3 w-3 mr-1" /> Exportar
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("import-entrada-file")?.click()}>
-                    <Upload className="h-3 w-3 mr-1" /> Importar
-                  </Button>
-                  <input id="import-entrada-file" type="file" accept=".xlsx,.xls" className="hidden" onChange={importEntradaPlanilha} />
                   <span className="text-sm text-muted-foreground whitespace-nowrap">{checkedLinhas.length} selecionado(s)</span>
                 </div>
                 <div className="border rounded-lg overflow-auto max-h-64">
