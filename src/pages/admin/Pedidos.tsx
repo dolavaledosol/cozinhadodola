@@ -395,6 +395,7 @@ const Pedidos = () => {
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
       observacao: compraEdit.observacao || null,
       fornecedor_id: compraEdit.fornecedor_id || null,
+      local_estoque_id: compraEdit.local_estoque_id || null,
       data_pagamento: compraEdit.pago ? (new Date().toISOString().slice(0, 10)) : null,
       compra_itens: itensToSave.length > 0 ? JSON.parse(JSON.stringify(itensToSave)) : null,
     }).eq("contas_pagar_id", compraEdit.contas_pagar_id);
