@@ -3334,6 +3334,19 @@ const Pedidos = () => {
               </div>
             </div>
 
+            {entradaFornecedor && (
+              <div className="flex items-center gap-2 flex-wrap border-t pt-3">
+                <span className="text-sm font-medium mr-auto">Planilha:</span>
+                <Button type="button" variant="outline" size="sm" onClick={exportEntradaPlanilha}>
+                  <Download className="h-3 w-3 mr-1" /> Exportar
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("import-entrada-file2")?.click()}>
+                  <Upload className="h-3 w-3 mr-1" /> Importar
+                </Button>
+                <input id="import-entrada-file2" type="file" accept=".xlsx,.xls" className="hidden" onChange={importEntradaPlanilha} />
+              </div>
+            )}
+
             {entradaLinhas.length > 0 && (
               <>
                 <div className="flex items-center gap-2 flex-wrap">
