@@ -679,17 +679,28 @@ const Pedidos = () => {
       }
       // recebido → pendente: rollback stock entries
       else if (current === "recebido" && newStatus === "pendente") {
-        const itens = compra.compra_itens || [];
-        const localId = compra.local_estoque_id;
-        if (itens.length > 0 && localId) {
+        // Re-fetch to ensure we have the latest items/local from DB (state may be stale)
+        const { data: full, error: fullErr } = await supabase
+          .from("contas_pagar")
+          .select("compra_itens, local_estoque_id, descricao")
+          .eq("contas_pagar_id", compra.contas_pagar_id)
+          .maybeSingle();
+        if (fullErr) throw fullErr;
+        const itens: any[] = Array.isArray(full?.compra_itens) ? (full!.compra_itens as any[]) : [];
+        const localId = full?.local_estoque_id;
+        if (itens.length === 0 || !localId) {
+          toast({ title: "Aviso", description: "Compra sem itens ou local de estoque — status revertido sem ajuste de estoque.", variant: "destructive" });
+        } else {
+          const nfMatch = (full?.descricao || compra.descricao || "").match(/NF\s+([^\s-]+)/i);
           for (const item of itens) {
-            await supabase.rpc("ajustar_estoque", {
+            const qty = Number(item.quantidade);
+            if (!item.produto_id || !qty) continue;
+            const { error: rpcErr } = await supabase.rpc("ajustar_estoque", {
               _produto_id: item.produto_id,
               _local_estoque_id: localId,
-              _delta: -item.quantidade,
+              _delta: -qty,
             });
-            // Remove movimentacao related to this compra
-            const nfMatch = compra.descricao.match(/NF\s+([^\s-]+)/i);
+            if (rpcErr) throw new Error(`Falha ao estornar ${item.nome || item.produto_id}: ${rpcErr.message}`);
             if (nfMatch) {
               await supabase.from("movimentacao_estoque").delete()
                 .eq("produto_id", item.produto_id).eq("local_estoque_id", localId)
