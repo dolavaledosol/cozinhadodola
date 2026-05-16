@@ -3151,12 +3151,21 @@ const Pedidos = () => {
               <Label>Descrição *</Label>
               <Input value={compraEdit.descricao} onChange={(e) => setCompraEdit({ ...compraEdit, descricao: e.target.value })} disabled={isPago} />
             </div>
-            <div className="space-y-2">
-              <Label>Fornecedor</Label>
-              <Select value={compraEdit.fornecedor_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, fornecedor_id: v })} disabled={isPago || temItens}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{compraEditFornecedores.map((f) => <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Fornecedor</Label>
+                <Select value={compraEdit.fornecedor_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, fornecedor_id: v })} disabled={isPago || temItens}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>{compraEditFornecedores.map((f) => <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Local de Estoque</Label>
+                <Select value={compraEdit.local_estoque_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, local_estoque_id: v })} disabled={isPago || isRecebido}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>{entradaLocais.map((l) => <SelectItem key={l.local_estoque_id} value={l.local_estoque_id}>{l.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
