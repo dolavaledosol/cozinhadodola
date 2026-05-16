@@ -342,7 +342,7 @@ const Pedidos = () => {
 
   /* ── Compra edit state ── */
   const [compraEditOpen, setCompraEditOpen] = useState(false);
-  const [compraEdit, setCompraEdit] = useState<{ contas_pagar_id: string; descricao: string; valor: string; data_vencimento: string; data_nf: string; pago: boolean; observacao: string; fornecedor_id: string; frete: string; status_compra: string }>({ contas_pagar_id: "", descricao: "", valor: "", data_vencimento: "", data_nf: "", pago: false, observacao: "", fornecedor_id: "", frete: "0", status_compra: "pendente" });
+  const [compraEdit, setCompraEdit] = useState<{ contas_pagar_id: string; descricao: string; valor: string; data_vencimento: string; data_nf: string; pago: boolean; observacao: string; fornecedor_id: string; frete: string; status_compra: string; local_estoque_id: string }>({ contas_pagar_id: "", descricao: "", valor: "", data_vencimento: "", data_nf: "", pago: false, observacao: "", fornecedor_id: "", frete: "0", status_compra: "pendente", local_estoque_id: "" });
   const [compraEditLoading, setCompraEditLoading] = useState(false);
   const [compraEditFornecedores, setCompraEditFornecedores] = useState<{ fornecedor_id: string; nome: string }[]>([]);
   const [compraEditItens, setCompraEditItens] = useState<{ produto_id: string; nome: string; quantidade: number; preco_custo: number; aceita_fracionado: boolean }[]>([]);
@@ -359,12 +359,14 @@ const Pedidos = () => {
   useEffect(() => { loadCompras(); }, []);
 
   const openCompraEdit = async (c: ContaPagarCompra) => {
-    const [fornsRes, prodsRes] = await Promise.all([
+    const [fornsRes, prodsRes, locaisRes] = await Promise.all([
       supabase.from("fornecedor").select("fornecedor_id, nome").eq("ativo", true).order("nome"),
       supabase.from("produto").select("produto_id, nome, aceita_fracionado, peso_liquido, unidade_medida").eq("ativo", true).order("nome"),
+      supabase.from("local_estoque").select("local_estoque_id, nome").eq("ativo", true).order("nome"),
     ]);
     if (fornsRes.data) setCompraEditFornecedores(fornsRes.data);
     if (prodsRes.data) setCompraEditProdutos(prodsRes.data);
+    if (locaisRes.data) setEntradaLocais(locaisRes.data);
     const itens = Array.isArray(c.compra_itens) ? c.compra_itens : [];
     setCompraEditItens(itens.map((i: any) => {
       const prod = prodsRes.data?.find((p: any) => p.produto_id === i.produto_id);
@@ -376,6 +378,7 @@ const Pedidos = () => {
       contas_pagar_id: c.contas_pagar_id, descricao: c.descricao, valor: String(c.valor),
       data_vencimento: c.data_vencimento, data_nf: c.data_nf || "", pago: c.pago, observacao: c.observacao || "",
       fornecedor_id: c.fornecedor_id || "", frete: String(freteFromMap), status_compra: c.status_compra || "pendente",
+      local_estoque_id: c.local_estoque_id || "",
     });
     setCompraEditOpen(true);
   };
@@ -392,6 +395,7 @@ const Pedidos = () => {
       data_vencimento: compraEdit.data_vencimento, data_nf: compraEdit.data_nf || null, pago: compraEdit.pago,
       observacao: compraEdit.observacao || null,
       fornecedor_id: compraEdit.fornecedor_id || null,
+      local_estoque_id: compraEdit.local_estoque_id || null,
       data_pagamento: compraEdit.pago ? (new Date().toISOString().slice(0, 10)) : null,
       compra_itens: itensToSave.length > 0 ? JSON.parse(JSON.stringify(itensToSave)) : null,
     }).eq("contas_pagar_id", compraEdit.contas_pagar_id);
@@ -608,13 +612,15 @@ const Pedidos = () => {
       // a conta do fornecedor não fique duplicada com a conta separada de frete.
       const valorFornecedor = totalNF - freteVal;
       // Create contas_pagar NF record with status pendente (deferred)
+      let parentCompraId: string | null = null;
       if (valorFornecedor > 0) {
-        await supabase.from("contas_pagar").insert({
+        const { data: inserted } = await supabase.from("contas_pagar").insert({
           descricao: `NF ${entradaNF || "s/n"} - ${fornNome}`, valor: valorFornecedor,
           data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
           status_compra: "pendente", local_estoque_id: entradaLocal,
           compra_itens: itensJson as any,
-        });
+        }).select("contas_pagar_id").maybeSingle();
+        parentCompraId = inserted?.contas_pagar_id || null;
       }
       // Create frete record if applicable
       if (freteVal > 0) {
@@ -622,6 +628,7 @@ const Pedidos = () => {
           descricao: `Frete NF ${entradaNF || "s/n"} - ${fornNome}`, valor: freteVal,
           data_vencimento: new Date().toISOString().slice(0, 10), fornecedor_id: fornId,
           status_compra: "pendente",
+          observacao: parentCompraId ? `frete_ref:${parentCompraId}` : null,
         });
       }
       toast({ title: "Compra registrada como pendente!" });
@@ -3144,12 +3151,21 @@ const Pedidos = () => {
               <Label>Descrição *</Label>
               <Input value={compraEdit.descricao} onChange={(e) => setCompraEdit({ ...compraEdit, descricao: e.target.value })} disabled={isPago} />
             </div>
-            <div className="space-y-2">
-              <Label>Fornecedor</Label>
-              <Select value={compraEdit.fornecedor_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, fornecedor_id: v })} disabled={isPago || temItens}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{compraEditFornecedores.map((f) => <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Fornecedor</Label>
+                <Select value={compraEdit.fornecedor_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, fornecedor_id: v })} disabled={isPago || temItens}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>{compraEditFornecedores.map((f) => <SelectItem key={f.fornecedor_id} value={f.fornecedor_id}>{f.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Local de Estoque</Label>
+                <Select value={compraEdit.local_estoque_id} onValueChange={(v) => setCompraEdit({ ...compraEdit, local_estoque_id: v })} disabled={isPago || isRecebido}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>{entradaLocais.map((l) => <SelectItem key={l.local_estoque_id} value={l.local_estoque_id}>{l.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
