@@ -359,12 +359,14 @@ const Pedidos = () => {
   useEffect(() => { loadCompras(); }, []);
 
   const openCompraEdit = async (c: ContaPagarCompra) => {
-    const [fornsRes, prodsRes] = await Promise.all([
+    const [fornsRes, prodsRes, locaisRes] = await Promise.all([
       supabase.from("fornecedor").select("fornecedor_id, nome").eq("ativo", true).order("nome"),
       supabase.from("produto").select("produto_id, nome, aceita_fracionado, peso_liquido, unidade_medida").eq("ativo", true).order("nome"),
+      supabase.from("local_estoque").select("local_estoque_id, nome").eq("ativo", true).order("nome"),
     ]);
     if (fornsRes.data) setCompraEditFornecedores(fornsRes.data);
     if (prodsRes.data) setCompraEditProdutos(prodsRes.data);
+    if (locaisRes.data) setEntradaLocais(locaisRes.data);
     const itens = Array.isArray(c.compra_itens) ? c.compra_itens : [];
     setCompraEditItens(itens.map((i: any) => {
       const prod = prodsRes.data?.find((p: any) => p.produto_id === i.produto_id);
@@ -376,6 +378,7 @@ const Pedidos = () => {
       contas_pagar_id: c.contas_pagar_id, descricao: c.descricao, valor: String(c.valor),
       data_vencimento: c.data_vencimento, data_nf: c.data_nf || "", pago: c.pago, observacao: c.observacao || "",
       fornecedor_id: c.fornecedor_id || "", frete: String(freteFromMap), status_compra: c.status_compra || "pendente",
+      local_estoque_id: c.local_estoque_id || "",
     });
     setCompraEditOpen(true);
   };
