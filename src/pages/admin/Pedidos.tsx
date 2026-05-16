@@ -500,21 +500,30 @@ const Pedidos = () => {
   };
 
   const exportEntradaPlanilha = () => {
-    if (entradaLinhas.length === 0) { toast({ title: "Selecione um fornecedor primeiro", variant: "destructive" }); return; }
+    if (!entradaFornecedor) { toast({ title: "Selecione um fornecedor primeiro", variant: "destructive" }); return; }
     const fornNome = entradaFornecedores.find(f => f.fornecedor_id === entradaFornecedor)?.nome || "fornecedor";
+    const localNome = entradaLocais.find(l => l.local_estoque_id === entradaLocal)?.nome || "";
+    const cabecalho = [
+      { Campo: "Nota Fiscal", Valor: entradaNF || "" },
+      { Campo: "Frete", Valor: entradaFrete !== "" ? Number(entradaFrete) : "" },
+      { Campo: "Local de Estoque", Valor: localNome },
+    ];
     const rows = entradaLinhas.map(l => ({
       "Produto": l.nome,
-      "Quantidade": "",
+      "Quantidade": l.checked ? Number(l.quantidade) || "" : "",
       "Custo Unitário": Number(l.preco_custo) || "",
       "Valor Venda": Number(l.preco_venda) || "",
       "produto_id": l.produto_id,
     }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 38 }];
     const wb = XLSX.utils.book_new();
+    const wsCab = XLSX.utils.json_to_sheet(cabecalho);
+    wsCab["!cols"] = [{ wch: 20 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsCab, "Cabeçalho");
+    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Produto: "", Quantidade: "", "Custo Unitário": "", "Valor Venda": "", produto_id: "" }]);
+    ws["!cols"] = [{ wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 38 }];
     XLSX.utils.book_append_sheet(wb, ws, "Entrada");
     XLSX.writeFile(wb, `entrada_${fornNome.replace(/\s+/g, "_")}.xlsx`);
-    toast({ title: "Planilha exportada! Preencha a coluna Quantidade e importe de volta." });
+    toast({ title: "Planilha exportada! Preencha e importe de volta." });
   };
 
   const importEntradaPlanilha = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -524,7 +533,24 @@ const Pedidos = () => {
     reader.onload = (evt) => {
       try {
         const wb = XLSX.read(evt.target?.result, { type: "binary" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
+        // Read Cabeçalho if present
+        const cabSheetName = wb.SheetNames.find(n => n.toLowerCase().startsWith("cabe"));
+        if (cabSheetName) {
+          const cabRows = XLSX.utils.sheet_to_json<any>(wb.Sheets[cabSheetName]);
+          for (const r of cabRows) {
+            const campo = String(r["Campo"] || "").toLowerCase();
+            const valor = r["Valor"];
+            if (valor == null || valor === "") continue;
+            if (campo.includes("nota")) setEntradaNF(String(valor));
+            else if (campo.includes("frete")) setEntradaFrete(String(Number(valor) || valor));
+            else if (campo.includes("local")) {
+              const loc = entradaLocais.find(l => l.nome.toLowerCase() === String(valor).toLowerCase());
+              if (loc) setEntradaLocal(loc.local_estoque_id);
+            }
+          }
+        }
+        const entradaSheetName = wb.SheetNames.find(n => n.toLowerCase() === "entrada") || wb.SheetNames[0];
+        const ws = wb.Sheets[entradaSheetName];
         const data = XLSX.utils.sheet_to_json<any>(ws);
         if (!data.length) { toast({ title: "Planilha vazia", variant: "destructive" }); return; }
         setEntradaLinhas(prev => {
@@ -3307,6 +3333,19 @@ const Pedidos = () => {
                 </Select>
               </div>
             </div>
+
+            {entradaFornecedor && (
+              <div className="flex items-center gap-2 flex-wrap border-t pt-3">
+                <span className="text-sm font-medium mr-auto">Planilha:</span>
+                <Button type="button" variant="outline" size="sm" onClick={exportEntradaPlanilha}>
+                  <Download className="h-3 w-3 mr-1" /> Exportar
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("import-entrada-file2")?.click()}>
+                  <Upload className="h-3 w-3 mr-1" /> Importar
+                </Button>
+                <input id="import-entrada-file2" type="file" accept=".xlsx,.xls" className="hidden" onChange={importEntradaPlanilha} />
+              </div>
+            )}
 
             {entradaLinhas.length > 0 && (
               <>
