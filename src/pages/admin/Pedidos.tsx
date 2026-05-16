@@ -533,7 +533,24 @@ const Pedidos = () => {
     reader.onload = (evt) => {
       try {
         const wb = XLSX.read(evt.target?.result, { type: "binary" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
+        // Read Cabeçalho if present
+        const cabSheetName = wb.SheetNames.find(n => n.toLowerCase().startsWith("cabe"));
+        if (cabSheetName) {
+          const cabRows = XLSX.utils.sheet_to_json<any>(wb.Sheets[cabSheetName]);
+          for (const r of cabRows) {
+            const campo = String(r["Campo"] || "").toLowerCase();
+            const valor = r["Valor"];
+            if (valor == null || valor === "") continue;
+            if (campo.includes("nota")) setEntradaNF(String(valor));
+            else if (campo.includes("frete")) setEntradaFrete(String(Number(valor) || valor));
+            else if (campo.includes("local")) {
+              const loc = entradaLocais.find(l => l.nome.toLowerCase() === String(valor).toLowerCase());
+              if (loc) setEntradaLocal(loc.local_estoque_id);
+            }
+          }
+        }
+        const entradaSheetName = wb.SheetNames.find(n => n.toLowerCase() === "entrada") || wb.SheetNames[0];
+        const ws = wb.Sheets[entradaSheetName];
         const data = XLSX.utils.sheet_to_json<any>(ws);
         if (!data.length) { toast({ title: "Planilha vazia", variant: "destructive" }); return; }
         setEntradaLinhas(prev => {
