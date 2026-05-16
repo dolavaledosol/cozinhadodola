@@ -342,7 +342,7 @@ const Pedidos = () => {
 
   /* ── Compra edit state ── */
   const [compraEditOpen, setCompraEditOpen] = useState(false);
-  const [compraEdit, setCompraEdit] = useState<{ contas_pagar_id: string; descricao: string; valor: string; data_vencimento: string; data_nf: string; pago: boolean; observacao: string; fornecedor_id: string; frete: string; status_compra: string }>({ contas_pagar_id: "", descricao: "", valor: "", data_vencimento: "", data_nf: "", pago: false, observacao: "", fornecedor_id: "", frete: "0", status_compra: "pendente" });
+  const [compraEdit, setCompraEdit] = useState<{ contas_pagar_id: string; descricao: string; valor: string; data_vencimento: string; data_nf: string; pago: boolean; observacao: string; fornecedor_id: string; frete: string; status_compra: string; local_estoque_id: string }>({ contas_pagar_id: "", descricao: "", valor: "", data_vencimento: "", data_nf: "", pago: false, observacao: "", fornecedor_id: "", frete: "0", status_compra: "pendente", local_estoque_id: "" });
   const [compraEditLoading, setCompraEditLoading] = useState(false);
   const [compraEditFornecedores, setCompraEditFornecedores] = useState<{ fornecedor_id: string; nome: string }[]>([]);
   const [compraEditItens, setCompraEditItens] = useState<{ produto_id: string; nome: string; quantidade: number; preco_custo: number; aceita_fracionado: boolean }[]>([]);
